@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Verb Lesson" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#ff5722" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff5722'/><text x='50' y='70' font-size='70' text-anchor='middle'>🐉</text></svg>" />
+<title>Priyansh's Action Verb Lesson 🐉⚡</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="stars-bg"></div>
+
+  <header>
+    <div class="title-wrap">
+      <span class="kame">🐉</span>
+      <h1>Priyansh's Action Verb Lesson</h1>
+      <span class="kame">⚡</span>
+    </div>
+    <p class="subtitle">Power up your words! Master <b>past</b>, <b>present</b>, and <b>future</b> tenses!</p>
+    <div class="power-bar">
+      <div class="power-fill" id="power-fill"></div>
+      <span class="power-label">POWER LEVEL: <span id="power-level">0</span></span>
+    </div>
+  </header>
+
+  <nav class="modes">
+    <button class="mode-btn active" data-mode="learn">📚 Train</button>
+    <button class="mode-btn" data-mode="quiz">⚡ Battle</button>
+    <button class="mode-btn" data-mode="list">📜 Scroll</button>
+  </nav>
+
+  <main id="app"></main>
+
+  <footer>
+    <p>🌟 Dragon Balls: <span id="stars">0</span></p>
+  </footer>
+
+  <script src="verbs.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
