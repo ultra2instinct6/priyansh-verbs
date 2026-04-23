@@ -24,3 +24,4 @@ For each verb, the child sees:
 - `app.js` — Learn / Quiz / List logic
 
 No build step. No internet needed. Just open and go.
+# priyansh-verbs
