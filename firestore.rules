@@ -1,0 +1,54 @@
+rules_version = '2';
+// Punjabi Ji global leaderboard rules.
+// - Open reads: anyone can see the leaderboard.
+// - Anonymous writes constrained to the `scores` collection only,
+//   with a strict shape so the doc can't be turned into spam storage.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /scores/{docId} {
+      allow read: if true;
+
+      allow write: if
+        docId.size() <= 80
+        && request.resource.data.keys().hasOnly(
+              ['childId','id','player','power','zeni','balls','rank','device','step','stepTotal','updatedAt'])
+          && request.resource.data.childId is string
+          && request.resource.data.childId.size() > 0
+          && request.resource.data.childId.size() <= 120
+        && request.resource.data.id is string
+        && request.resource.data.id.size() > 0
+        && request.resource.data.id.size() <= 120
+        && request.resource.data.player is string
+        && request.resource.data.player.size() > 0
+        && request.resource.data.player.size() <= 20
+        && request.resource.data.power is number
+        && request.resource.data.power >= 0
+        && request.resource.data.power < 100000000
+        && request.resource.data.zeni  is number
+        && request.resource.data.zeni  >= 0
+        && request.resource.data.zeni  < 100000000
+        && request.resource.data.balls is number
+        && request.resource.data.balls >= 0
+        && request.resource.data.balls < 1000000
+        && request.resource.data.rank   is string
+        && request.resource.data.rank.size() <= 40
+        && request.resource.data.device is string
+        && request.resource.data.device.size() <= 40
+        && request.resource.data.step is number
+        && request.resource.data.step >= 1
+        && request.resource.data.step < 1000000
+        && request.resource.data.stepTotal is number
+        && request.resource.data.stepTotal >= 1
+        && request.resource.data.stepTotal < 1000000;
+
+      // No client-side deletes — leaderboard is append-only.
+      allow delete: if false;
+    }
+
+    // Everything else is locked down.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

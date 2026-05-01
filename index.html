@@ -2,59 +2,96 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Punjabi Ji: Path to Power — a bilingual English–Punjabi verb adventure for kids. Climb the ladder, beat the bosses, earn XP." />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="Daroach Learning" />
+<meta name="apple-mobile-web-app-title" content="Punjabi Ji" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="theme-color" content="#ff5722" />
+<meta name="theme-color" content="#0f5fd7" />
 <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff5722'/><text x='50' y='70' font-size='70' text-anchor='middle'>🐉</text></svg>" />
-<title>Daroach Learning 🐉⚡</title>
+<link rel="manifest" href="manifest.json" />
+<!-- Open Graph / WhatsApp / Facebook -->
+<meta property="og:type"        content="website" />
+<meta property="og:url"         content="https://punjabiji.web.app/" />
+<meta property="og:title"       content="Punjabi Ji: Path to Power ⚡ | ਪੰਜਾਬੀ ਜੀ" />
+<meta property="og:description" content="A bilingual English–Punjabi verb adventure for kids. Climb the ladder, beat the bosses, earn XP! ਸਿੱਖੋ ਅਤੇ ਜਿੱਤੋ!" />
+<meta property="og:image"       content="https://punjabiji.web.app/og-image.png" />
+<!-- Twitter / X Card -->
+<meta name="twitter:card"        content="summary_large_image" />
+<meta name="twitter:title"       content="Punjabi Ji: Path to Power ⚡" />
+<meta name="twitter:description" content="A bilingual English–Punjabi verb adventure for kids. Climb the ladder, beat the bosses, earn XP!" />
+<meta name="twitter:image"       content="https://punjabiji.web.app/og-image.png" />
+<title>Punjabi Ji: Path to Power ⚡ | ਪੰਜਾਬੀ ਜੀ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@500;600;700&family=Noto+Sans+Gurmukhi:wght@500;600;700&display=swap" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="stars-bg"></div>
 
   <header>
-    <div class="title-wrap">
-      <span class="kame">🐉</span>
-      <h1>Daroach Learning</h1>
-      <span class="kame">⚡</span>
+    <button class="player-chip" id="player-chip" title="Switch fighter · ਯੋਧਾ ਬਦਲੋ">
+      <span class="player-chip-icon">👤</span>
+      <span class="player-chip-name" id="player-chip-name">Player</span>
+      <span class="player-chip-caret">▾</span>
+    </button>
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Punjabi Ji: Path to Power" class="site-logo" />
     </div>
-    <p class="subtitle">Train your mind. Battle for <b>Zeni</b>. Hunt the 7 <b>Dragon Balls</b>!</p>
     <div class="power-bar">
       <div class="power-fill" id="power-fill"></div>
       <span class="power-label">
-        <span id="rank-label">🌍 EARTHLING</span> ·
+        <span id="rank-label">🌍 EARTHLING <span class="pa pa-rank" lang="pa">· ਧਰਤੀਵਾਸੀ</span></span> ·
         <span id="power-level">0</span> / 1,000,000
       </span>
     </div>
   </header>
 
-  <nav class="modes">
-    <button class="mode-btn active" data-mode="learn">📚 Train</button>
-    <button class="mode-btn" data-mode="quiz">⚡ Battle</button>
-    <button class="mode-btn" data-mode="list">📜 Scroll</button>
-  </nav>
-
-  <div class="session-stats" id="session-stats">
-    <span>✅ <b id="stat-correct">0</b></span>
-    <span>❌ <b id="stat-wrong">0</b></span>
-    <span>🔥 <b id="stat-best">0</b></span>
+  <div class="hud-row">
+    <div class="hp-bar" id="hp-bar" title="Health · ਸਿਹਤ">
+      <div class="hp-fill" id="hp-fill"></div>
+      <span class="hp-label">❤️ <span id="hp-text">30 / 30</span></span>
+    </div>
+    <div class="hud-progress" id="ladder-progress">Step 1 / 1 <span class="pa pa-inline" lang="pa">· ਕਦਮ 1 / 1</span></div>
+    <div class="hud-progress">💰 <span id="zeni">0</span> · 🐉 <span id="balls">0/7</span></div>
+    <div class="hud-actions">
+      <button class="hud-btn" id="sound-btn" title="Sound · ਆਵਾਜ਼">🔊</button>
+      <button class="hud-btn" id="map-btn" title="Map · ਨਕਸ਼ਾ">🗺️</button>
+      <button class="hud-btn" id="board-btn" title="Leaderboard · ਲੀਡਰਬੋਰਡ" aria-label="Leaderboard">🏆</button>
+      <button class="hud-btn" id="export-btn" title="Export stats · ਅੰਕੜੇ ਸੇਵ ਕਰੋ">📤</button>
+      <button class="hud-btn danger" id="reset-btn" title="Reset progress · ਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਓ">♻️</button>
+    </div>
   </div>
 
   <main id="app"></main>
 
+  <!-- Floating fighter portrait — chosen avatar with a reactive aura -->
+  <div class="fighter-portrait" id="fighter-portrait" aria-hidden="true">
+    <div class="fp-aura"></div>
+    <div class="fp-frame">
+      <img class="fp-img" id="fp-img" src="boystart.png" alt="" />
+    </div>
+    <div class="fp-burst" id="fp-burst"></div>
+  </div>
+
   <footer>
-    <p class="footer-stats">
-      <span class="zeni">💰 Zeni: <span id="zeni">0</span></span>
-      <span class="dot">·</span>
-      <span class="balls">🐉 <span id="stars">0</span>/7</span>
-    </p>
-    <p class="credit">Created by Dr. Daroach</p>
+    <p class="credit">Created by Dr. Daroach <span class="pa pa-inline" lang="pa">· ਡਾ. ਦਾਰੋਚ ਵੱਲੋਂ</span></p>
   </footer>
 
-  <script src="verbs.js"></script>
+  <script src="ladder.js"></script>
   <script src="app.js"></script>
+  <script type="module" src="online.js"></script>
+  <script>
+    // Register service worker for offline play + faster repeat loads.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch((e) =>
+          console.warn("[SW] register failed:", e.message)
+        );
+      });
+    }
+  </script>
 </body>
 </html>
