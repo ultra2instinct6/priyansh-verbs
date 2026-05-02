@@ -3754,6 +3754,8 @@
     orientBtn.title = orientLocked
       ? "Landscape locked · ਲੈਂਡਸਕੇਪ ਲਾਕ ਚਾਲੂ"
       : "Lock landscape · ਲੈਂਡਸਕੇਪ ਲਾਕ";
+    // Focus Mode: hide non-essential UI when locked.
+    document.body.classList.toggle("focus-mode", orientLocked);
   }
   async function enterLandscape() {
     let lockedOk = false;
