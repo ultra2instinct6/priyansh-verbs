@@ -1521,38 +1521,71 @@
       _musicGain.connect(_master);
     }
 
+    // Tanpura pattern (signature of Gurbani kirtan): Sa Sa Pa Sa (low oct).
+    // Plays each beat softly — provides the meditative drone backbone.
+    const TANPURA = [131, 131, 196, 131, 131, 131, 196, 131];
+    // Vocal alaap glide phrases (Gurbani-style): pairs of [fromIdx, toIdx]
+    // used as start→glide-to. Each cycle picks one phrase to sing softly.
+    const ALAAPS = [
+      [0, 2],   // Sa → Ga (rising sigh)
+      [4, 5],   // Pa → Dha (uplift)
+      [5, 4],   // Dha → Pa (descend)
+      [7, 4],   // Sa' → Pa (octave fall)
+      [2, 0],   // Ga → Sa (resolve)
+      [4, 7],   // Pa → Sa' (climb)
+    ];
+
     // Schedule a single bar step (called from lookahead loop).
     // step: 0..7 within one Kaherwa cycle.
     function _scheduleStep(step, when) {
       if (!_ac) return;
-      // ----- Drums (Kaherwa) -----
+      const drumOff = when - _ac.currentTime;
+
+      // ---------- LAYER 1 · Tanpura drone (Gurbani signature) ----------
+      _bgmTanpura(TANPURA[step], BEAT * 1.6, 0.06, drumOff);
+
+      // ---------- LAYER 2 · Drums (Kaherwa theka — bhangra side) ----------
       // beats:  0    1    2   3    | 4    5     6     7
       // bols:   DHA  DHIN NA  TIN  | NA   DHIN  DHIN  NA
-      const drumOff = when - _ac.currentTime;
-      const drumScale = 0.55; // softer than SFX hits
+      const drumScale = 0.55;
       if (step === 0 || step === 4) {
-        // Sam (1) and madhya (5) — strong DHA = dhol + tabla DHIN
         _bgmDhol(0.30 * drumScale, drumOff, 1.0);
         _bgmTabla("DHIN", 0.18 * drumScale, drumOff + 0.005);
       } else {
         const bols = ["DHA", "DHIN", "NA", "TIN", "NA", "DHIN", "DHIN", "NA"];
         _bgmTabla(bols[step] || "NA", 0.16 * drumScale, drumOff);
       }
-      // Taali (off-beat claps) every other cycle, beats 1/3/5/7
+      // Taali on off-beats, alternating cycles
       if ((_cycle % 2 === 1) && (step % 2 === 1)) {
         _bgmClap(0.10 * drumScale, drumOff + 0.02);
       }
-      // ----- Bass arpeggio (chiptune) -----
-      _bgmBass(BASS[step], BEAT * 0.85, 0.10, drumOff);
-      // ----- Tumbi melody (alternates between phrases) -----
+
+      // ---------- LAYER 3 · Bass (chiptune gaming side) ----------
+      _bgmBass(BASS[step], BEAT * 0.85, 0.09, drumOff);
+
+      // ---------- LAYER 4 · Harmonium chord (Gurbani reed) ----------
+      // Sa+Pa fifth on beats 1 and 5 — the kirtan foundation chord.
+      if (step === 0 || step === 4) {
+        _bgmHarmonium(SCALE[0], BEAT * 4.2, 0.07, drumOff);
+      }
+
+      // ---------- LAYER 5 · Tumbi melody (folk lead) ----------
       const phrase = PHRASES[_cycle % PHRASES.length];
       const noteIdx = phrase[step];
       if (noteIdx != null) {
-        _bgmTumbi(SCALE[noteIdx], BEAT * 0.7, 0.12, drumOff + 0.02);
+        _bgmTumbi(SCALE[noteIdx], BEAT * 0.7, 0.11, drumOff + 0.02);
       }
-      // ----- Pad: re-trigger softly every 4 beats -----
+
+      // ---------- LAYER 6 · Vocal alaap (Gurbani sung phrase, with meend) ----------
+      // Sing one alaap on beat 2 every 3rd cycle to avoid crowding.
+      if (step === 2 && (_cycle % 3 === 0)) {
+        const al = ALAAPS[((_cycle / 3) | 0) % ALAAPS.length];
+        _bgmAlaap(SCALE[al[0]], SCALE[al[1]], BEAT * 2.4, 0.07, drumOff);
+      }
+
+      // ---------- LAYER 7 · Long Sa pad (warm glue) ----------
       if (step === 0) {
-        _bgmPad(SCALE[0] / 2, BEAT * 8, 0.05, drumOff); // long Sa drone
+        _bgmPad(SCALE[0] / 2, BEAT * 8, 0.04, drumOff);
       }
     }
 
@@ -1663,6 +1696,100 @@
       o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(_musicGain);
       o1.start(t); o1.stop(t + dur + 0.02);
       o2.start(t); o2.stop(t + dur + 0.02);
+    }
+
+    // Tanpura: long-decay plucked drone string with shimmer overtones.
+    // The signature continuous backbone of all Gurbani kirtan.
+    function _bgmTanpura(freq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      // Two slightly detuned saws + sine = rich sympathetic-string body
+      const o1 = a.createOscillator(); o1.type = "sawtooth"; o1.frequency.value = freq;
+      const o2 = a.createOscillator(); o2.type = "sawtooth"; o2.frequency.value = freq * 2.003; // octave shimmer
+      const o3 = a.createOscillator(); o3.type = "sine";     o3.frequency.value = freq * 3.01;  // jawari overtone
+      const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800; lp.Q.value = 1.4;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.025);  // soft pluck attack
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);  // long bell-like tail
+      const og2 = a.createGain(); og2.gain.value = 0.35;
+      const og3 = a.createGain(); og3.gain.value = 0.18;
+      o1.connect(lp);
+      o2.connect(og2); og2.connect(lp);
+      o3.connect(og3); og3.connect(lp);
+      lp.connect(g); g.connect(_musicGain);
+      // Light reverb send for "temple hall" depth
+      if (_verbSend) { const s = a.createGain(); s.gain.value = 0.20; g.connect(s); s.connect(_verbSend); }
+      o1.start(t); o1.stop(t + dur + 0.05);
+      o2.start(t); o2.stop(t + dur + 0.05);
+      o3.start(t); o3.stop(t + dur + 0.05);
+    }
+
+    // Harmonium: reedy sustained chord (Sa + Pa fifth + octave) with
+    // gentle bellows tremolo. The foundational kirtan accompaniment.
+    function _bgmHarmonium(rootFreq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      // Reed-organ stack: root + fifth + octave, square waves through lowpass
+      const partials = [
+        { f: rootFreq,         amp: 1.0, type: "square" },
+        { f: rootFreq * 1.5,   amp: 0.55, type: "square" }, // Pa
+        { f: rootFreq * 2,     amp: 0.40, type: "sawtooth" },// upper Sa
+      ];
+      const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1400; lp.Q.value = 0.9;
+      const g = a.createGain();
+      // Bellows-style swell and release
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.18);
+      g.gain.setValueAtTime(vol, t + dur - 0.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      // Tremolo LFO (~5 Hz bellows wobble)
+      const lfo = a.createOscillator(); lfo.type = "sine"; lfo.frequency.value = 5;
+      const lfoG = a.createGain(); lfoG.gain.value = vol * 0.10;
+      lfo.connect(lfoG); lfoG.connect(g.gain);
+      const oscs = partials.map(p => {
+        const o = a.createOscillator(); o.type = p.type; o.frequency.value = p.f;
+        const og = a.createGain(); og.gain.value = p.amp;
+        o.connect(og); og.connect(lp);
+        return o;
+      });
+      lp.connect(g); g.connect(_musicGain);
+      if (_verbSend) { const s = a.createGain(); s.gain.value = 0.18; g.connect(s); s.connect(_verbSend); }
+      lfo.start(t); lfo.stop(t + dur + 0.05);
+      oscs.forEach(o => { o.start(t); o.stop(t + dur + 0.05); });
+    }
+
+    // Vocal alaap: a sung-style melodic glide (meend) from one note to
+    // another, using formant filtering for an "AA" vowel. This is the
+    // hallmark of Gurbani kirtan vocals.
+    function _bgmAlaap(fromFreq, toFreq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      // Carrier: triangle wave glides between pitches
+      const o = a.createOscillator(); o.type = "triangle";
+      o.frequency.setValueAtTime(fromFreq, t);
+      o.frequency.exponentialRampToValueAtTime(toFreq, t + dur * 0.7);
+      o.frequency.setValueAtTime(toFreq, t + dur * 0.95);
+      // "AA" vowel formants (~700 Hz F1, ~1200 Hz F2)
+      const bp1 = a.createBiquadFilter(); bp1.type = "bandpass"; bp1.frequency.value = 700;  bp1.Q.value = 5;
+      const bp2 = a.createBiquadFilter(); bp2.type = "bandpass"; bp2.frequency.value = 1200; bp2.Q.value = 5;
+      const mix = a.createGain();
+      o.connect(bp1); bp1.connect(mix);
+      o.connect(bp2); bp2.connect(mix);
+      // ADSR with slow attack (sung legato), gentle release
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.18);
+      g.gain.setValueAtTime(vol, t + dur - 0.25);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      // Vibrato (~6 Hz human voice)
+      const vib = a.createOscillator(); vib.type = "sine"; vib.frequency.value = 6;
+      const vibG = a.createGain(); vibG.gain.value = 4; // ±4 Hz pitch wobble
+      vib.connect(vibG); vibG.connect(o.frequency);
+      mix.connect(g); g.connect(_musicGain);
+      if (_verbSend) { const s = a.createGain(); s.gain.value = 0.30; g.connect(s); s.connect(_verbSend); }
+      vib.start(t); vib.stop(t + dur + 0.05);
+      o.start(t); o.stop(t + dur + 0.05);
     }
 
     function _scheduler() {
