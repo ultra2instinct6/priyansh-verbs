@@ -633,7 +633,7 @@
     idx: startIdx,
     // HP loaded raw; legacy hearts (≤3) and missing values get fixed up
     // after `power` is known so high-rank returners get their tier max,
-    // not the Earthling default. Sentinel `null` means "use rank max".
+    // not the lowest-tier default. Sentinel `null` means "use rank max".
     hp: (() => {
       const raw = localStorage.getItem(KEY.hp);
       if (raw == null) return null;
@@ -995,40 +995,306 @@
     setTimeout(() => t.remove(), 2600);
   }
 
-  // ----- Sound -----
+  // ===== Sound — Heroic Bhangra SoundKit =====
+  // Pure Web Audio synthesis (offline-safe, zero assets). Layered voices:
+  // dhol (boom+slap), tumbi (twangy pluck), chimta (jingle), clap (taali),
+  // plus generic pluck/sweep helpers. All routed through master bus
+  // (gain → compressor → reverb send → destination) so layered hits
+  // never clip. Mute hard-zeros the master.
   let muted = localStorage.getItem(KEY.muted) === "1";
-  let _ac = null;
+  let _ac = null, _master = null, _comp = null, _verbSend = null, _verb = null, _noiseBuf = null;
+  const _spamGuard = Object.create(null); // per-SFX last-fire timestamps (anti-spam)
+  const _seenAppear = new Set();           // for bossAppear once-per-session
+
   function ac() {
     if (muted) return null;
     try {
-      if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+      if (!_ac) {
+        _ac = new (window.AudioContext || window.webkitAudioContext)();
+        // Master bus
+        _master = _ac.createGain();
+        _master.gain.value = 0.9;
+        _comp = _ac.createDynamicsCompressor();
+        _comp.threshold.value = -14; _comp.knee.value = 24;
+        _comp.ratio.value = 3; _comp.attack.value = 0.003; _comp.release.value = 0.18;
+        _master.connect(_comp); _comp.connect(_ac.destination);
+        // Reverb send (parallel) — short algorithmic impulse for "stage" feel
+        _verbSend = _ac.createGain(); _verbSend.gain.value = 0.18;
+        _verb = _ac.createConvolver(); _verb.buffer = _makeImpulse(0.4, 2.2);
+        const verbOut = _ac.createGain(); verbOut.gain.value = 0.55;
+        _verbSend.connect(_verb); _verb.connect(verbOut); verbOut.connect(_comp);
+        // Noise buffer (1 s mono) reused for percussive hits
+        _noiseBuf = _ac.createBuffer(1, _ac.sampleRate, _ac.sampleRate);
+        const nd = _noiseBuf.getChannelData(0);
+        for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      }
       if (_ac.state === "suspended") _ac.resume();
       return _ac;
     } catch (_) { return null; }
   }
-  function beep(freq, dur = 0.12, type = "sine", vol = 0.18, slideTo = null) {
-    const a = ac(); if (!a) return;
-    const o = a.createOscillator();
-    const g = a.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, a.currentTime);
-    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, a.currentTime + dur);
-    g.gain.setValueAtTime(vol, a.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
-    o.connect(g); g.connect(a.destination);
-    o.start(); o.stop(a.currentTime + dur + 0.02);
+  function _makeImpulse(seconds, decay) {
+    // Lazy: needs _ac but only called from within ac() init
+    const len = Math.floor(_ac.sampleRate * seconds);
+    const buf = _ac.createBuffer(2, len, _ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    return buf;
   }
+  function _spam(key, minMs) {
+    const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
+    const last = _spamGuard[key] || 0;
+    if (now - last < minMs) return true;
+    _spamGuard[key] = now;
+    return false;
+  }
+  // ---------- Voices ----------
+  function _route(node, dryGain, wetSend) {
+    const dry = _ac.createGain(); dry.gain.value = dryGain;
+    node.connect(dry); dry.connect(_master);
+    if (wetSend > 0 && _verbSend) {
+      const w = _ac.createGain(); w.gain.value = wetSend;
+      node.connect(w); w.connect(_verbSend);
+    }
+  }
+  // Tumbi: twangy single-string pluck (sawtooth → lowpass → fast decay)
+  function tumbi(freq, dur = 0.28, vol = 0.22, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const o = a.createOscillator(); o.type = "sawtooth";
+    o.frequency.setValueAtTime(freq, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(40, freq * 0.92), t + dur);
+    const lp = a.createBiquadFilter(); lp.type = "lowpass";
+    lp.frequency.setValueAtTime(2400, t); lp.Q.value = 4;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); lp.connect(g);
+    _route(g, 1, 0.25);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  // Dhol: low boom (sine bell) + percussive slap (filtered noise burst)
+  function dhol(vol = 0.32, when = 0, deep = 1) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    // Boom
+    const o = a.createOscillator(); o.type = "sine";
+    const f0 = 90 * deep, f1 = 55 * deep;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + 0.18);
+    const og = a.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(og); _route(og, 1, 0.30);
+    o.start(t); o.stop(t + 0.26);
+    // Slap (noise burst)
+    const n = a.createBufferSource(); n.buffer = _noiseBuf;
+    const bp = a.createBiquadFilter(); bp.type = "bandpass";
+    bp.frequency.value = 1800; bp.Q.value = 0.9;
+    const ng = a.createGain();
+    ng.gain.setValueAtTime(0.0001, t);
+    ng.gain.exponentialRampToValueAtTime(vol * 0.8, t + 0.002);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    n.connect(bp); bp.connect(ng); _route(ng, 1, 0.15);
+    n.start(t); n.stop(t + 0.08);
+  }
+  // Chimta: bandpass noise burst — metallic jingle
+  function chimta(freq = 6000, vol = 0.18, when = 0, dur = 0.10) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const n = a.createBufferSource(); n.buffer = _noiseBuf;
+    const bp = a.createBiquadFilter(); bp.type = "bandpass";
+    bp.frequency.value = freq; bp.Q.value = 8;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(bp); bp.connect(g); _route(g, 1, 0.40);
+    n.start(t); n.stop(t + dur + 0.02);
+  }
+  // Clap (taali): two ultra-short noise bursts
+  function clap(vol = 0.20, when = 0) {
+    const a = ac(); if (!a) return;
+    [0, 0.028].forEach((off) => {
+      const t = a.currentTime + when + off;
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1200;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      n.connect(hp); hp.connect(g); _route(g, 1, 0.20);
+      n.start(t); n.stop(t + 0.07);
+    });
+  }
+  // Generic short pluck (square/triangle) — used for UI ticks
+  function pluck(freq, dur = 0.08, type = "triangle", vol = 0.12, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const o = a.createOscillator(); o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); _route(g, 1, 0.05);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  // Pitch sweep (used for whoosh/timeout)
+  function sweep(f0, f1, dur, type = "sawtooth", vol = 0.18, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const o = a.createOscillator(); o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); _route(g, 1, 0.20);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+
+  // ---------- SFX (bhangra-flavored recipes) ----------
+  // Notes (Hz): Sa=523 (C5), Re=587, Ga=659, Ma=698, Pa=784, Dha=880, Ni=988, Sa'=1046
   const SFX = {
-    correct() { beep(880, 0.10, "triangle", 0.18); setTimeout(() => beep(1320, 0.14, "triangle", 0.16), 80); },
-    wrong()   { beep(220, 0.18, "sawtooth", 0.14, 110); },
-    combo(n)  { beep(660 + n * 30, 0.10, "square", 0.16); setTimeout(() => beep(990 + n * 30, 0.16, "square", 0.14), 80); },
-    blockClear() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.14, "triangle", 0.18), i * 90)); },
-    bossHit() { beep(140, 0.14, "sawtooth", 0.20, 70); },
-    bossWin() { [392, 523, 659, 784, 988, 1175].forEach((f, i) => setTimeout(() => beep(f, 0.18, "triangle", 0.20), i * 110)); },
-    rankUp()  { [523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, 0.18, "square", 0.18), i * 100)); },
-    ko()      { [330, 247, 165].forEach((f, i) => setTimeout(() => beep(f, 0.22, "sawtooth", 0.18), i * 120)); },
-    ball()    { beep(660, 0.10, "sine", 0.20); setTimeout(() => beep(990, 0.12, "sine", 0.18), 80); setTimeout(() => beep(1320, 0.16, "sine", 0.18), 160); },
+    correct() {
+      if (_spam("correct", 60)) return;
+      tumbi(784, 0.22, 0.22);                  // Pa
+      chimta(6500, 0.14, 0.02, 0.10);
+      clap(0.10, 0.02);
+    },
+    wrong() {
+      if (_spam("wrong", 80)) return;
+      // Soft, kid-friendly: muted dhol + downward tumbi bend
+      dhol(0.18, 0, 0.85);
+      tumbi(330, 0.30, 0.16, 0.04);
+      sweep(330, 200, 0.22, "triangle", 0.10, 0.02);
+    },
+    combo(n) {
+      if (_spam("combo", 90)) return;
+      const notes = [659, 784, 988, 1046]; // Ga Pa Ni Sa'
+      const k = Math.min(notes.length, Math.max(2, Math.floor(n / 2)));
+      for (let i = 0; i < k; i++) tumbi(notes[i], 0.20, 0.20, i * 0.06);
+      clap(0.16, 0);
+      if (n >= 5) clap(0.18, 0.18);
+      if (n >= 10) chimta(7000, 0.18, 0.30, 0.20);
+    },
+    blockClear() {
+      if (_spam("blockClear", 200)) return;
+      // Ascending bhangra riff: Sa Ga Pa Sa'
+      [523, 659, 784, 1046].forEach((f, i) => tumbi(f, 0.26, 0.22, i * 0.10));
+      chimta(6500, 0.18, 0.08, 0.12);
+      chimta(7500, 0.16, 0.32, 0.14);
+      clap(0.18, 0.42);
+    },
+    bossHit(tier) {
+      if (_spam("bossHit", 50)) return;
+      // Visceral double-hit
+      dhol(0.34, 0, 1.0);
+      dhol(0.26, 0.08, 1.0);
+      sweep(220, 90, 0.18, "sawtooth", 0.14, 0);
+      if ((tier | 0) >= 3) {
+        // Tier 3+ get a vocal-style chime sting
+        tumbi(330, 0.22, 0.18, 0.10);
+      }
+    },
+    bossWin() {
+      if (_spam("bossWin", 600)) return;
+      // Bhangra rhythm DHA-ge-na-DHIN under a tumbi flourish
+      dhol(0.32, 0.00, 1.0);
+      dhol(0.20, 0.18, 0.95);
+      dhol(0.20, 0.30, 0.95);
+      dhol(0.34, 0.46, 1.0);
+      [523, 659, 784, 988, 1046, 1175].forEach((f, i) => tumbi(f, 0.26, 0.22, 0.05 + i * 0.10));
+      clap(0.20, 0.20); clap(0.20, 0.40); clap(0.20, 0.60);
+      chimta(7000, 0.20, 0.72, 0.30);
+    },
+    rankUp() {
+      if (_spam("rankUp", 400)) return;
+      // Rising arpeggio + claps — "balle balle!"
+      [523, 659, 784, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, i * 0.09));
+      clap(0.20, 0.10); clap(0.20, 0.28);
+      chimta(6500, 0.20, 0.36, 0.22);
+      dhol(0.28, 0.36, 0.95);
+    },
+    ko() {
+      if (_spam("ko", 400)) return;
+      // Disappointed, not punishing
+      tumbi(440, 0.40, 0.20);
+      tumbi(330, 0.40, 0.18, 0.18);
+      tumbi(220, 0.55, 0.16, 0.36);
+      dhol(0.22, 0.04, 0.85);
+    },
+    ball() {
+      if (_spam("ball", 200)) return;
+      // Sparkle reward
+      chimta(6500, 0.10, 0.00, 0.08);
+      chimta(7500, 0.12, 0.08, 0.10);
+      chimta(8500, 0.14, 0.18, 0.12);
+      tumbi(1046, 0.22, 0.18, 0.06);
+    },
+    // ---- New SFX ----
+    damage() {
+      if (_spam("damage", 60)) return;
+      dhol(0.26, 0, 0.85);
+      sweep(380, 180, 0.16, "triangle", 0.10, 0.02);
+    },
+    coin() {
+      if (_spam("coin", 40)) return;
+      chimta(7000, 0.10, 0.00, 0.06);
+      pluck(1320, 0.10, "triangle", 0.14, 0.04);
+    },
+    click() {
+      if (_spam("click", 30)) return;
+      pluck(880, 0.05, "triangle", 0.08);
+    },
+    select() {
+      if (_spam("select", 80)) return;
+      tumbi(659, 0.18, 0.18);
+      chimta(6500, 0.10, 0.04, 0.08);
+    },
+    enemyAppear(tier) {
+      if (_spam("enemyAppear", 200)) return;
+      const t = (tier | 0) || 1;
+      dhol(0.26 + t * 0.03, 0.00, 1.0);
+      if (t >= 2) dhol(0.22, 0.10, 0.95);
+      if (t >= 3) {
+        sweep(330, 220, 0.30, "sawtooth", 0.16, 0.06);
+        tumbi(294, 0.30, 0.18, 0.12); // "oye!" sting
+      }
+    },
+    bossAppear() {
+      if (_spam("bossAppear", 400)) return;
+      // Crescendo: 4 dhol hits, last one big
+      [0.00, 0.12, 0.22, 0.32].forEach((off, i) => dhol(0.20 + i * 0.04, off, 1.0));
+      sweep(220, 110, 0.40, "sawtooth", 0.20, 0.20);
+      tumbi(294, 0.40, 0.22, 0.30); // dramatic low pluck
+      chimta(7000, 0.24, 0.42, 0.30);
+    },
+    tick() {
+      if (_spam("tick", 200)) return;
+      chimta(7500, 0.06, 0.00, 0.05);
+    },
+    timeout() {
+      if (_spam("timeout", 300)) return;
+      sweep(440, 110, 0.36, "sawtooth", 0.20);
+      dhol(0.28, 0.30, 0.85);
+    },
+    hint() {
+      if (_spam("hint", 150)) return;
+      chimta(6500, 0.08, 0.00, 0.06);
+      chimta(7500, 0.08, 0.06, 0.06);
+      chimta(8500, 0.10, 0.12, 0.06);
+    },
   };
+  // Track first-time enemy appearances for bossAppear vs enemyAppear distinction.
+  SFX._seenAppear = _seenAppear;
 
   function confetti(count = 24, emojis = ["✨", "⭐", "💥", "🔥", "🌟", "⚡"]) {
     const layer = document.createElement("div");
@@ -1092,9 +1358,16 @@
       haptic([30, 50, 30, 50, 80]);
     }
   }
-  function addRupees(n) { state.rupees = Math.max(0, state.rupees + n); }
+  function addRupees(n) {
+    state.rupees = Math.max(0, state.rupees + n);
+    if (n > 0) { try { SFX.coin(); } catch (_) {} }
+  }
   // Add raw gold coins. 10 coins auto-stack into 1 bar in the HUD.
-  function addGold(coins)   { state.gold   = Math.max(0, state.gold   + (coins | 0)); }
+  function addGold(coins)   {
+    const c = coins | 0;
+    state.gold = Math.max(0, state.gold + c);
+    if (c > 0) { try { SFX.coin(); } catch (_) {} }
+  }
   function addGoldBars(bars) { addGold((bars | 0) * GOLD_PER_BAR); }
   function dealDamage(n) {
     state.hp = Math.max(0, state.hp - (n | 0));
@@ -1103,6 +1376,7 @@
       const max = maxHpFor(state.power);
       const pct = max > 0 ? state.hp / max : 1;
       fpShout(pct <= 0.34 ? "DANGER!" : "OUCH!", "danger");
+      try { SFX.damage(); } catch (_) {}
     }
   }
   function heal(n) {
@@ -2304,8 +2578,8 @@
           ${paLine("ਤੁਸੀਂ ਹਾਰ ਗਏ!")}
           <p>HP depleted. Restarting block:<br><b>${entry.blockEmoji} ${entry.blockTitle}</b></p>
           ${paLine(`HP ਖ਼ਤਮ। ਪੜਾਅ ਮੁੜ ਸ਼ੁਰੂ: <b>${entry.blockEmoji} ${entry.blockTitle}</b>`)}
-          <p class="ko-note">Don't worry — you keep your Power Level, Zeni, and Dragon Balls. A true Saiyan grows stronger after every defeat. 💪</p>
-          ${paLine("ਚਿੰਤਾ ਨਾ ਕਰੋ — ਤਾਕਤ, ਜ਼ੈਨੀ ਤੇ ਡ੍ਰੈਗਨ ਬਾਲ ਸੁਰੱਖਿਅਤ ਹਨ। ਸੱਚਾ ਯੋਧਾ ਹਰ ਹਾਰ ਤੋਂ ਮਜ਼ਬੂਤ ਹੁੰਦਾ ਹੈ। 💪")}
+          <p class="ko-note">Don't worry — you keep your Power Level, Rupees, and Gold. Sachcha yodha har haar ton mazboot hunda hai. 💪</p>
+          ${paLine("ਚਿੰਤਾ ਨਾ ਕਰੋ — ਤਾਕਤ, ਰੁਪਏ ਤੇ ਸੋਨਾ ਸੁਰੱਖਿਅਤ ਹਨ। ਸੱਚਾ ਯੋਧਾ ਹਰ ਹਾਰ ਤੋਂ ਮਜ਼ਬੂਤ ਹੁੰਦਾ ਹੈ। 💪")}
           <div class="controls" style="justify-content:center">
             <button id="rise-btn">${bi("riseAgain")} ⚡</button>
           </div>
@@ -2527,9 +2801,9 @@
   });
 
   // ===== Header buttons =====
-  if (mapBtn) mapBtn.onclick = renderMap;
+  if (mapBtn) mapBtn.onclick = () => { try { SFX.click(); } catch (_) {} renderMap(); };
   const boardBtn = document.getElementById("board-btn");
-  if (boardBtn) boardBtn.onclick = () => renderBoard();
+  if (boardBtn) boardBtn.onclick = () => { try { SFX.click(); } catch (_) {} renderBoard(); };
 
   // ABC side game — opens the Sound Ladder overlay (abc.js).
   // If abc.js hasn't loaded (e.g. stale service-worker cache from before it
@@ -2537,6 +2811,7 @@
   // any service worker and hard-reload so the user gets the fresh build.
   const abcBtn = document.getElementById("abc-btn");
   if (abcBtn) abcBtn.onclick = () => {
+    try { SFX.click(); } catch (_) {}
     if (typeof window.openAbcGame === "function") {
       window.openAbcGame();
       return;
@@ -2587,8 +2862,8 @@
       hp: state.hp,
       maxHp: maxHpFor(state.power),
       power: state.power,
-      zeni: state.zeni,
-      balls: state.balls,
+      rupees: state.rupees,
+      gold: state.gold,
       cleared: state.cleared,
       reviewQueue: state.reviewQueue,
       historySample: state.history.slice(-50),
@@ -2606,8 +2881,8 @@
   };
 
   if (resetBtn) resetBtn.onclick = () => {
-    if (!confirm("Reset ALL progress? Power, Zeni, Dragon Balls and ladder position will be wiped.\n\nਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਉਣੀ ਹੈ?")) return;
-    [KEY.pos, KEY.hp, KEY.power, KEY.zeni, KEY.balls, KEY.review, KEY.cleared, KEY.history,
+    if (!confirm("Reset ALL progress? Power, Rupees, Gold and ladder position will be wiped.\n\nਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਉਣੀ ਹੈ?")) return;
+    [KEY.pos, KEY.hp, KEY.power, KEY.rupees, KEY.gold, KEY.review, KEY.cleared, KEY.history,
      KEY.daily,
      `dl_seen_v2__${currentChildId}`,
      `${AVATAR_KEY}__${currentChildId}`,
@@ -2637,16 +2912,16 @@
         pa: `🔥 ${d.count}-ਦਿਨਾਂ ਦੀ ਲਗਾਤਾਰ ਸਿਖਲਾਈ! ਸਭ ਤੋਂ ਵਧੀਆ: ${d.best}`
       }, "rank");
       else toast({
-        en: `👋 Welcome back, warrior! Day 1 of training.`,
+        en: `👋 Welcome back, yodha! Day 1 of training.`,
         pa: `👋 ਫਿਰ ਮਿਲੇ, ਯੋਧਾ! ਸਿਖਲਾਈ ਦਾ ਪਹਿਲਾ ਦਿਨ।`
       });
     }, 400);
     if (!alreadyToday && d.count > 1 && [3, 7, 14, 30].includes(d.count)) {
-      state.zeni += 200 * d.count;
+      state.rupees += 200 * d.count;
       setTimeout(() => {
         toast({
-          en: `🎁 Daily bonus: +${200 * d.count} 💰`,
-          pa: `🎁 ਰੋਜ਼ਾਨਾ ਇਨਾਮ: +${200 * d.count} 💰`
+          en: `🎁 Daily bonus: +${200 * d.count} ₹`,
+          pa: `🎁 ਰੋਜ਼ਾਨਾ ਇਨਾਮ: +${200 * d.count} ₹`
         }, "rank");
         confetti(40);
       }, 1200);
@@ -2660,7 +2935,7 @@
     SFX,
     paLine, paInline,
     toast, confetti, kiBurst, screenShake, slowMo,
-    addPower, addZeni, dealDamage,
+    addPower, addRupees, addGold, addGoldBars, dealDamage,
     queueReview,
     maxHpFor, rankIndex,
     persist,

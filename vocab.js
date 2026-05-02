@@ -194,7 +194,7 @@
       meaning_pa:"ਬਹੁਤ ਚਿਰ ਤੋਂ", example_en:"This book is old.", example_pa:"ਇਹ ਕਿਤਾਬ ਪੁਰਾਣੀ ਹੈ।",
       tags:["adj"] },
     { word:"strong",  emoji:"💪", pa_gloss:"ਤਾਕਤਵਰ",meaning_en:"having lots of power",
-      meaning_pa:"ਬਹੁਤ ਤਾਕਤ ਵਾਲਾ", example_en:"Goku is strong.", example_pa:"ਗੋਕੂ ਤਾਕਤਵਰ ਹੈ।",
+      meaning_pa:"ਬਹੁਤ ਤਾਕਤ ਵਾਲਾ", example_en:"Bittu is strong.", example_pa:"ਬਿੱਟੂ ਤਾਕਤਵਰ ਹੈ।",
       tags:["adj"] },
     { word:"brave",   emoji:"🦁", pa_gloss:"ਬਹਾਦੁਰ", meaning_en:"not afraid",
       meaning_pa:"ਡਰ ਨਾ ਲੱਗਣਾ", example_en:"A brave kid tries hard.", example_pa:"ਬਹਾਦੁਰ ਬੱਚਾ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ।",

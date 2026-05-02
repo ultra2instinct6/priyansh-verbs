@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Punjabi Ji" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#0f5fd7" />
-<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff5722'/><text x='50' y='70' font-size='70' text-anchor='middle'>🐉</text></svg>" />
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff5722'/><text x='50' y='70' font-size='70' text-anchor='middle'>�</text></svg>" />
 <link rel="manifest" href="manifest.json" />
 <!-- Open Graph / WhatsApp / Facebook -->
 <meta property="og:type"        content="website" />
@@ -26,9 +26,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@500;600;700&family=Noto+Sans+Gurmukhi:wght@500;600;700&display=swap" />
+<link rel="preload" as="image" href="images/logo.png" />
 <link rel="stylesheet" href="styles.css" />
+<style>
+  /* Inline critical splash styles so it shows instantly, before styles.css loads. */
+  #splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a2e73;}
+  #splash .splash-logo{max-width:min(70vw,420px);max-height:55vh;}
+</style>
 </head>
 <body>
+  <div id="splash" role="presentation" aria-hidden="true">
+    <img src="images/logo.png" alt="" class="splash-logo" decoding="async" fetchpriority="high" />
+  </div>
   <div class="stars-bg"></div>
 
   <header>
@@ -43,7 +52,7 @@
     <div class="power-bar">
       <div class="power-fill" id="power-fill"></div>
       <span class="power-label">
-        <span id="rank-label">🌍 EARTHLING <span class="pa pa-rank" lang="pa">· ਧਰਤੀਵਾਸੀ</span></span> ·
+        <span id="rank-label">🫓 ROTI <span class="pa pa-rank" lang="pa">· ਰੋਟੀ</span></span> ·
         <span id="power-level">0</span> / 1,000,000
       </span>
     </div>
@@ -55,7 +64,7 @@
       <span class="hp-label">❤️ <span id="hp-text">30 / 30</span></span>
     </div>
     <div class="hud-progress" id="ladder-progress">Step 1 / 1 <span class="pa pa-inline" lang="pa">· ਕਦਮ 1 / 1</span></div>
-    <div class="hud-progress">💰 <span id="zeni">0</span> · 🐉 <span id="balls">0/7</span></div>
+    <div class="hud-progress">₹ <span id="rupees">0</span> · 🟨 <span id="gold-bars">0</span> · 🪙 <span id="gold-coins">0</span></div>
     <div class="hud-actions">
       <button class="hud-btn" id="sound-btn" title="Sound · ਆਵਾਜ਼">🔊</button>
       <button class="hud-btn" id="map-btn" title="Map · ਨਕਸ਼ਾ">🗺️</button>
@@ -89,6 +98,38 @@
   <script src="abc.js?v=2026050202"></script>
   <script src="app.js"></script>
   <script type="module" src="online.js"></script>
+  <script>
+    // Splash screen: show logo for ~3.2s, then fade. Tap/click/key to skip after a short minimum.
+    (function () {
+      var splash = document.getElementById("splash");
+      if (!splash) return;
+      var MIN_MS = 800;   // earliest user can skip
+      var AUTO_MS = 3200; // automatic dismiss
+      var FADE_MS = 700;  // matches CSS transition + buffer
+      var startedAt = Date.now();
+      var dismissed = false;
+      function dismiss() {
+        if (dismissed) return;
+        dismissed = true;
+        splash.classList.add("hide");
+        var done = false;
+        function gone() {
+          if (done) return;
+          done = true;
+          splash.classList.add("gone");
+        }
+        splash.addEventListener("transitionend", gone, { once: true });
+        setTimeout(gone, FADE_MS);
+      }
+      function trySkip() {
+        if (Date.now() - startedAt >= MIN_MS) dismiss();
+      }
+      splash.addEventListener("click", trySkip);
+      splash.addEventListener("touchstart", trySkip, { passive: true });
+      window.addEventListener("keydown", trySkip, { once: true });
+      setTimeout(dismiss, AUTO_MS);
+    })();
+  </script>
   <script>
     // Register service worker for offline play + faster repeat loads.
     if ("serviceWorker" in navigator) {

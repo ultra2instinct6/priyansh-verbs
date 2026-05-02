@@ -608,7 +608,7 @@
         <div class="abc-reward-grid">
           <div class="abc-reward-card"><div class="abc-reward-icon">\u2B50</div><div>Sound Stars</div><strong>${p.stars || 0}</strong></div>
           <div class="abc-reward-card"><div class="abc-reward-icon">\uD83D\uDC8E</div><div>Learning Gems</div><strong>${Math.floor((p.plays || 0) / 3)}</strong></div>
-          <div class="abc-reward-card"><div class="abc-reward-icon">\uD83D\uDC32</div><div>Dragon Balls</div><strong>${Math.floor((p.stars || 0) / 7)}</strong></div>
+          <div class="abc-reward-card"><div class="abc-reward-icon">\uD83D\uDFE8</div><div>Gold Bars</div><strong>${Math.floor((p.stars || 0) / 7)}</strong></div>
         </div>
         <button class="abc-cta" id="abc-rew-back">\u2190 Home</button>
       </section>

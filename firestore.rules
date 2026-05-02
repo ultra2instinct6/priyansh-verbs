@@ -12,7 +12,7 @@ service cloud.firestore {
       allow write: if
         docId.size() <= 80
         && request.resource.data.keys().hasOnly(
-              ['childId','id','player','power','zeni','balls','rank','device','step','stepTotal','updatedAt'])
+              ['childId','id','player','power','rupees','gold','rank','device','step','stepTotal','updatedAt'])
           && request.resource.data.childId is string
           && request.resource.data.childId.size() > 0
           && request.resource.data.childId.size() <= 120
@@ -25,12 +25,12 @@ service cloud.firestore {
         && request.resource.data.power is number
         && request.resource.data.power >= 0
         && request.resource.data.power < 100000000
-        && request.resource.data.zeni  is number
-        && request.resource.data.zeni  >= 0
-        && request.resource.data.zeni  < 100000000
-        && request.resource.data.balls is number
-        && request.resource.data.balls >= 0
-        && request.resource.data.balls < 1000000
+        && request.resource.data.rupees is number
+        && request.resource.data.rupees >= 0
+        && request.resource.data.rupees < 100000000
+        && request.resource.data.gold   is number
+        && request.resource.data.gold   >= 0
+        && request.resource.data.gold   < 100000000
         && request.resource.data.rank   is string
         && request.resource.data.rank.size() <= 40
         && request.resource.data.device is string

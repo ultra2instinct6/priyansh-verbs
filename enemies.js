@@ -42,8 +42,8 @@
       emoji: "🥷",
       png: "images/bandit.png",
       tier: 2,
-      taunt_en: "Stealing your zeni!",
-      taunt_pa: "ਤੁਹਾਡਾ ਜ਼ੇਨੀ ਚੁਰਾ ਲਵਾਂਗਾ!",
+      taunt_en: "Stealing your rupees!",
+      taunt_pa: "ਤੁਹਾਡੇ ਰੁਪਏ ਚੁਰਾ ਲਵਾਂਗਾ!",
     },
     {
       id: "ghost",

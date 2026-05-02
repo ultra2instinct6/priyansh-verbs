@@ -1,6 +1,6 @@
-# 🐉⚡ Daroach Learning
+# �⚡ Daroach Learning
 
-A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **68 concept blocks across 5 units**, battle **5 bosses**, collect 7 Dragon Balls.
+A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **68 concept blocks across 5 units**, battle **5 bosses**, and stack up Gold Bars.
 
 **449 cards** of progression — built to be long, deep, and fun.
 
@@ -11,7 +11,7 @@ A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **
    ```
    then visit http://localhost:8765/
 2. Just answer cards. Get 3 wrong in a block → KO → restart that block.
-   Power Level, Zeni, and Dragon Balls are kept across KOs.
+   Power Level, Rupees, and Gold are kept across KOs.
 
 ## What it teaches
 - **English**: nouns, verbs, adjectives, adverbs, prepositions, plurals,
@@ -33,10 +33,10 @@ A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **
   continents & oceans, feelings & manners.
 
 ## Units
-1. 🌍 **Earthling Basics** — foundations (10 blocks + Saibaman boss)
-2. 🥋 **Z Fighter Training** — building (13 blocks + Nappa boss)
-3. 💥 **Saiyan Saga** — advanced (13 blocks + Vegeta boss)
-4. 🟡 **Saiyan Awakening** — multiplication, division, prefixes/suffixes,
+1. 🌍 **Pind Basics** — foundations (10 blocks + Saibaman boss)
+2. 🥋 **Dhol Drills** — building (13 blocks + Nappa boss)
+3. 💥 **Over 9000!** — advanced (13 blocks + Vegeta boss)
+4. 🟡 **Yodha Awakening** — multiplication, division, prefixes/suffixes,
    states of matter, plants (17 blocks + Frieza boss)
 5. 🏆 **Galactic Tournament** — bigger math, homophones, planets, oceans,
    nutrition, critical thinking (18 blocks + Cell boss)

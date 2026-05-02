@@ -3319,3 +3319,60 @@ main {
 .abc-lvl-lock { margin-left: 4px; }
 .abc-lvl-detail { margin-top: 6px; }
 .abc-letter-tile.sight { min-width: 64px; }
+
+/* ===== Splash screen ===== */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 178, 107, 0.35), transparent 55%),
+    radial-gradient(circle at 20% 80%, rgba(110, 200, 255, 0.25), transparent 60%),
+    linear-gradient(165deg, #0a2e73 0%, #0f5fd7 55%, #1a73e8 100%);
+  opacity: 1;
+  transition: opacity 600ms ease-out;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#splash::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 18% 28%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 72% 18%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 38% 82%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 88% 68%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 12% 62%, rgba(255, 255, 255, 0.45), transparent);
+  animation: splashTwinkle 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+#splash.hide { opacity: 0; pointer-events: none; }
+#splash.gone { display: none !important; }
+.splash-logo {
+  position: relative;
+  max-width: min(70vw, 420px);
+  max-height: 55vh;
+  width: auto;
+  height: auto;
+  animation: splashPop 700ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.45));
+}
+@keyframes splashPop {
+  0%   { transform: scale(0.8) translateY(8px); opacity: 0; }
+  60%  { transform: scale(1.04) translateY(0);  opacity: 1; }
+  100% { transform: scale(1)    translateY(0);  opacity: 1; }
+}
+@keyframes splashTwinkle {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo { animation: none; }
+  #splash::before { animation: none; opacity: 0.7; }
+  #splash { transition: opacity 200ms linear; }
+}
+

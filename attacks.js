@@ -2,7 +2,7 @@
 //
 // Hooked into the ladder loop via app.js -> Attacks.maybeRun(state).
 // All side effects on game state go through window.GameAPI (exposed by app.js):
-//   GameAPI.dealDamage(n), GameAPI.addPower(n), GameAPI.addZeni(n),
+//   GameAPI.dealDamage(n), GameAPI.addPower(n), GameAPI.addRupees(n), GameAPI.addGold(coins),
 //   GameAPI.queueReview(id), GameAPI.persist(),
 //   GameAPI.kiBurst(), GameAPI.confetti(n,emojis), GameAPI.screenShake(ms),
 //   GameAPI.SFX, GameAPI.toast({en,pa}, cls), GameAPI.paLine(text),
@@ -152,7 +152,25 @@
       document.body.appendChild(o);
       try { window.GameAPI && GameAPI.screenShake && GameAPI.screenShake(280); } catch (_) {}
       try { window.GameAPI && GameAPI.kiBurst   && GameAPI.kiBurst();        } catch (_) {}
-      try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.bossHit && GameAPI.SFX.bossHit(); } catch (_) {}
+      try {
+        const sfx = window.GameAPI && GameAPI.SFX;
+        if (sfx) {
+          const tier = (enemy && enemy.tier) | 0;
+          const seen = sfx._seenAppear;
+          // Tier 4 elite (Sky Dragon) = always boss-appear sting.
+          // First-of-kind tier 3+ = boss-appear; otherwise tiered enemy-appear.
+          const key = enemy && (enemy.id || enemy.name_en || "?");
+          const isFirst = seen && !seen.has(key);
+          if (seen) seen.add(key);
+          if (tier >= 4 || (tier >= 3 && isFirst)) {
+            sfx.bossAppear && sfx.bossAppear();
+          } else {
+            sfx.enemyAppear && sfx.enemyAppear(tier || 1);
+          }
+          // Always stamp a hit for the slam impact
+          sfx.bossHit && sfx.bossHit(tier);
+        }
+      } catch (_) {}
       setTimeout(() => { try { o.remove(); } catch(_) {} resolve(); }, 1100);
     });
   }
@@ -417,10 +435,10 @@
   // and elite enemies feel like a real event. Aligns with existing XP table
   // (mcq=80, fill=120, boss=150) so attacks are quick "snack" XP, not grindable.
   const TIER_REWARD = {
-    1: { spellPower: 15, spellZeni: 10, defPower: 12, defZeni:  8, dmg: 4 },
-    2: { spellPower: 25, spellZeni: 18, defPower: 20, defZeni: 14, dmg: 6 },
-    3: { spellPower: 50, spellZeni: 35, defPower: 40, defZeni: 28, dmg: 8 },
-    4: { spellPower:100, spellZeni: 75, defPower: 80, defZeni: 60, dmg:12 },
+    1: { spellPower: 15, spellRupees: 10, defPower: 12, defRupees:  8, dmg: 4 },
+    2: { spellPower: 25, spellRupees: 18, defPower: 20, defRupees: 14, dmg: 6 },
+    3: { spellPower: 50, spellRupees: 35, defPower: 40, defRupees: 28, dmg: 8 },
+    4: { spellPower:100, spellRupees: 75, defPower: 80, defRupees: 60, dmg:12 },
   };
   function applyOutcomeAndContinue(ctx, kind, ok, timedOut, word) {
     const tier = (ctx.enemy && ctx.enemy.tier) || 1;
@@ -428,16 +446,18 @@
     try {
       if (ok) {
         if (kind === "spell") {
-          GameAPI.addPower(r.spellPower); GameAPI.addZeni(r.spellZeni);
+          GameAPI.addPower(r.spellPower); GameAPI.addRupees && GameAPI.addRupees(r.spellRupees);
         } else {
-          GameAPI.addPower(r.defPower); GameAPI.addZeni(r.defZeni);
+          GameAPI.addPower(r.defPower); GameAPI.addRupees && GameAPI.addRupees(r.defRupees);
         }
+        // Bonus gold coin for taking down an elite (tier-4) foe.
+        if (tier >= 4) { try { GameAPI.addGold && GameAPI.addGold(1); } catch (_) {} }
         try { GameAPI.kiBurst && GameAPI.kiBurst(); } catch (_) {}
         try { GameAPI.confetti && GameAPI.confetti(tier >= 3 ? 32 : 18, ["✨", "⚡", "💥", "⭐"]); } catch (_) {}
         if (tier >= 3) {
           try { GameAPI.toast && GameAPI.toast({
-            en: tier === 4 ? "🐉 ELITE DEFEATED!" : "⭐ RARE FOE DOWN!",
-            pa: tier === 4 ? "🐉 ਲਾਜਵਾਬ ਹਾਰਿਆ!" : "⭐ ਦੁਰਲੱਭ ਦੁਸ਼ਮਣ ਹਾਰਿਆ!"
+            en: tier === 4 ? "🟨 ELITE DEFEATED!" : "⭐ RARE FOE DOWN!",
+            pa: tier === 4 ? "🟨 ਲਾਜਵਾਬ ਹਾਰਿਆ!" : "⭐ ਦੁਰਲੱਭ ਦੁਸ਼ਮਣ ਹਾਰਿਆ!"
           }, "rank"); } catch (_) {}
         }
       } else {
@@ -466,12 +486,24 @@
   function startTimer(durMs, onTimeout) {
     const fill = document.querySelector(".atk-timer-fill");
     const start = performance.now();
-    const t = { id: 0, done: false };
+    const t = { id: 0, done: false, lastTickSec: -1 };
+    const sfx = (window.GameAPI && window.GameAPI.SFX) || null;
     function step(now) {
       if (t.done) return;
       const p = Math.min(1, (now - start) / durMs);
       if (fill) fill.style.width = ((1 - p) * 100).toFixed(1) + "%";
-      if (p >= 1) { t.done = true; onTimeout(); return; }
+      // Tick beep on each of the last 3 whole seconds before timeout.
+      const remainingSec = Math.ceil((durMs - (now - start)) / 1000);
+      if (sfx && remainingSec > 0 && remainingSec <= 3 && remainingSec !== t.lastTickSec) {
+        t.lastTickSec = remainingSec;
+        try { sfx.tick && sfx.tick(); } catch (_) {}
+      }
+      if (p >= 1) {
+        t.done = true;
+        try { sfx && sfx.timeout && sfx.timeout(); } catch (_) {}
+        onTimeout();
+        return;
+      }
       t.id = requestAnimationFrame(step);
     }
     t.id = requestAnimationFrame(step);

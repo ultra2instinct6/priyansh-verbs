@@ -102,7 +102,7 @@ if (!isConfigured(FIREBASE_CONFIG)) {
         ready: true,
         status: "online",
         push(row) {
-          // row = { id, childId, player, power, zeni, balls, rank, device, step, stepTotal }
+          // row = { id, childId, player, power, rupees, gold, rank, device, step, stepTotal }
           if (!row || !row.id) return;
           pending = { id: row.id, data: row };
           if (!timer) timer = setTimeout(flush, 1500);
@@ -131,7 +131,7 @@ if (!isConfigured(FIREBASE_CONFIG)) {
  *       match /scores/{docId} {
  *         allow read: if true;
  *         allow write: if request.resource.data.keys().hasOnly(
- *             ['player','power','zeni','balls','rank','device','updatedAt'])
+ *             ['player','power','rupees','gold','rank','device','updatedAt','childId','step','stepTotal'])
  *           && request.resource.data.player is string
  *           && request.resource.data.player.size() <= 20
  *           && request.resource.data.power is number

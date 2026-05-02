@@ -33,10 +33,10 @@ const LADDER_VERSION = 13;
 const LADDER = [
 
   // ============================================================
-  // UNIT 1 — EARTHLING BASICS  (foundations, ~Grade 1.5–2.0)
+  // UNIT 1 — PIND BASICS  (foundations, ~Grade 1.5–2.0)
   // ============================================================
   {
-    id: "u1", title: "Earthling Basics", emoji: "🌍",
+    id: "u1", title: "Pind Basics", emoji: "🌍",
     blocks: [
 
       // ---- Block A1: Alphabet & letter sounds ----
@@ -44,7 +44,7 @@ const LADDER = [
         id: "u1.a1", title: "Alphabet & letter sounds", emoji: "🔤",
         cards: [
           { id:"u1.a1.c1", type:"intro",
-            title:"Welcome, warrior!",
+            title:"Welcome, yodha!",
             body:"Each card you clear grows your <b>Power Level</b>. Wrong answers cost a ❤️. Lose all 3 hearts and you restart the block. Let's start with the <b>26 letters</b> of the alphabet." },
           { id:"u1.a1.c2", type:"flash",
             front:"How many letters are in the English alphabet?",
@@ -171,7 +171,7 @@ const LADDER = [
         id: "u1.b1", title: "Nouns: people, places, things", emoji: "🧱",
         cards: [
           { id:"u1.b1.c1", type:"intro",
-            title:"Welcome, warrior!",
+            title:"Welcome, yodha!",
             body:"You can read words. Now learn what KIND of word each one is. First up: <b>nouns</b>.<br>Each card you clear grows your <b>Power Level</b>. Wrong answers cost a ❤️." },
           { id:"u1.b1.c2", type:"flash",
             front:"What is a <b>NOUN</b>?",
@@ -233,7 +233,7 @@ const LADDER = [
           { id:"u1.b3.c8", type:"fill", prompt:"🧮 7 + 8 = ?", accept:["15","fifteen"], choices:["15","14","16"] },
           { id:"u1.b3.c9", type:"fill", prompt:"🧮 11 + 6 = ?", accept:["17","seventeen"], choices:["17","16","18"] },
           { id:"u1.b3.c10", type:"mcq",
-            prompt:"🧮 Goku has 8 senzu beans. Krillin gives him 6 more. How many now?",
+            prompt:"🧮 Bittu has 8 samose. Simran gives him 6 more. How many now?",
             choices:["12","13","14","15"], correct:"14" },
         ]
       },
@@ -533,18 +533,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 2 — Z FIGHTER  (build, ~Grade 2.0–2.5)
+  // UNIT 2 — DHOL DRILLS  (build, ~Grade 2.0–2.5)
   // ============================================================
   {
-    id: "u2", title: "Z Fighter Drills", emoji: "🥋",
+    id: "u2", title: "Dhol Drills", emoji: "🥋",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 1) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 1) ----
       {
-        id: "u2.recap", title: "Senzu Recap: Unit 1", emoji: "🌿",
+        id: "u2.recap", title: "Chai Recap: Unit 1", emoji: "☕",
         cards: [
           { id:"u2.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Quick refresh of Unit 1 before we level up. <b>Nouns, verbs, plurals, place value, +/− to 20.</b> Power through!" },
           { id:"u2.recap.c2", type:"mcq",
             prompt:"Pick the noun: <i>The bird sang loudly.</i>",
@@ -637,7 +637,7 @@ const LADDER = [
           { id:"u2.b4.c4", type:"fill", prompt:"🧮 41 + 25 = ?", accept:["66"], choices:["66","65","67"] },
           { id:"u2.b4.c5", type:"fill", prompt:"🧮 52 + 36 = ?", accept:["88"], choices:["88","78","98"] },
           { id:"u2.b4.c6", type:"mcq",
-            prompt:"🧮 Goku trained 30 hours. He trained 25 more. Total?",
+            prompt:"🧮 Bittu trained 30 hours. He trained 25 more. Total?",
             choices:["45","50","55","65"], correct:"55" },
         ]
       },
@@ -883,7 +883,7 @@ const LADDER = [
         cards: [
           { id:"u2.fun.c1", type:"intro",
             title:"🎮 Fun Arena!",
-            body:"Earn extra Zeni and a streak boost by acing these mini-games!" },
+            body:"Earn extra Rupees and a streak boost by acing these mini-games!" },
           { id:"u2.fun.c2", type:"match",
             title:"Match contractions",
             pairs:[
@@ -968,18 +968,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 3 — OVER 9000  (extend, ~Grade 2.5–3.0)
+  // UNIT 3 — BHANGRA BLAST  (extend, ~Grade 2.5–3.0)
   // ============================================================
   {
-    id: "u3", title: "Over 9000!", emoji: "💥",
+    id: "u3", title: "Bhangra Blast", emoji: "💥",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 2) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 2) ----
       {
-        id: "u3.recap", title: "Senzu Recap: Unit 2", emoji: "🌿",
+        id: "u3.recap", title: "Chai Recap: Unit 2", emoji: "☕",
         cards: [
           { id:"u3.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Quick refresh from Unit 2: <b>past tense, contractions, capitalization, 2-digit math, shapes.</b>" },
           { id:"u3.recap.c2", type:"mcq",
             prompt:"Past of <b>walk</b>?",
@@ -1053,7 +1053,7 @@ const LADDER = [
           { id:"u3.b3.c4", type:"fill", prompt:"🧮 68 − 35 = ?", accept:["33"], choices:["33","23","43"] },
           { id:"u3.b3.c5", type:"fill", prompt:"🧮 90 − 40 = ?", accept:["50","fifty"], choices:["50","40","60"] },
           { id:"u3.b3.c6", type:"mcq",
-            prompt:"🧮 Vegeta had 75 Zeni. He spent 30. How many left?",
+            prompt:"🧮 Veer had 75 rupees. He spent 30. How many left?",
             choices:["35","40","45","55"], correct:"45" },
         ]
       },
@@ -1071,7 +1071,7 @@ const LADDER = [
           { id:"u3.b3b.c5", type:"fill", prompt:"🧮 58 + 17 = ?", accept:["75"], choices:["75","65","85"] },
           { id:"u3.b3b.c6", type:"fill", prompt:"🧮 39 + 44 = ?", accept:["83"], choices:["83","73","93"] },
           { id:"u3.b3b.c7", type:"mcq",
-            prompt:"🧮 Goku trained 26 hours, then 38 more. Total hours?",
+            prompt:"🧮 Bittu trained 26 hours, then 38 more. Total hours?",
             choices:["54","64","74","66"], correct:"64" },
         ]
       },
@@ -1405,7 +1405,7 @@ const LADDER = [
         cards: [
           { id:"u3.fun.c1", type:"intro",
             title:"🎮 Fun Arena!",
-            body:"Three mini-games to warm up before Vegeta. PERFECT score = bonus zeni!" },
+            body:"Three mini-games to warm up before the boss. PERFECT score = bonus rupees!" },
           { id:"u3.fun.c2", type:"match",
             title:"Match synonyms",
             pairs:[
@@ -1491,18 +1491,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 4 — SAIYAN AWAKENING  (~Grade 2.5)
+  // UNIT 4 — YODHA AWAKENING  (~Grade 2.5)
   // ============================================================
   {
-    id: "u4", title: "Saiyan Awakening", emoji: "🟡",
+    id: "u4", title: "Yodha Awakening", emoji: "🟡",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 3) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 3) ----
       {
-        id: "u4.recap", title: "Senzu Recap: Unit 3", emoji: "🌿",
+        id: "u4.recap", title: "Chai Recap: Unit 3", emoji: "☕",
         cards: [
           { id:"u4.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Refresh from Unit 3: <b>future tense, adjectives, synonyms/antonyms, ×2/×5/×10, punctuation.</b>" },
           { id:"u4.recap.c2", type:"mcq",
             prompt:"Future of <b>help</b>?",
@@ -1714,7 +1714,7 @@ const LADDER = [
             title:"Read carefully!",
             body:"Look for clue words: <b>in all / total</b> = add. <b>left / fewer</b> = subtract. <b>each / groups</b> = multiply or divide." },
           { id:"u4.b8.c2", type:"mcq",
-            prompt:"Goku ate 7 senzu beans. Vegeta ate 5. <b>How many in total?</b>",
+            prompt:"Bittu ate 7 jalebis. Simran ate 5. <b>How many in total?</b>",
             choices:["2","11","12","13"], correct:"12" },
           { id:"u4.b8.c3", type:"mcq",
             prompt:"There were 20 apples. 8 were eaten. <b>How many left?</b>",
@@ -1794,8 +1794,8 @@ const LADDER = [
             correct:"Sam said, \"hello.\"" },
           { id:"u4.b10.c3", type:"mcq",
             prompt:"Pick the right one:",
-            choices:["\"I am hungry,\" said Goku.","I am hungry said Goku.","\"I am hungry said Goku.","I am hungry, \"said Goku.\""],
-            correct:"\"I am hungry,\" said Goku." },
+            choices:["\"I am hungry,\" said Bittu.","I am hungry said Bittu.","\"I am hungry said Bittu.","I am hungry, \"said Bittu.\""],
+            correct:"\"I am hungry,\" said Bittu." },
           { id:"u4.b10.c4", type:"mcq",
             prompt:"What do quotation marks tell us?",
             choices:["A list","A question","Someone's exact words","The end of a story"],
@@ -2100,18 +2100,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 5 — GALACTIC TOURNAMENT  (~Grade 2.8–3.0)
+  // UNIT 5 — PIND DA AKHADA  (~Grade 2.8–3.0)
   // ============================================================
   {
-    id: "u5", title: "Galactic Tournament", emoji: "🏆",
+    id: "u5", title: "Pind Da Akhada", emoji: "🏆",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 4) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 4) ----
       {
-        id: "u5.recap", title: "Senzu Recap: Unit 4", emoji: "🌿",
+        id: "u5.recap", title: "Chai Recap: Unit 4", emoji: "☕",
         cards: [
           { id:"u5.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Refresh from Unit 4: <b>adverbs, prepositions, ×3/×4, division, place value to 100s, prefixes/suffixes.</b>" },
           { id:"u5.recap.c2", type:"mcq",
             prompt:"Pick the adverb: <i>She sang loudly.</i>",
@@ -2639,7 +2639,7 @@ const LADDER = [
             title:"Two-step thinking",
             body:"Some problems need <b>two steps</b>. Read carefully:<br>1. What is the question really asking?<br>2. Do the first step. <i>Write the answer.</i><br>3. Use that answer in the next step.<br>Example: <i>Sara had 8 stickers. She gave 3 away, then got 5 more.</i> → 8 − 3 = 5; 5 + 5 = <b>10</b>." },
           { id:"u5.b19.c2", type:"mcq",
-            prompt:"Goku has 12 senzu beans. He eats 4, then Krillin gives him 6 more. How many does he have now?",
+            prompt:"Bittu has 12 gulab jamuns. He eats 4, then Simran gives him 6 more. How many does he have now?",
             choices:["10","12","14","18"], correct:"14" },
           { id:"u5.b19.c3", type:"mcq",
             prompt:"There are 6 boxes with 4 cookies each. You eat 5 cookies. How many cookies are LEFT?",
@@ -2802,18 +2802,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 6 — SUPER SAIYAN SAGA  (~Grade 3.0–3.5)
+  // UNIT 6 — SHER-DIL SAGA  (~Grade 3.0–3.5)
   // ============================================================
   {
-    id: "u6", title: "Super Saiyan Saga", emoji: "🌟",
+    id: "u6", title: "Sher-Dil Saga", emoji: "🌟",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 5) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 5) ----
       {
-        id: "u6.recap", title: "Senzu Recap: Unit 5", emoji: "🌿",
+        id: "u6.recap", title: "Chai Recap: Unit 5", emoji: "☕",
         cards: [
           { id:"u6.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Refresh from Unit 5: <b>×6, ×9, division, place value to 1000s, fractions, planets, continents.</b>" },
           { id:"u6.recap.c2", type:"mcq", prompt:"6 × 7 = ?", choices:["36","42","48","54"], correct:"42" },
           { id:"u6.recap.c3", type:"mcq", prompt:"9 × 8 = ?", choices:["63","72","81","90"], correct:"72" },
@@ -3180,18 +3180,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 7 — TOURNAMENT OF POWER  (~Grade 3.5)
+  // UNIT 7 — SHER-DIL DANGAL  (~Grade 3.5)
   // ============================================================
   {
-    id: "u7", title: "Tournament of Power", emoji: "🏆",
+    id: "u7", title: "Sher-Dil Dangal", emoji: "🏆",
     blocks: [
 
-      // ---- Block 0: 🌿 Senzu Recap (from Unit 6) ----
+      // ---- Block 0: ☕ Chai Recap (from Unit 6) ----
       {
-        id: "u7.recap", title: "Senzu Recap: Unit 6", emoji: "🌿",
+        id: "u7.recap", title: "Chai Recap: Unit 6", emoji: "☕",
         cards: [
           { id:"u7.recap.c1", type:"intro",
-            title:"🌿 Senzu Recap",
+            title:"☕ Chai Recap",
             body:"Quick refresh from Unit 6: <b>×7, ×8, division, place value to 10,000, equivalent fractions, area, body systems, water cycle.</b>" },
           { id:"u7.recap.c2", type:"mcq", prompt:"7 × 8 = ?", choices:["48","54","56","64"], correct:"56" },
           { id:"u7.recap.c3", type:"mcq", prompt:"72 ÷ 8 = ?", choices:["7","8","9","10"], correct:"9" },
