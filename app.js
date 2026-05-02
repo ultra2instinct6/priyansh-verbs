@@ -11,8 +11,8 @@
   const hpFill = document.getElementById("hp-fill");
   const hpText = document.getElementById("hp-text");
   const rupeesEl    = document.getElementById("rupees");
-  const goldBarsEl  = document.getElementById("gold-bars");
-  const goldCoinsEl = document.getElementById("gold-coins");
+  const goldBarsEl    = document.getElementById("gold-bars");
+  const silverCoinsEl = document.getElementById("silver-coins");
   const powerFill = document.getElementById("power-fill");
   const powerLevel = document.getElementById("power-level");
   const rankLabel = document.getElementById("rank-label");
@@ -53,8 +53,11 @@
   const RUPEES_REVIEW_BONUS = 30;
   // Boss clears now drop a satchel of gold + a fat rupee bonus.
   const RUPEES_BOSS_CLEAR = 2000;
-  // Gold collectible: every boss clear drops 5 gold bars (= 50 coins).
-  // Side wins (rare elite enemy defeats in attacks.js) drop a single coin.
+  // Currency model:
+  //  - Bosses drop GOLD BARS (🟨): big-haul reward (5 bars = 50 silver coins).
+  //  - Enemy attacks (rare elite kills in attacks.js) drop a SILVER COIN (🥈).
+  //  - 10 silver coins auto-stack into 1 gold bar in the HUD.
+  // state.gold stores the total silver-coin count; bars = floor(gold/10).
   // 10 coins auto-stack into 1 bar in the HUD.
   const GOLD_PER_COIN     = 1;
   const GOLD_PER_BAR      = 10;
@@ -754,14 +757,14 @@
       const from = _prev.rupees == null ? state.rupees : _prev.rupees;
       tweenNumber(rupeesEl, from, state.rupees, 600);
     }
-    if (goldBarsEl || goldCoinsEl) {
+    if (goldBarsEl || silverCoinsEl) {
       const before = _prev.gold == null ? state.gold : _prev.gold;
       const bars  = Math.floor(state.gold / GOLD_PER_BAR);
       const coins = state.gold % GOLD_PER_BAR;
-      if (goldBarsEl)  goldBarsEl.textContent  = String(bars);
-      if (goldCoinsEl) goldCoinsEl.textContent = String(coins);
+      if (goldBarsEl)    goldBarsEl.textContent    = String(bars);
+      if (silverCoinsEl) silverCoinsEl.textContent = String(coins);
       if (state.gold > before) {
-        const bumped = (Math.floor(before / GOLD_PER_BAR) !== bars) ? goldBarsEl : goldCoinsEl;
+        const bumped = (Math.floor(before / GOLD_PER_BAR) !== bars) ? goldBarsEl : silverCoinsEl;
         if (bumped) { bumped.classList.remove("bump"); void bumped.offsetWidth; bumped.classList.add("bump"); }
       }
     }
@@ -855,7 +858,7 @@
   // Gold-bar arc: spawn a 🟨 at originEl center, fly to the gold counter in HUD.
   function goldBarArc(originEl) {
     if (!motionOK()) return;
-    const target = document.getElementById("gold-bars") || document.getElementById("gold-coins");
+    const target = document.getElementById("gold-bars") || document.getElementById("silver-coins");
     if (!target) return;
     const src = (originEl || document.body).getBoundingClientRect();
     const dst = target.getBoundingClientRect();
@@ -1783,7 +1786,7 @@
     if ((state.streak | 0) >= 3) { try { SFX.streakBreak(); } catch (_) {} }
     state.streak = 0;
   }
-  // Add raw gold coins. 10 coins auto-stack into 1 bar in the HUD.
+  // Add raw silver coins. 10 silver coins auto-stack into 1 gold bar in the HUD.
   function addGold(coins)   {
     const c = coins | 0;
     state.gold = Math.max(0, state.gold + c);
@@ -1915,11 +1918,11 @@
           slowMo();
           const bars = Math.floor(state.gold / GOLD_PER_BAR);
           toast({
-            en: `🏆 BOSS DOWN! +${GOLD_BARS_PER_BOSS} 🟨 gold bars (×${GOLD_PER_BAR}) · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · Total bars: ${bars}`,
+            en: `🏆 BOSS DOWN! +${GOLD_BARS_PER_BOSS} 🟨 gold bars (= ${GOLD_BARS_PER_BOSS * GOLD_PER_BAR} 🥈 silver) · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · Total bars: ${bars}`,
             pa: `🏆 ਬੌਸ ਹਾਰਿਆ! +${GOLD_BARS_PER_BOSS} 🟨 ਸੋਨੇ ਦੀਆਂ ਇੱਟਾਂ · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · ਕੁਲ ਇੱਟਾਂ: ${bars}`
           }, "rank");
           SFX.bossWin(); SFX.ball();
-          confetti(60, ["🟨", "🪙", "⭐", "✨", "🏆", "🔥", "💫"]);
+          confetti(60, ["🟨", "�", "⭐", "✨", "🏆", "🔥", "💫"]);
         } else {
           toast({
             en: `✅ Block cleared: ${entry.blockTitle}`,
@@ -3079,7 +3082,7 @@
       fpShout("POWER UP!", "super");
       setTimeout(() => document.body.classList.remove("win-now"), 1200);
       setTimeout(() => { confetti(40, ["🌟","✨","⭐","💛"]); }, 350);
-      setTimeout(() => { confetti(40, ["�","🪙","✨","🏆"]); }, 750);
+      setTimeout(() => { confetti(40, ["🟨","🥈","✨","🏆"]); }, 750);
       confetti(60, ["🌟","✨","⭐","💛","🏆"]);
       SFX.bossWin();
     }
@@ -3090,8 +3093,8 @@
           <h2>LADDER COMPLETE!</h2>
           ${paLine("ਪੌੜੀ ਪੂਰੀ ਹੋਈ!")}
           <p>You climbed every step. Power Level: <b>${state.power.toLocaleString()}</b></p>
-          <p>Rupees: <b>₹${state.rupees.toLocaleString()}</b> · Gold: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} bars · 🪙 ${state.gold % GOLD_PER_BAR} coins</b></p>
-          ${paLine(`ਤੁਸੀਂ ਹਰ ਕਦਮ ਪੂਰਾ ਕੀਤਾ। ਤਾਕਤ: <b>${state.power.toLocaleString()}</b><br>ਰੁਪਏ: <b>₹${state.rupees.toLocaleString()}</b> · ਸੋਨਾ: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} ਇੱਟਾਂ · 🪙 ${state.gold % GOLD_PER_BAR} ਸਿੱਕੇ</b>`)}
+          <p>Rupees: <b>₹${state.rupees.toLocaleString()}</b> · Treasure: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} gold bars · 🥈 ${state.gold % GOLD_PER_BAR} silver coins</b></p>
+          ${paLine(`ਤੁਸੀਂ ਹਰ ਕਦਮ ਪੂਰਾ ਕੀਤਾ। ਤਾਕਤ: <b>${state.power.toLocaleString()}</b><br>ਰੁਪਏ: <b>₹${state.rupees.toLocaleString()}</b> · ਖਜ਼ਾਨਾ: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} ਸੋਨੇ ਦੀਆਂ ਇੱਟਾਂ · 🥈 ${state.gold % GOLD_PER_BAR} ਚਾਂਦੀ ਦੇ ਸਿੱਕੇ</b>`)}
           <p class="ko-note">More units coming soon. Open the Map to revisit any block.${paInline("ਹੋਰ ਯੂਨਿਟ ਜਲਦੀ ਆਉਣਗੇ। ਨਕਸ਼ੇ ਤੋਂ ਕਿਸੇ ਵੀ ਪੜਾਅ ਨੂੰ ਦੁਹਰਾਓ।")}</p>
           <div class="controls" style="justify-content:center">
             <button id="map-from-victory">🗺️ ${bi("openMap")}</button>
@@ -3147,7 +3150,7 @@
           <td class="pw">${(r.power|0).toLocaleString()} ⚡</td>
           <td class="rn">${esc(r.rank || rankFor(r.power|0).name)}</td>
           <td class="rp">₹${(r.rupees|0).toLocaleString()}</td>
-          <td class="gd">🟨 ${bars} · 🪙 ${coins}</td>
+          <td class="gd">🟨 ${bars} · � ${coins}</td>
           <td class="ts">${fmtTime(r.updatedAt)}</td>
           <td class="ax">${
             scope === "device"

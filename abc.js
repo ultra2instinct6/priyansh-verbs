@@ -554,7 +554,7 @@
     // + gold). Awards only on stars *gained* this session, never twice.
     //   1 star  =>  60 rupees + 250 power
     //   2 stars => 150 rupees + 600 power
-    //   3 stars => 320 rupees + 1300 power + 1 gold bar (10 coins)
+    //   3 stars => 320 rupees + 1300 power + 1 gold bar (= 10 silver coins)
     // -----------------------------------------------------------------
     if (starsDelta > 0 && window.VTK && typeof window.VTK.reward === "function") {
       const TIER = {
@@ -576,8 +576,8 @@
           rupees, power, gold,
           confetti: starsDelta * 12,
           message: {
-            en: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDE99` : ""}`,
-            pa: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDE99` : ""}`
+            en: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDD48` : ""}`,
+            pa: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDD48` : ""}`
           }
         });
         // Remember last bridge payout for the reward screen UI.
@@ -1418,7 +1418,7 @@
             <div class="abc-bridge-row">
               <span class="abc-bridge-pill">+\u20B9${p.lastBridge.rupees}</span>
               <span class="abc-bridge-pill">+${p.lastBridge.power}\u26A1</span>
-              ${p.lastBridge.gold ? `<span class="abc-bridge-pill">+${p.lastBridge.gold}\uD83E\uDE99</span>` : ""}
+              ${p.lastBridge.gold ? `<span class="abc-bridge-pill">+${p.lastBridge.gold}\uD83E\uDD48</span>` : ""}
             </div>
           </div>` : ""}
         <div class="abc-stats">

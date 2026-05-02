@@ -4223,3 +4223,88 @@ body.hide-pa .abc-gloss-pa { display: none; }
   background: rgba(20, 184, 122, 0.15);
   color: #0a7c4f;
 }
+
+/* ABC pedagogy v2 — objective banner, rhyme step, spell (encoding) step */
+.abc-objective {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.18);
+  font-size: 0.88em;
+  color: var(--neon-cyan, #00e5ff);
+}
+.abc-rhyme-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+.abc-rhyme-word {
+  font-family: "Bangers", "Comic Sans MS", sans-serif;
+  font-size: 3rem;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 2px 0 #000, 0 0 18px rgba(255,210,63,0.55);
+}
+.abc-spell-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+.abc-spell-slot {
+  min-width: 56px;
+  min-height: 64px;
+  padding: 8px 14px;
+  border: 2px dashed rgba(255,255,255,0.35);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bangers", "Comic Sans MS", sans-serif;
+  font-size: 2rem;
+  color: #fff;
+  transition: background 180ms ease, border-color 180ms ease, transform 120ms ease;
+}
+.abc-spell-slot.filled {
+  background: linear-gradient(180deg, rgba(0,229,255,0.22), rgba(0,229,255,0.10));
+  border-color: var(--neon-cyan, #00e5ff);
+  border-style: solid;
+  transform: translateY(-2px);
+}
+.abc-spell-slot.revealed {
+  background: rgba(255,210,63,0.18);
+  border-color: var(--neon-amber, #ffd23f);
+  border-style: solid;
+  color: var(--neon-amber, #ffd23f);
+}
+.abc-spell-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.abc-spell-tile {
+  min-width: 56px;
+  padding: 12px 18px;
+  font-family: "Bangers", "Comic Sans MS", sans-serif;
+  font-size: 1.6rem;
+  color: #1a0033;
+  background: linear-gradient(180deg, #ffd23f 0%, #ffae00 100%);
+  border: 2px solid rgba(0,0,0,0.25);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25), inset 0 -3px 0 rgba(0,0,0,0.18);
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 200ms ease;
+}
+.abc-spell-tile:hover { transform: translateY(-2px); }
+.abc-spell-tile.used,
+.abc-spell-tile:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  transform: none;
+}

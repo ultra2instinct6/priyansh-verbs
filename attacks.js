@@ -450,13 +450,14 @@
         } else {
           GameAPI.addPower(r.defPower); GameAPI.addRupees && GameAPI.addRupees(r.defRupees);
         }
-        // Bonus gold coin for taking down an elite (tier-4) foe.
+        // Bonus silver coin for taking down an elite (tier-4) foe.
+        // Tier-4 elite drops a silver coin (🥈). 10 silver = 1 gold bar.
         if (tier >= 4) { try { GameAPI.addGold && GameAPI.addGold(1); } catch (_) {} }
         try { GameAPI.kiBurst && GameAPI.kiBurst(); } catch (_) {}
         try { GameAPI.confetti && GameAPI.confetti(tier >= 3 ? 32 : 18, ["✨", "⚡", "💥", "⭐"]); } catch (_) {}
         if (tier >= 3) {
           try { GameAPI.toast && GameAPI.toast({
-            en: tier === 4 ? "🟨 ELITE DEFEATED!" : "⭐ RARE FOE DOWN!",
+            en: tier === 4 ? "🥈 ELITE DEFEATED!" : "⭐ RARE FOE DOWN!",
             pa: tier === 4 ? "🟨 ਲਾਜਵਾਬ ਹਾਰਿਆ!" : "⭐ ਦੁਰਲੱਭ ਦੁਸ਼ਮਣ ਹਾਰਿਆ!"
           }, "rank"); } catch (_) {}
         }
