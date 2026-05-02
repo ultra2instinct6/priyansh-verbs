@@ -1008,8 +1008,9 @@
   const _spamGuard = Object.create(null); // per-SFX last-fire timestamps (anti-spam)
   const _seenAppear = new Set();           // for bossAppear once-per-session
 
-  function ac() {
-    if (muted) return null;
+  // Internal: build the audio context + master bus on first use.
+  // Does NOT check the SFX mute flag — BGM may run while SFX is muted.
+  function _initAudio() {
     try {
       if (!_ac) {
         _ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -1033,6 +1034,11 @@
       if (_ac.state === "suspended") _ac.resume();
       return _ac;
     } catch (_) { return null; }
+  }
+  // SFX entry point — short-circuits when muted so SFX voices stay silent.
+  function ac() {
+    if (muted) return null;
+    return _initAudio();
   }
   function _makeImpulse(seconds, decay) {
     // Lazy: needs _ac but only called from within ac() init
@@ -1469,6 +1475,242 @@
   };
   // Track first-time enemy appearances for bossAppear vs enemyAppear distinction.
   SFX._seenAppear = _seenAppear;
+
+  // ===== BGM — Punjabi folk × chiptune background loop =====
+  // Procedural music. Layers:
+  //   1. Drums   — Kaherwa theka: dhol on DHA, tabla bols on the rest
+  //   2. Bass    — gamey square-wave arpeggio (Sa-Pa-Sa-Pa) chiptune feel
+  //   3. Tumbi   — raag Mand melody phrases, varied each cycle
+  //   4. Pad     — soft sawtooth drone on Sa root for warmth
+  //   5. Taali   — claps on off-beats every other cycle
+  // Uses a 25 ms scheduling lookahead so timing stays tight even when the
+  // browser tab is throttled. Music routes through its own gain (separate
+  // from SFX) so the player can mute music while keeping SFX, and vice versa.
+  const BGM = (function () {
+    let on = localStorage.getItem(KEY.music) !== "0"; // default ON
+    let _musicGain = null;
+    let _running = false;
+    let _timer = null;
+    let _nextNoteTime = 0;
+    let _step = 0;            // 0..7 across the 8-beat cycle
+    let _cycle = 0;           // increments every full cycle
+    const BPM = 100;
+    const BEAT = 60 / BPM;            // 0.6 s per beat
+    const STEP = BEAT;                // one bol per quarter-note
+    const LOOKAHEAD = 0.10;           // schedule 100 ms ahead
+    const TICK_MS = 25;               // re-check every 25 ms
+    const SCALE = [523, 587, 659, 784, 880, 1046, 1175, 1318]; // raag Mand × 2 oct
+    // Bass roots (Sa octave below) used for chiptune arpeggio
+    const BASS = [131, 196, 131, 196, 131, 196, 165, 196]; // C3-G3 with a Eb-ish lift
+    // Tumbi phrase library (each phrase = 8 step pitch indices into SCALE; null = rest)
+    const PHRASES = [
+      [0, null, 2, null, 4, null, 5, null],          // Sa _ Ga _ Pa _ Dha _
+      [4, 5, 4, 2, 0, null, 2, 4],                   // Pa Dha Pa Ga Sa _ Ga Pa
+      [5, 4, 2, 4, 5, 7, 5, 4],                      // Dha Pa Ga Pa Dha Sa' Dha Pa
+      [0, 2, 4, 5, 7, 5, 4, 2],                      // ascend then descend
+      [7, 5, 4, 2, 0, null, null, null],             // descend riff
+    ];
+
+    function _initGain() {
+      if (_musicGain || !_ac) return;
+      _musicGain = _ac.createGain();
+      _musicGain.gain.value = on ? 0.55 : 0.0001; // ~half volume vs SFX
+      _musicGain.connect(_master);
+    }
+
+    // Schedule a single bar step (called from lookahead loop).
+    // step: 0..7 within one Kaherwa cycle.
+    function _scheduleStep(step, when) {
+      if (!_ac) return;
+      // ----- Drums (Kaherwa) -----
+      // beats:  0    1    2   3    | 4    5     6     7
+      // bols:   DHA  DHIN NA  TIN  | NA   DHIN  DHIN  NA
+      const drumOff = when - _ac.currentTime;
+      const drumScale = 0.55; // softer than SFX hits
+      if (step === 0 || step === 4) {
+        // Sam (1) and madhya (5) — strong DHA = dhol + tabla DHIN
+        _bgmDhol(0.30 * drumScale, drumOff, 1.0);
+        _bgmTabla("DHIN", 0.18 * drumScale, drumOff + 0.005);
+      } else {
+        const bols = ["DHA", "DHIN", "NA", "TIN", "NA", "DHIN", "DHIN", "NA"];
+        _bgmTabla(bols[step] || "NA", 0.16 * drumScale, drumOff);
+      }
+      // Taali (off-beat claps) every other cycle, beats 1/3/5/7
+      if ((_cycle % 2 === 1) && (step % 2 === 1)) {
+        _bgmClap(0.10 * drumScale, drumOff + 0.02);
+      }
+      // ----- Bass arpeggio (chiptune) -----
+      _bgmBass(BASS[step], BEAT * 0.85, 0.10, drumOff);
+      // ----- Tumbi melody (alternates between phrases) -----
+      const phrase = PHRASES[_cycle % PHRASES.length];
+      const noteIdx = phrase[step];
+      if (noteIdx != null) {
+        _bgmTumbi(SCALE[noteIdx], BEAT * 0.7, 0.12, drumOff + 0.02);
+      }
+      // ----- Pad: re-trigger softly every 4 beats -----
+      if (step === 0) {
+        _bgmPad(SCALE[0] / 2, BEAT * 8, 0.05, drumOff); // long Sa drone
+      }
+    }
+
+    // ----- Lighter BGM voices (lower vol, less reverb than SFX) -----
+    function _bgmDhol(vol, when, deep) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const og = a.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+      [{ type: "sine", mul: 1.0, amp: 1.0 }, { type: "triangle", mul: 0.5, amp: 0.5 }].forEach(v => {
+        const o = a.createOscillator(); o.type = v.type;
+        o.frequency.setValueAtTime(95 * deep * v.mul, t);
+        o.frequency.exponentialRampToValueAtTime(55 * deep * v.mul, t + 0.18);
+        const vg = a.createGain(); vg.gain.value = v.amp;
+        o.connect(vg); vg.connect(og);
+        o.start(t); o.stop(t + 0.24);
+      });
+      og.connect(_musicGain);
+    }
+    function _bgmTabla(bol, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const cfg = ({
+        DHIN: { f0: 320, f1: 200, dur: 0.28, slap: 0.10 },
+        NA:   { f0: 480, f1: 380, dur: 0.14, slap: 0.16 },
+        TIN:  { f0: 540, f1: 460, dur: 0.10, slap: 0.14 },
+        TA:   { f0: 380, f1: 280, dur: 0.12, slap: 0.18 },
+      })[bol] || { f0: 380, f1: 280, dur: 0.16, slap: 0.12 };
+      const o = a.createOscillator(); o.type = "sine";
+      o.frequency.setValueAtTime(cfg.f0, t);
+      o.frequency.exponentialRampToValueAtTime(cfg.f1, t + cfg.dur);
+      const og = a.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + cfg.dur);
+      o.connect(og); og.connect(_musicGain);
+      o.start(t); o.stop(t + cfg.dur + 0.02);
+      // Slap
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const bp = a.createBiquadFilter(); bp.type = "bandpass";
+      bp.frequency.value = 2400; bp.Q.value = 1.2;
+      const ng = a.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.exponentialRampToValueAtTime(vol * cfg.slap * 4, t + 0.001);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      n.connect(bp); bp.connect(ng); ng.connect(_musicGain);
+      n.start(t); n.stop(t + 0.06);
+    }
+    function _bgmClap(vol, when) {
+      const a = _ac; if (!a) return;
+      [0, 0.025].forEach(off => {
+        const t = a.currentTime + when + off;
+        const n = a.createBufferSource(); n.buffer = _noiseBuf;
+        const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1200;
+        const g = a.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(vol, t + 0.002);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+        n.connect(hp); hp.connect(g); g.connect(_musicGain);
+        n.start(t); n.stop(t + 0.07);
+      });
+    }
+    // Bass: 8-bit square pluck with quick decay
+    function _bgmBass(freq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const o = a.createOscillator(); o.type = "square";
+      o.frequency.setValueAtTime(freq, t);
+      const lp = a.createBiquadFilter(); lp.type = "lowpass";
+      lp.frequency.value = 1100; lp.Q.value = 2;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(lp); lp.connect(g); g.connect(_musicGain);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    // Tumbi melody note (lighter than SFX tumbi)
+    function _bgmTumbi(freq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const o = a.createOscillator(); o.type = "sawtooth";
+      o.frequency.setValueAtTime(freq, t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(60, freq * 0.94), t + dur);
+      const lp = a.createBiquadFilter(); lp.type = "lowpass";
+      lp.frequency.value = 2200; lp.Q.value = 3;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(lp); lp.connect(g); g.connect(_musicGain);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    // Soft pad drone
+    function _bgmPad(freq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const o1 = a.createOscillator(); o1.type = "sawtooth"; o1.frequency.value = freq;
+      const o2 = a.createOscillator(); o2.type = "sawtooth"; o2.frequency.value = freq * 1.005; // detune for chorus
+      const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 600; lp.Q.value = 0.7;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.30);
+      g.gain.setValueAtTime(vol, t + dur - 0.30);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(_musicGain);
+      o1.start(t); o1.stop(t + dur + 0.02);
+      o2.start(t); o2.stop(t + dur + 0.02);
+    }
+
+    function _scheduler() {
+      if (!_running || !_ac) return;
+      // Schedule any steps within the lookahead window
+      while (_nextNoteTime < _ac.currentTime + LOOKAHEAD) {
+        _scheduleStep(_step, _nextNoteTime);
+        _nextNoteTime += STEP;
+        _step++;
+        if (_step >= 8) { _step = 0; _cycle++; }
+      }
+    }
+
+    function start() {
+      if (_running || !on) return;
+      // Use _initAudio() not ac() so music plays even when SFX is muted.
+      const a = _initAudio(); if (!a) return;
+      _initGain();
+      if (_musicGain) _musicGain.gain.cancelScheduledValues(a.currentTime);
+      if (_musicGain) _musicGain.gain.linearRampToValueAtTime(0.55, a.currentTime + 0.5);
+      _running = true;
+      _step = 0; _cycle = 0;
+      _nextNoteTime = a.currentTime + 0.10;
+      _timer = setInterval(_scheduler, TICK_MS);
+    }
+    function stop(fadeMs = 400) {
+      if (!_running) return;
+      _running = false;
+      if (_timer) { clearInterval(_timer); _timer = null; }
+      if (_musicGain && _ac) {
+        const t = _ac.currentTime;
+        _musicGain.gain.cancelScheduledValues(t);
+        _musicGain.gain.setValueAtTime(_musicGain.gain.value, t);
+        _musicGain.gain.exponentialRampToValueAtTime(0.0001, t + fadeMs / 1000);
+      }
+    }
+    function toggle() {
+      on = !on;
+      localStorage.setItem(KEY.music, on ? "1" : "0");
+      if (on) start(); else stop();
+      return on;
+    }
+    function isOn() { return on; }
+    return { start, stop, toggle, isOn };
+  })();
+
+  // Auto-pause music when tab is hidden (saves battery, prevents drift)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) BGM.stop(200);
+    else if (BGM.isOn()) BGM.start();
+  });
 
   function confetti(count = 24, emojis = ["✨", "⭐", "💥", "🔥", "🌟", "⚡"]) {
     const layer = document.createElement("div");
@@ -3064,7 +3306,25 @@
       muted = !muted;
       localStorage.setItem(KEY.muted, muted ? "1" : "0");
       updateSoundIcon();
+      // SFX toggle is INDEPENDENT of music — do not touch BGM here.
       if (!muted) SFX.correct();
+    };
+  }
+
+  // 🎵 Music toggle (independent of SFX mute)
+  const musicBtn = document.getElementById("music-btn");
+  if (musicBtn) {
+    const updateMusicIcon = () => {
+      musicBtn.textContent = BGM.isOn() ? "🎵" : "🔕";
+      musicBtn.classList.toggle("muted-btn", !BGM.isOn());
+      musicBtn.title = BGM.isOn() ? "Music ON · ਸੰਗੀਤ ਚਾਲੂ" : "Music OFF · ਸੰਗੀਤ ਬੰਦ";
+    };
+    updateMusicIcon();
+    musicBtn.onclick = () => {
+      // Music toggle implies a user gesture — safe to init AudioContext
+      try { _initAudio(); } catch (_) {}
+      const nowOn = BGM.toggle();
+      updateMusicIcon();
     };
   }
 
@@ -3146,6 +3406,7 @@
     app,
     state,
     SFX,
+    BGM,
     paLine, paInline,
     toast, confetti, kiBurst, screenShake, slowMo,
     addPower, addRupees, addGold, addGoldBars, dealDamage,

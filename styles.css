@@ -4113,3 +4113,113 @@ body.hide-pa .abc-gloss-pa { display: none; }
   left: 0;
   right: 0;
 }
+
+/* ============================================================
+   LEADERBOARD READABILITY FIX — text was white-on-white after
+   the card redesign. Re-color all leaderboard text to dark ink
+   on the white card surface.
+   ============================================================ */
+
+/* Title and subtitle: dark blue on white */
+.board-title {
+  color: var(--goku-blue-deep, #0a2e73);
+  text-shadow: none;
+}
+.board-sub,
+.board-foot {
+  color: var(--ink-soft, #334155);
+}
+
+/* Action buttons: orange-on-white pills */
+.board-btn {
+  background: var(--white, #fff);
+  color: var(--goku-orange-ink, #c2410c);
+  border: 2px solid var(--goku-orange, #ff7a18);
+}
+.board-btn:hover {
+  background: var(--goku-orange, #ff7a18);
+  color: #fff;
+}
+.board-btn.primary {
+  background: linear-gradient(135deg, var(--goku-orange, #ff7a18), #ff5722);
+  color: #fff;
+  border-color: var(--goku-orange, #ff7a18);
+}
+.board-btn.del {
+  background: #fff;
+  color: var(--danger, #ef4444);
+  border-color: var(--danger, #ef4444);
+}
+.board-btn.del:hover {
+  background: var(--danger, #ef4444);
+  color: #fff;
+}
+
+/* Tabs: pill toggle style */
+.board-tab {
+  background: var(--white, #fff);
+  color: var(--goku-blue-deep, #0a2e73);
+  border: 2px solid var(--border, #d8e6ff);
+}
+.board-tab.active {
+  background: linear-gradient(135deg, var(--goku-orange, #ff7a18), #ff5722);
+  color: #fff;
+  border-color: var(--goku-orange, #ff7a18);
+  box-shadow: 0 4px 12px rgba(255, 122, 24, 0.35);
+}
+
+/* Table: dark text, light row separators */
+.board-table {
+  color: var(--ink, #0f172a);
+}
+.board-table th,
+.board-table td {
+  border-bottom: 1px solid var(--border, #d8e6ff);
+}
+.board-table th {
+  background: var(--surface-2, #eef5ff);
+  color: var(--goku-blue-deep, #0a2e73);
+}
+.board-table tr.me {
+  background: linear-gradient(90deg,
+    rgba(255, 122, 24, 0.12),
+    rgba(15, 95, 215, 0.08));
+  box-shadow: inset 4px 0 0 var(--goku-orange, #ff7a18);
+}
+.board-table td.rk {
+  color: var(--goku-orange-ink, #c2410c);
+}
+.board-table td.nm {
+  color: var(--ink, #0f172a);
+}
+.board-table td.pw {
+  color: var(--goku-blue-deep, #0a2e73);
+}
+.board-table td.zn,
+.board-table td.db,
+.board-table td.ts {
+  color: var(--ink-soft, #334155);
+}
+.board-table td.rn {
+  color: var(--ink, #0f172a);
+  opacity: 1;
+}
+.board-table td.empty {
+  color: var(--ink-soft, #334155);
+}
+
+/* "ME" badges: orange chips */
+.me-tag {
+  background: var(--goku-orange, #ff7a18);
+  color: #fff;
+}
+.me-pill {
+  background: rgba(255, 122, 24, 0.15);
+  color: var(--goku-orange-ink, #c2410c);
+}
+
+/* Status pills */
+.lb-status.ok {
+  background: rgba(20, 184, 122, 0.15);
+  color: #0a7c4f;
+}

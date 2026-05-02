@@ -161,6 +161,7 @@
       id: "L1",
       title: "Level 1: First Sounds",
       lesson: "Letters make sounds. Tap a letter to hear its sound.",
+      objective: "I can hear and tap the first sound in a word.",
       letters: ["m", "s", "t", "p", "a"],
       words:   WORDS,
       sentences: SENTENCES
@@ -169,6 +170,7 @@
       id: "L2",
       title: "Level 2: Add n, i",
       lesson: "Each new letter adds new words you can read.",
+      objective: "I can read CVC words with i and n.",
       letters: ["m", "s", "t", "p", "a", "n", "i"],
       words:   ["in", "it", "sit", "pin", "tin", "man", "pan", "nap", "sip", "tip"],
       sentences: [
@@ -182,6 +184,8 @@
     {
       id: "L3",
       title: "Level 3: Add d, o",
+      objective: "I can read CVC words with d and o.",
+      story: ["Dad sat on a mat.", "A pot is on top.", "Sam tips it. Dad is sad."],
       letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o"],
       words:   ["dot", "dad", "mad", "sad", "mop", "top", "pot", "pod", "dip", "did"],
       sentences: [
@@ -195,6 +199,8 @@
     {
       id: "L4",
       title: "Level 4: Add g, c",
+      objective: "I can read words with c and g, like cat and dog.",
+      story: ["A cat sat on a mat.", "The dog can dig a pit.", "Pat got a pig in a pen."],
       letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o", "g", "c"],
       words:   ["cat", "cap", "cot", "cog", "dog", "gap", "dig", "can", "got", "pig"],
       sentences: [
@@ -208,6 +214,8 @@
     {
       id: "L5",
       title: "Level 5: Add h, f",
+      objective: "I can read words with h and f.",
+      story: ["Sam has a hat.", "The fan is on. The fog is gone.", "Pat hid the ham in a pan."],
       letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o", "g", "c", "h", "f"],
       words:   ["hat", "ham", "hop", "hit", "fan", "fin", "fit", "fog", "hid", "hip"],
       sentences: [
@@ -221,6 +229,8 @@
     {
       id: "L6",
       title: "Level 6: Add e, r",
+      objective: "I can read words with e and r.",
+      story: ["The hen ran to her pen.", "Sam has a red pen.", "Pat got ten nets for the rat."],
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r"],
       words:   ["red", "hen", "pen", "net", "ten", "ran", "rip", "rat", "rod", "her"],
       sentences: [
@@ -234,6 +244,8 @@
     {
       id: "L7",
       title: "Level 7: Add b, k, l",
+      objective: "I can read words with b, k, l.",
+      story: ["The kid has a big bag.", "A log fell on the lap.", "Pat sat on the bed and lift the lid."],
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l"],
       words:   ["bat", "bed", "big", "bag", "kid", "kit", "lap", "leg", "log", "lid"],
       sentences: [
@@ -247,6 +259,8 @@
     {
       id: "L8",
       title: "Level 8: Add u, w, j",
+      objective: "I can read words with u, w, j.",
+      story: ["The bug is on the cup.", "Sam can run in the sun.", "The jet is fast. We win!"],
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
       words:   ["cup", "bug", "sun", "run", "jug", "jet", "jog", "web", "wig", "win"],
       sentences: [
@@ -261,6 +275,8 @@
       id: "L9",
       title: "Level 9: Blends (st, sp, pl, fl, fr, cl, cr, dr)",
       lesson: "A blend is two letters that keep BOTH sounds: s-t \u2192 \u201cst\u201d.",
+      objective: "I can read consonant blends like st, pl, fr.",
+      story: ["The frog jumps to the spot.", "Sam has a plan to clip the flag.", "Stop! The crab is in the mud."],
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
       words:   ["stop", "step", "spot", "plan", "plot", "flag", "frog", "clip", "crab", "drum"],
       sentences: [
@@ -275,6 +291,8 @@
       id: "L10",
       title: "Level 10: Digraphs sh, ch, th",
       lesson: "A digraph is two letters that make ONE new sound: s+h \u2192 /sh/.",
+      objective: "I can read digraphs sh, ch, th.",
+      story: ["The ship is at the shop.", "Chop a chip for the dish.", "This thin fish is for that chin."],
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","f","d","h","c"],
       words:   ["ship", "shop", "fish", "dish", "chip", "chop", "chin", "this", "that", "thin"],
       sentences: [
@@ -289,6 +307,8 @@
       id: "L11",
       title: "Level 11: Magic e (CVCe)",
       lesson: "Magic e at the end makes the vowel say its name: cap \u2192 cape.",
+      objective: "I can read magic-e words like cake, bike, home.",
+      story: ["I like to bake a cake.", "The bike rides home by the lake.", "It is time. The cute pup has a bone."],
       letters: ["a","e","i","o","u","m","k","t","p","n","l","d","r","b","c","h"],
       words:   ["make", "cake", "lake", "bike", "like", "time", "home", "bone", "cube", "cute"],
       sentences: [
@@ -302,6 +322,8 @@
     {
       id: "L12",
       title: "Level 12: Reader's Mix",
+      objective: "I can mix what I have learned to read longer words.",
+      story: ["The snake is on a plate.", "I won the prize and a trike.", "Chase the crane to the globe."],
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","z"],
       words:   ["shape", "chase", "these", "trike", "plate", "snake", "flame", "globe", "prize", "crane"],
       sentences: [
@@ -316,6 +338,8 @@
       id: "L13",
       title: "Level 13: Vowel Teams ee, ea",
       lesson: "Vowel teams ee and ea both say the long e sound: /\u0113/.",
+      objective: "I can read vowel teams ee and ea.",
+      story: ["I see a tree by the beach.", "Feed the team some meat.", "The leaf fell on the seat."],
       letters: ["a","e","i","o","u","ee","ea","s","t","p","n","r","l","f","b","d","m","h","ch"],
       words:   ["see", "feet", "tree", "feed", "leaf", "read", "team", "seat", "beach", "meat"],
       sentences: [
@@ -330,6 +354,8 @@
       id: "L14",
       title: "Level 14: Vowel Teams oa, ai, ay",
       lesson: "Vowel teams oa, ai, ay say long o (\u014D) and long a (\u0101).",
+      objective: "I can read vowel teams oa, ai, ay.",
+      story: ["The boat is on the road.", "It will rain on the train today.", "We may play in the day."],
       letters: ["a","e","i","o","u","oa","ai","ay","s","t","p","n","r","l","b","d","m","c"],
       words:   ["boat", "coat", "road", "soap", "rain", "train", "pain", "day", "play", "may"],
       sentences: [
@@ -344,6 +370,8 @@
       id: "L15",
       title: "Level 15: Bossy R (ar, or, er, ir, ur)",
       lesson: "Bossy R changes the vowel: ar, or, er, ir, ur.",
+      objective: "I can read bossy-r words like car, bird, fork.",
+      story: ["The car has a star.", "The bird can turn at the fork.", "The girl can stir the pot."],
       letters: ["a","e","i","o","u","ar","or","er","ir","ur","c","s","t","p","n","f","b","d","h","g","l","k"],
       words:   ["car", "star", "fork", "born", "fern", "bird", "stir", "hurt", "turn", "girl"],
       sentences: [
@@ -358,6 +386,8 @@
       id: "L16",
       title: "Level 16: Diphthongs (ow, ou, oi, oy)",
       lesson: "Diphthongs slide two sounds: ow/ou (cow) and oi/oy (boy).",
+      objective: "I can read diphthongs ow, ou, oi, oy.",
+      story: ["The cow is loud now.", "I found a coin out by the boat.", "The boy has joy. Do not shout!"],
       letters: ["a","e","i","o","u","ow","ou","oi","oy","c","t","n","l","b","d","f","j","s","p","h"],
       words:   ["cow", "now", "down", "out", "loud", "shout", "coin", "boil", "boy", "joy"],
       sentences: [
@@ -372,6 +402,8 @@
       id: "L17",
       title: "Level 17: Add -ing Suffix",
       lesson: "Add -ing to a verb to show it is happening now: jump \u2192 jumping.",
+      objective: "I can read -ing verbs like jumping and running.",
+      story: ["Sam is jumping in the sun.", "The dog is running and the bird is singing.", "Pat is helping Mom with the dish."],
       letters: ["a","e","i","o","u","ing","s","t","p","n","r","l","k","b","d","m","f","h","g","j","c","w","y"],
       words:   ["jumping", "running", "singing", "ringing", "helping", "hopping", "fishing", "talking", "playing", "yelling"],
       sentences: [
@@ -386,6 +418,8 @@
       id: "L18",
       title: "Level 18: Sight Words",
       lesson: "Sight words don\u2019t play by the rules \u2014 we just learn them by sight!",
+      objective: "I can read tricky sight words by sight.",
+      story: ["The cat is here.", "She said hi to my friend.", "He was at home. They are happy."],
       letters: ["the","a","is","of","was","said","you","are","to","my","he","she","we","they","it"],
       sightOnly: true,
       words:   ["the", "is", "was", "said", "you", "are", "my", "he", "she", "they"],
@@ -401,6 +435,8 @@
       id: "L19",
       title: "Level 19: Two-Syllable Readers",
       lesson: "Big words split into syllables. Clap once for each beat: rab\u00b7bit.",
+      objective: "I can clap and read two-syllable words.",
+      story: ["The rab·bit hid in a bas·ket.", "We had a pic·nic at sun·set.", "The kit·ten ate a muf·fin."],
       letters: ["a","e","i","o","u","s","t","p","n","r","l","k","b","d","m","f","h","g","c"],
       words:   ["sunset", "picnic", "magnet", "rabbit", "basket", "kitten", "muffin", "napkin", "puppet", "tablet"],
       twoSyllable: {
@@ -427,6 +463,7 @@
       id: "L20",
       title: "Level 20: Boss \u2014 Story Read",
       lesson: "Boss round! Read the story, then answer each question carefully.",
+      objective: "I can read a short story and answer questions.",
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","w","ee","ai","oa"],
       bossMode: true,
       story: [
@@ -661,6 +698,34 @@
     const pool = arr.filter(x => !exclude || !exclude.includes(x));
     return shuffle(pool).slice(0, n);
   }
+  // Spaced-review weighted pick. Uses lifetime stats: items where the child has
+  // missed more than they got right are 3x more likely to be selected. New
+  // (unseen) items get a moderate 1.5x boost so the engine introduces them.
+  function pickWeighted(arr, kind) {
+    if (!arr || !arr.length) return null;
+    let stats = null;
+    try {
+      const p = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "{}");
+      stats = (p.lifetime && p.lifetime[kind]) || {};
+    } catch (_) { stats = {}; }
+    const weights = arr.map(item => {
+      const t = stats[item];
+      if (!t) return 1.5;                       // unseen → moderate boost
+      const tot = t.correct + t.wrong;
+      if (tot === 0) return 1.5;
+      const accuracy = t.correct / tot;
+      if (accuracy < 0.5) return 3.0;            // weak → strong boost
+      if (accuracy < 0.8) return 2.0;            // shaky → medium boost
+      return 1.0;                                // mastered → baseline
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < arr.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return arr[i];
+    }
+    return arr[arr.length - 1];
+  }
   function escHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -779,7 +844,7 @@
         <div class="abc-lvl-grid">${cards}</div>
         <div class="abc-lvl-detail">
           <h4 class="abc-h4">${escHtml(lvl.title)}</h4>
-          ${lvl.lesson ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(lvl.lesson)}</span></div>` : ""}
+          ${lvl.lesson ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(lvl.lesson)}${lvl.objective ? `<div class="abc-objective"><b>I can:</b> ${escHtml(lvl.objective)}</div>` : ""}</span></div>` : ""}
           <p class="abc-sub">Sounds you'll practice (tap to hear):</p>
           <div class="abc-letter-row">
             ${lvl.letters.map(k => LETTERS[k] ? `
@@ -859,12 +924,75 @@
     go("game");
   }
 
-  // Build a 10-step round: 3 sound-match, 3 letter-to-sound, 3 blend, 1 sentence.
+  // Build a ~10-step round: phonemic awareness (rhyme) when possible,
+  // sound-match, letter-to-sound, blend, encoding (spell), sentence.
   function generateRound(level) {
     const steps = [];
     const letters = level.letters;
 
-    const soundN  = level.bossMode ? 2 : CONFIG.soundMatchSteps;
+    // ---- Phonemic awareness: rhyme step (only when level has ≥2 same-suffix words)
+    function buildRhymeStep() {
+      if (level.sightOnly || level.bossMode) return null;
+      const groups = {};
+      (level.words || []).forEach(w => {
+        const k = String(w).toLowerCase().slice(-2);
+        (groups[k] = groups[k] || []).push(w);
+      });
+      const rhymeKeys = Object.keys(groups).filter(k => groups[k].length >= 2);
+      if (!rhymeKeys.length) return null;
+      const k = rhymeKeys[(Math.random() * rhymeKeys.length) | 0];
+      const pair = shuffle(groups[k]).slice(0, 2);
+      const target = pair[0];
+      const rhyme  = pair[1];
+      const distractorPool = (level.words || []).filter(w =>
+        String(w).toLowerCase().slice(-2) !== k);
+      const distractors = pickN(distractorPool, 2, []);
+      if (distractors.length < 2) return null;
+      const choices = shuffle([rhyme, ...distractors]);
+      return {
+        type: "rhyme",
+        prompt: `Which word rhymes with "${target}"?`,
+        target: rhyme,
+        targetWord: target,
+        choices,
+        replay: () => speakWord(target),
+        statKind: "word", statKey: target
+      };
+    }
+
+    // ---- Encoding (spell) step: child rebuilds word from sound tiles.
+    function buildSpellStep() {
+      if (level.sightOnly || level.bossMode) return null;
+      const word = pickWeighted(level.words, "words") || pick(level.words);
+      let tiles;
+      if (level.twoSyllable && level.twoSyllable[word]) tiles = level.twoSyllable[word];
+      else tiles = tokenizeWord(word, level.letters);
+      if (!tiles || tiles.length < 2) return null;
+      const scrambled = shuffle(tiles.slice());
+      // Avoid the unlikely case the scramble equals the answer.
+      if (scrambled.join("|") === tiles.join("|") && tiles.length > 1) {
+        [scrambled[0], scrambled[1]] = [scrambled[1], scrambled[0]];
+      }
+      return {
+        type: "spell",
+        prompt: `Spell the word: tap the tiles in order.`,
+        target: tiles.join("|"),
+        word,
+        tiles,
+        scrambled,
+        replay: () => speakWord(word),
+        statKind: "word", statKey: word
+      };
+    }
+
+
+    // Identify which optional steps fit this level so we can budget away from
+    // the fixed loops to keep total step count near CONFIG.stepsPerRound.
+    const _earlyLvlIdx = LEVELS.findIndex(l => l === level);
+    const _isEarly = _earlyLvlIdx >= 0 && _earlyLvlIdx <= 5; // L1–L6
+    const _wantRhyme = _isEarly && !level.bossMode && !level.sightOnly;
+    const _wantSpell = !level.bossMode && !level.sightOnly;
+    const soundN  = level.bossMode ? 2 : (CONFIG.soundMatchSteps - (_wantRhyme ? 1 : 0));
     const letterN = level.bossMode ? 2 : CONFIG.letterToSoundSteps;
     const phonicPool = letters.filter(k => LETTERS[k]);
     // Group letters by phoneme so sound-match never has 2 correct answers.
@@ -877,7 +1005,7 @@
     });
     const uniquePhonemePool = phonicPool.filter(k => byPhoneme[LETTERS[k].phoneme][0] === k);
     for (let i = 0; i < soundN; i++) {
-      const target = pick(uniquePhonemePool);
+      const target = pickWeighted(uniquePhonemePool, "sounds") || pick(uniquePhonemePool);
       // Distractors: only letters whose phoneme is different from target's,
       // so all 3 buttons map to distinct sounds.
       const targetPh = LETTERS[target].phoneme;
@@ -897,7 +1025,7 @@
     }
 
     for (let i = 0; i < letterN; i++) {
-      const target = pick(uniquePhonemePool);
+      const target = pickWeighted(uniquePhonemePool, "sounds") || pick(uniquePhonemePool);
       const targetPh = LETTERS[target].phoneme;
       const distractorPool = phonicPool.filter(k => LETTERS[k].phoneme !== targetPh);
       const choices = shuffle([target, ...pickN(distractorPool, 2, [target])]).map(k => LETTERS[k].phoneme);
@@ -912,9 +1040,9 @@
       });
     }
 
-    const blendStepsN = level.bossMode ? 2 : CONFIG.blendSteps;
+    const blendStepsN = level.bossMode ? 2 : (CONFIG.blendSteps - (_wantSpell ? 1 : 0));
     for (let i = 0; i < blendStepsN; i++) {
-      const word = pick(level.words);
+      const word = pickWeighted(level.words, "words") || pick(level.words);
       const choices = shuffle([word, ...pickN(level.words, 2, [word])]);
       let tiles;
       if (level.sightOnly) tiles = [word];
@@ -931,6 +1059,10 @@
       });
     }
 
+    if (_wantSpell) {
+      const sp = buildSpellStep();
+      if (sp) steps.push(sp);
+    }
     const sentenceCount = level.bossMode ? 2 : 1;
     const used = [];
     for (let i = 0; i < sentenceCount; i++) {
@@ -949,6 +1081,10 @@
       });
     }
 
+    if (_wantRhyme) {
+      const rh = buildRhymeStep();
+      if (rh) steps.unshift(rh);
+    }
     return steps;
   }
 
@@ -1000,6 +1136,31 @@
         ${glossHtml}
         <div class="abc-prompt">${escHtml(step.prompt)}</div>
       `;
+    } else if (step.type === "rhyme") {
+      challenge = `
+        <div class="abc-prompt">${escHtml(step.prompt)}</div>
+        <div class="abc-rhyme-hero">
+          <span class="abc-rhyme-word">${escHtml(step.targetWord)}</span>
+          <button class="abc-mini" id="abc-rhyme-replay">\uD83D\uDD0A</button>
+        </div>
+        <div class="abc-prompt small">Listen for the ending sound.</div>
+      `;
+    } else if (step.type === "spell") {
+      const g = WORD_GLOSSES[step.word] || WORD_GLOSSES[String(step.word).toLowerCase()];
+      const glossHtml = g
+        ? `<div class="abc-gloss"><span class="abc-gloss-emoji">${g.emoji || ""}</span>${g.pa ? `<span class="abc-gloss-pa pa" lang="pa">${escHtml(g.pa)}</span>` : ""}</div>`
+        : "";
+      challenge = `
+        <div class="abc-prompt">${escHtml(step.prompt)}</div>
+        ${glossHtml}
+        <div class="abc-spell-slots" id="abc-spell-slots" data-target="${escHtml(step.target)}" data-len="${step.tiles.length}">
+          ${step.tiles.map((_, i) => `<div class="abc-spell-slot" data-i="${i}"></div>`).join("")}
+        </div>
+        <div class="abc-spell-bank" id="abc-spell-bank">
+          ${step.scrambled.map((t, i) => `<button class="abc-spell-tile" data-tile="${escHtml(t)}" data-bi="${i}">${escHtml(t)}</button>`).join("")}
+        </div>
+        <button class="abc-mini" id="abc-spell-undo">\u21A9 Undo</button>
+      `;
     } else if (step.type === "sentence") {
       const storyHtml = step.story
         ? `<div class="abc-story">${step.story.map(line => `<div>${escHtml(line)}</div>`).join("")}</div>`
@@ -1018,13 +1179,13 @@
     }
 
     const lessonBanner = (state.level.lesson && state.stepIdx === 0)
-      ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(state.level.lesson)}</span></div>`
+      ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(state.level.lesson)}${state.level.objective ? `<div class="abc-objective"><b>Today I can:</b> ${escHtml(state.level.objective)}</div>` : ""}</span></div>`
       : "";
     body.innerHTML = `
       <section class="abc-game">
         <div class="abc-game-top">
           <div class="abc-level-name">${escHtml(state.level.title)}</div>
-          <div class="abc-progress">Step ${state.stepIdx + 1}/${CONFIG.stepsPerRound}</div>
+          <div class="abc-progress">Step ${state.stepIdx + 1}/${state.round.length}</div>
         </div>
         ${lessonBanner}
 
@@ -1058,11 +1219,80 @@
     body.querySelectorAll(".abc-blend-tile").forEach(t => {
       t.addEventListener("click", () => speakLetter(t.dataset.blend));
     });
+
+    // Rhyme replay button
+    const rhymeReplay = body.querySelector("#abc-rhyme-replay");
+    if (rhymeReplay) rhymeReplay.addEventListener("click", () => step.replay && step.replay());
+
+    // Spell (encoding) tile interactions
+    const slots = body.querySelector("#abc-spell-slots");
+    const bank  = body.querySelector("#abc-spell-bank");
+    if (slots && bank) {
+      const targetParts = String(slots.dataset.target).split("|");
+      const slotEls = Array.from(slots.querySelectorAll(".abc-spell-slot"));
+      let cursor = 0;
+      function checkComplete() {
+        if (cursor < slotEls.length) return;
+        const built = slotEls.map(el => el.dataset.value || "").join("|");
+        const ok = built === slots.dataset.target;
+        const fb = body.querySelector("#abc-feedback");
+        if (ok) {
+          fb.textContent = pick(PRAISE);
+          fb.className = "abc-feedback ok";
+          recordAnswer(step.statKind, step.statKey, true);
+          try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.correct && GameAPI.SFX.correct(); } catch (_) {}
+          setTimeout(() => { state.stepIdx++; state.attempts = 0;
+            if (state.stepIdx >= state.round.length) finishRound();
+            else render();
+          }, 850);
+        } else {
+          fb.textContent = "Not quite. Tap Undo and try again.";
+          fb.className = "abc-feedback bad";
+          state.attempts++;
+          recordAnswer(step.statKind, step.statKey, false);
+          if (state.attempts >= 2) {
+            // Reveal correct order then advance.
+            slotEls.forEach((el, i) => { el.textContent = targetParts[i]; el.classList.add("revealed"); });
+            speakWord(step.word);
+            setTimeout(() => { state.stepIdx++; state.attempts = 0;
+              if (state.stepIdx >= state.round.length) finishRound();
+              else render();
+            }, 1400);
+          }
+        }
+      }
+      bank.querySelectorAll(".abc-spell-tile").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (btn.disabled || cursor >= slotEls.length) return;
+          const slot = slotEls[cursor];
+          slot.textContent = btn.textContent;
+          slot.dataset.value = btn.dataset.tile;
+          slot.dataset.fromBi = btn.dataset.bi;
+          slot.classList.add("filled");
+          btn.disabled = true;
+          btn.classList.add("used");
+          speakLetter(btn.dataset.tile);
+          cursor++;
+          if (cursor === slotEls.length) checkComplete();
+        });
+      });
+      const undo = body.querySelector("#abc-spell-undo");
+      if (undo) undo.addEventListener("click", () => {
+        if (cursor === 0) return;
+        cursor--;
+        const slot = slotEls[cursor];
+        const bi = slot.dataset.fromBi;
+        slot.textContent = ""; slot.dataset.value = ""; slot.dataset.fromBi = "";
+        slot.classList.remove("filled");
+        const btn = bank.querySelector(`.abc-spell-tile[data-bi="${bi}"]`);
+        if (btn) { btn.disabled = false; btn.classList.remove("used"); }
+      });
+    }
   }
 
   function renderLadder(stepIdx) {
     const rungs = [];
-    for (let i = CONFIG.stepsPerRound; i >= 1; i--) {
+    for (let i = state.round.length; i >= 1; i--) {
       const reached = i <= stepIdx;
       const here    = i === stepIdx + 1;
       rungs.push(`
@@ -1091,7 +1321,7 @@
       setTimeout(() => {
         state.stepIdx++;
         state.attempts = 0;
-        if (state.stepIdx >= CONFIG.stepsPerRound) finishRound();
+        if (state.stepIdx >= state.round.length) finishRound();
         else render();
       }, 850);
     } else {
