@@ -57,7 +57,22 @@
     sh:{ phoneme: "/sh/",  speak: "shh" },
     ch:{ phoneme: "/ch/",  speak: "chuh" },
     th:{ phoneme: "/th/",  speak: "thh" },
-    z: { phoneme: "/z/",   speak: "zzz" }
+    z: { phoneme: "/z/",   speak: "zzz" },
+    ee:{ phoneme: "/\u0113/", speak: "ee" },
+    ea:{ phoneme: "/\u0113/", speak: "ee" },
+    oa:{ phoneme: "/\u014D/", speak: "oh" },
+    ai:{ phoneme: "/\u0101/", speak: "ay" },
+    ay:{ phoneme: "/\u0101/", speak: "ay" },
+    ar:{ phoneme: "/ar/", speak: "ar" },
+    or:{ phoneme: "/or/", speak: "or" },
+    er:{ phoneme: "/\u025D/", speak: "er" },
+    ir:{ phoneme: "/\u025D/", speak: "er" },
+    ur:{ phoneme: "/\u025D/", speak: "er" },
+    ow:{ phoneme: "/ow/", speak: "ow" },
+    ou:{ phoneme: "/ow/", speak: "ow" },
+    oi:{ phoneme: "/oi/", speak: "oy" },
+    oy:{ phoneme: "/oi/", speak: "oy" },
+    ing:{ phoneme: "/ing/", speak: "ing" }
   };
   const LETTER_KEYS = Object.keys(LETTERS);
 
@@ -222,6 +237,130 @@
         { text: "Chase the trike home.", q: "Chase the what?",  a: "trike", choices: ["trike","plate","shape"] },
         { text: "These shapes are blue.", q: "What is blue?",   a: "shape", choices: ["shape","globe","flame"] }
       ]
+    },
+    {
+      id: "L13",
+      title: "Level 13: Vowel Teams ee, ea",
+      letters: ["a","e","i","o","u","ee","ea","s","t","p","n","r","l","f","b","d","m","h","ch"],
+      words:   ["see", "feet", "tree", "feed", "leaf", "read", "team", "seat", "beach", "meat"],
+      sentences: [
+        { text: "I see a tree.",       q: "What do I see?",     a: "tree", choices: ["tree","leaf","feet"] },
+        { text: "Feed the team.",      q: "Feed the what?",     a: "team", choices: ["team","tree","seat"] },
+        { text: "The leaf fell.",      q: "What fell?",          a: "leaf", choices: ["leaf","beach","seat"] },
+        { text: "I read at the beach.", q: "Where do I read?",   a: "beach", choices: ["beach","seat","tree"] },
+        { text: "Take a seat.",        q: "Take a what?",        a: "seat", choices: ["seat","feet","meat"] }
+      ]
+    },
+    {
+      id: "L14",
+      title: "Level 14: Vowel Teams oa, ai, ay",
+      letters: ["a","e","i","o","u","oa","ai","ay","s","t","p","n","r","l","b","d","m","c"],
+      words:   ["boat", "coat", "road", "soap", "rain", "train", "pain", "day", "play", "may"],
+      sentences: [
+        { text: "The boat is on the road.", q: "Where is the boat?", a: "road", choices: ["road","rain","play"] },
+        { text: "It will rain today.",   q: "What will happen?",  a: "rain", choices: ["rain","play","train"] },
+        { text: "I play in the day.",    q: "When do I play?",    a: "day", choices: ["day","may","pain"] },
+        { text: "The train is fast.",    q: "What is fast?",      a: "train", choices: ["train","boat","coat"] },
+        { text: "Pat has a red coat.",   q: "What does Pat have?", a: "coat", choices: ["coat","soap","road"] }
+      ]
+    },
+    {
+      id: "L15",
+      title: "Level 15: Bossy R (ar, or, er, ir, ur)",
+      letters: ["a","e","i","o","u","ar","or","er","ir","ur","c","s","t","p","n","f","b","d","h","g","l","k"],
+      words:   ["car", "star", "fork", "born", "fern", "bird", "stir", "hurt", "turn", "girl"],
+      sentences: [
+        { text: "The car has a star.",  q: "What has a star?",   a: "car", choices: ["car","fork","bird"] },
+        { text: "The bird can turn.",   q: "Who can turn?",      a: "bird", choices: ["bird","fern","star"] },
+        { text: "Her fork is hot.",     q: "What is hot?",       a: "fork", choices: ["fork","fern","car"] },
+        { text: "Stir the pot.",        q: "Stir the what?",     a: "pot", choices: ["pot","fork","bird"] },
+        { text: "The girl can run.",    q: "Who can run?",       a: "girl", choices: ["girl","bird","fern"] }
+      ]
+    },
+    {
+      id: "L16",
+      title: "Level 16: Diphthongs (ow, ou, oi, oy)",
+      letters: ["a","e","i","o","u","ow","ou","oi","oy","c","t","n","l","b","d","f","j","s","p","h"],
+      words:   ["cow", "now", "down", "out", "loud", "shout", "coin", "boil", "boy", "joy"],
+      sentences: [
+        { text: "The cow is loud.",     q: "What is loud?",      a: "cow", choices: ["cow","boy","coin"] },
+        { text: "Sit down now.",        q: "Sit down when?",     a: "now", choices: ["now","out","joy"] },
+        { text: "I found a coin.",      q: "What did I find?",   a: "coin", choices: ["coin","cow","boy"] },
+        { text: "The boy has joy.",     q: "Who has joy?",       a: "boy", choices: ["boy","cow","coin"] },
+        { text: "Do not shout.",        q: "Do not what?",       a: "shout", choices: ["shout","boil","down"] }
+      ]
+    },
+    {
+      id: "L17",
+      title: "Level 17: Add -ing Suffix",
+      letters: ["a","e","i","o","u","ing","s","t","p","n","r","l","k","b","d","m","f","h","g","j","c","w","y"],
+      words:   ["jumping", "running", "singing", "ringing", "helping", "hopping", "fishing", "talking", "playing", "yelling"],
+      sentences: [
+        { text: "Sam is jumping.",      q: "Who is jumping?",    a: "Sam", choices: ["Sam","Pat","Dad"] },
+        { text: "The dog is running.",  q: "Who is running?",    a: "dog", choices: ["dog","cat","bird"] },
+        { text: "Pat is singing a song.", q: "What is Pat doing?", a: "singing", choices: ["singing","playing","talking"] },
+        { text: "The bell is ringing.", q: "What is ringing?",   a: "bell", choices: ["bell","dog","cat"] },
+        { text: "She is helping mom.",  q: "Who is she helping?", a: "mom", choices: ["mom","dad","sam"] }
+      ]
+    },
+    {
+      id: "L18",
+      title: "Level 18: Sight Words",
+      letters: ["the","a","is","of","was","said","you","are","to","my","he","she","we","they","it"],
+      sightOnly: true,
+      words:   ["the", "is", "was", "said", "you", "are", "my", "he", "she", "they"],
+      sentences: [
+        { text: "The cat is mine.",     q: "Whose cat is it?",   a: "mine", choices: ["mine","yours","theirs"] },
+        { text: "She said hello.",      q: "What did she say?",  a: "hello", choices: ["hello","goodbye","yes"] },
+        { text: "You are my friend.",   q: "Who is my friend?",  a: "you", choices: ["you","they","he"] },
+        { text: "He was here.",         q: "Who was here?",      a: "he", choices: ["he","she","they"] },
+        { text: "They are at home.",    q: "Where are they?",    a: "home", choices: ["home","park","school"] }
+      ]
+    },
+    {
+      id: "L19",
+      title: "Level 19: Two-Syllable Readers",
+      letters: ["a","e","i","o","u","s","t","p","n","r","l","k","b","d","m","f","h","g","c"],
+      words:   ["sunset", "picnic", "magnet", "rabbit", "basket", "kitten", "muffin", "napkin", "puppet", "tablet"],
+      twoSyllable: {
+        sunset:  ["sun","set"],
+        picnic:  ["pic","nic"],
+        magnet:  ["mag","net"],
+        rabbit:  ["rab","bit"],
+        basket:  ["bas","ket"],
+        kitten:  ["kit","ten"],
+        muffin:  ["muf","fin"],
+        napkin:  ["nap","kin"],
+        puppet:  ["pup","pet"],
+        tablet:  ["tab","let"]
+      },
+      sentences: [
+        { text: "The rabbit hid.",      q: "Who hid?",           a: "rabbit", choices: ["rabbit","kitten","puppet"] },
+        { text: "We had a picnic.",     q: "What did we have?",  a: "picnic", choices: ["picnic","sunset","muffin"] },
+        { text: "The kitten is small.", q: "What is small?",     a: "kitten", choices: ["kitten","rabbit","tablet"] },
+        { text: "I see the sunset.",    q: "What do I see?",     a: "sunset", choices: ["sunset","magnet","basket"] },
+        { text: "Put it in the basket.", q: "Put it in the what?", a: "basket", choices: ["basket","napkin","muffin"] }
+      ]
+    },
+    {
+      id: "L20",
+      title: "Level 20: Boss \u2014 Story Read",
+      letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","w","ee","ai","oa"],
+      bossMode: true,
+      story: [
+        "Sam took the boat to the lake.",
+        "He saw a big green frog.",
+        "The frog hopped on a leaf.",
+        "Sam said, that is so neat!"
+      ],
+      words:   ["boat", "lake", "green", "frog", "leaf", "took", "saw", "neat", "said", "hop"],
+      sentences: [
+        { text: "Sam took the boat to the lake.", q: "Where did Sam go?", a: "lake", choices: ["lake","park","river"] },
+        { text: "The frog hopped on a leaf.",     q: "Where did the frog hop?", a: "leaf", choices: ["leaf","rock","boat"] },
+        { text: "Sam saw a big green frog.",      q: "What color was the frog?", a: "green", choices: ["green","red","blue"] },
+        { text: "Sam said it was neat.",          q: "What did Sam say?", a: "neat", choices: ["neat","loud","old"] },
+        { text: "He took the boat.",              q: "Who took the boat?", a: "Sam", choices: ["Sam","Pat","Dad"] }
+      ]
     }
   ];
 
@@ -280,7 +419,14 @@
     const p = loadProgress();
     p.plays = (p.plays || 0) + 1;
     p.best  = Math.max(p.best || 0, score);
-    if (score === CONFIG.stepsPerRound) p.stars = (p.stars || 0) + 1;
+    const earned = score >= 10 ? 3 : score >= 9 ? 2 : score >= 7 ? 1 : 0;
+    p.starsPerLevel = p.starsPerLevel || {};
+    const _lvlIdNow = (state.level && state.level.id) || "";
+    const _prev = p.starsPerLevel[_lvlIdNow] || 0;
+    if (earned > _prev) {
+      p.starsPerLevel[_lvlIdNow] = earned;
+      p.stars = (p.stars || 0) + (earned - _prev);
+    }
     p.lastSession = state.sessionStats;
     // Per-level best + unlock: 7/10 unlocks the next level.
     const lvlIdx = LEVELS.findIndex(l => l === state.level);
@@ -471,18 +617,39 @@
   }
 
   function renderLevel(body) {
-    const lvl = state.level || LEVELS[0];
+    const p = loadProgress();
+    if (!state.level) state.level = LEVELS[0];
+    const lvl = state.level;
+    const cards = LEVELS.map((L, idx) => {
+      const stars = (p.starsPerLevel && p.starsPerLevel[L.id]) || 0;
+      // Unlock rule: L1 always open; later levels open once previous level has ≥1 star
+      const prevStars = idx === 0 ? 99 : ((p.starsPerLevel && p.starsPerLevel[LEVELS[idx-1].id]) || 0);
+      const locked = idx > 0 && prevStars < 1;
+      const isSel  = L.id === lvl.id;
+      const starHtml = [0,1,2].map(k => k < stars ? "\u2605" : "\u2606").join("");
+      const lockTag = locked ? '<span class="abc-lvl-lock">\uD83D\uDD12</span>' : "";
+      return `
+        <button class="abc-lvl-card ${isSel ? "sel" : ""} ${locked ? "locked" : ""}" data-lvl="${L.id}" ${locked ? "disabled" : ""}>
+          <div class="abc-lvl-card-id">${L.id} ${lockTag}</div>
+          <div class="abc-lvl-card-title">${escHtml(L.title.replace(/^Level \d+:\s*/, ""))}</div>
+          <div class="abc-lvl-card-stars">${starHtml}</div>
+        </button>`;
+    }).join("");
     body.innerHTML = `
       <section class="abc-level">
-        <h3 class="abc-h3">${escHtml(lvl.title)}</h3>
-        <p class="abc-sub">Sounds you'll practice (tap to hear):</p>
-        <div class="abc-letter-row">
-          ${lvl.letters.map(k => `
-            <button class="abc-letter-tile" data-letter="${k}">
-              <span class="abc-letter-big">${k}</span>
-              <span class="abc-letter-phn">${LETTERS[k].phoneme}</span>
-            </button>
-          `).join("")}
+        <h3 class="abc-h3">Pick a Level</h3>
+        <div class="abc-lvl-grid">${cards}</div>
+        <div class="abc-lvl-detail">
+          <h4 class="abc-h4">${escHtml(lvl.title)}</h4>
+          <p class="abc-sub">Sounds you'll practice (tap to hear):</p>
+          <div class="abc-letter-row">
+            ${lvl.letters.map(k => LETTERS[k] ? `
+              <button class="abc-letter-tile" data-letter="${k}">
+                <span class="abc-letter-big">${k}</span>
+                <span class="abc-letter-phn">${LETTERS[k].phoneme}</span>
+              </button>
+            ` : `<button class="abc-letter-tile sight" data-sight="${k}"><span class="abc-letter-big">${k}</span></button>`).join("")}
+          </div>
         </div>
         <div class="abc-level-actions">
           <button class="abc-cta primary" id="abc-level-start">\u25B6 Start Level</button>
@@ -490,8 +657,18 @@
         </div>
       </section>
     `;
+    body.querySelectorAll(".abc-lvl-card").forEach(c => {
+      c.addEventListener("click", () => {
+        const id = c.dataset.lvl;
+        const next = LEVELS.find(x => x.id === id);
+        if (next) { state.level = next; render(); }
+      });
+    });
     body.querySelectorAll(".abc-letter-tile").forEach(t => {
-      t.addEventListener("click", () => speakLetter(t.dataset.letter));
+      t.addEventListener("click", () => {
+        if (t.dataset.letter) speakLetter(t.dataset.letter);
+        else if (t.dataset.sight) speakWord(t.dataset.sight);
+      });
     });
     body.querySelector("#abc-level-start").addEventListener("click", () => startRound());
     body.querySelector("#abc-level-back").addEventListener("click", () => go("home"));
@@ -548,9 +725,12 @@
     const steps = [];
     const letters = level.letters;
 
-    for (let i = 0; i < CONFIG.soundMatchSteps; i++) {
-      const target = pick(letters);
-      const choices = shuffle([target, ...pickN(letters, 2, [target])]);
+    const soundN  = level.bossMode ? 2 : CONFIG.soundMatchSteps;
+    const letterN = level.bossMode ? 2 : CONFIG.letterToSoundSteps;
+    const phonicPool = letters.filter(k => LETTERS[k]);
+    for (let i = 0; i < soundN; i++) {
+      const target = pick(phonicPool);
+      const choices = shuffle([target, ...pickN(phonicPool, 2, [target])]);
       steps.push({
         type: "sound-match",
         prompt: `Tap the letter that says ${LETTERS[target].phoneme}`,
@@ -560,9 +740,9 @@
       });
     }
 
-    for (let i = 0; i < CONFIG.letterToSoundSteps; i++) {
-      const target = pick(letters);
-      const choices = shuffle([target, ...pickN(letters, 2, [target])]).map(k => LETTERS[k].phoneme);
+    for (let i = 0; i < letterN; i++) {
+      const target = pick(phonicPool);
+      const choices = shuffle([target, ...pickN(phonicPool, 2, [target])]).map(k => LETTERS[k].phoneme);
       steps.push({
         type: "letter-to-sound",
         prompt: "What sound does this letter make?",
@@ -574,32 +754,64 @@
       });
     }
 
-    for (let i = 0; i < CONFIG.blendSteps; i++) {
+    const blendStepsN = level.bossMode ? 2 : CONFIG.blendSteps;
+    for (let i = 0; i < blendStepsN; i++) {
       const word = pick(level.words);
       const choices = shuffle([word, ...pickN(level.words, 2, [word])]);
+      let tiles;
+      if (level.sightOnly) tiles = [word];
+      else if (level.twoSyllable && level.twoSyllable[word]) tiles = level.twoSyllable[word];
+      else tiles = tokenizeWord(word, level.letters);
       steps.push({
         type: "blend",
         prompt: "What word did you make?",
         word,
-        letters: word.split(""),
+        letters: tiles,
         replay: () => speakWord(word),
         target: word, choices,
         statKind: "word", statKey: word
       });
     }
 
-    const s = pick(level.sentences);
-    steps.push({
-      type: "sentence",
-      prompt: s.q,
-      sentence: s.text,
-      replay: () => speakSentence(s.text),
-      target: s.a,
-      choices: shuffle(s.choices),
-      statKind: "word", statKey: s.a
-    });
+    const sentenceCount = level.bossMode ? 2 : 1;
+    const used = [];
+    for (let i = 0; i < sentenceCount; i++) {
+      const pool = level.sentences.filter(x => !used.includes(x));
+      const s = pick(pool.length ? pool : level.sentences);
+      used.push(s);
+      steps.push({
+        type: "sentence",
+        prompt: s.q,
+        sentence: s.text,
+        story: i === 0 ? level.story || null : null,
+        replay: () => speakSentence(s.text),
+        target: s.a,
+        choices: shuffle(s.choices),
+        statKind: "word", statKey: s.a
+      });
+    }
 
     return steps;
+  }
+
+  // Greedy left-to-right tokenizer: prefers longer multi-char letter tiles
+  // (e.g. "ai", "sh", "ing") when they appear in the level letter inventory.
+  function tokenizeWord(word, levelLetters) {
+    const allowed = new Set((levelLetters || []).map(s => s.toLowerCase()));
+    const w = word.toLowerCase();
+    const out = [];
+    let i = 0;
+    while (i < w.length) {
+      let matched = null;
+      for (const len of [3, 2]) {
+        const slice = w.slice(i, i + len);
+        if (slice.length === len && allowed.has(slice)) { matched = slice; break; }
+      }
+      if (!matched) matched = w[i];
+      out.push(matched);
+      i += matched.length;
+    }
+    return out;
   }
 
   function renderGame(body) {
@@ -626,7 +838,11 @@
         <div class="abc-prompt">${escHtml(step.prompt)}</div>
       `;
     } else if (step.type === "sentence") {
+      const storyHtml = step.story
+        ? `<div class="abc-story">${step.story.map(line => `<div>${escHtml(line)}</div>`).join("")}</div>`
+        : "";
       challenge = `
+        ${storyHtml}
         <div class="abc-sentence">${escHtml(step.sentence)}</div>
         <div class="abc-prompt">${escHtml(step.prompt)}</div>
       `;

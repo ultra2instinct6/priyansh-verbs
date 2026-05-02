@@ -3304,3 +3304,18 @@ main {
 @media (max-width: 480px) {
   .abc-level-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ABC Sound Ladder — L13-L20 additions */
+.abc-story { padding: 10px 12px; background: rgba(0,40,80,.45); border-left: 3px solid #00e5ff; border-radius: 8px; margin-bottom: 10px; line-height: 1.5; font-size: 0.95rem; color: #fff; }
+.abc-story > div { margin: 2px 0; }
+.abc-lvl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin: 8px 0 14px; max-height: 220px; overflow-y: auto; padding: 4px; }
+.abc-lvl-card { background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 6px; cursor: pointer; color: #fff; text-align: center; transition: transform .1s, border-color .1s; }
+.abc-lvl-card:hover:not(:disabled) { border-color: #00e5ff; transform: translateY(-1px); }
+.abc-lvl-card.sel { border-color: #ffd23f; background: rgba(255,210,63,0.18); }
+.abc-lvl-card.locked { opacity: 0.45; cursor: not-allowed; }
+.abc-lvl-card-id { font-weight: 700; font-size: 0.95rem; }
+.abc-lvl-card-title { font-size: 0.7rem; opacity: 0.85; margin: 2px 0; min-height: 2.2em; line-height: 1.1; }
+.abc-lvl-card-stars { color: #ffd23f; letter-spacing: 2px; font-size: 0.85rem; }
+.abc-lvl-lock { margin-left: 4px; }
+.abc-lvl-detail { margin-top: 6px; }
+.abc-letter-tile.sight { min-width: 64px; }

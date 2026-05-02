@@ -10,8 +10,9 @@
   const app = document.getElementById("app");
   const hpFill = document.getElementById("hp-fill");
   const hpText = document.getElementById("hp-text");
-  const zeniEl = document.getElementById("zeni");
-  const ballsEl = document.getElementById("balls");
+  const rupeesEl    = document.getElementById("rupees");
+  const goldBarsEl  = document.getElementById("gold-bars");
+  const goldCoinsEl = document.getElementById("gold-coins");
   const powerFill = document.getElementById("power-fill");
   const powerLevel = document.getElementById("power-level");
   const rankLabel = document.getElementById("rank-label");
@@ -22,7 +23,8 @@
   const soundBtn = document.getElementById("sound-btn");
 
   // ===== Constants =====
-  const SUPER_SAIYAN = 1_000_000;
+  // Power threshold at which the player wears the top-tier rank.
+  const MAX_RANK_POWER = 1_000_000;
 
   // ----- Scaling HP -----
   // Each rank tier grants more max HP, so leveling up gives a bigger buffer.
@@ -36,7 +38,7 @@
     match:  8,  // match: each wrong pair nibbles HP
     speed:  0   // speed sprint never drains HP (timed, by design)
   };
-  // Senzu Bean theme: correct reviews restore a sliver of HP.
+  // Chai Break theme: correct reviews restore a sliver of HP.
   const HEAL_ON_REVIEW = 5;
 
   const XP = {
@@ -46,26 +48,36 @@
   const XP_WRONG = 5;
   const STREAK_BONUS = 5;
 
-  const ZENI_BASE = 80;
-  const ZENI_REVIEW_BONUS = 30;
-  const ZENI_BOSS_CLEAR = 500;
+  // Rupees (₹) replace the old DBZ "zeni" currency.
+  const RUPEES_BASE = 80;
+  const RUPEES_REVIEW_BONUS = 30;
+  // Boss clears now drop a satchel of gold + a fat rupee bonus.
+  const RUPEES_BOSS_CLEAR = 2000;
+  // Gold collectible: every boss clear drops 5 gold bars (= 50 coins).
+  // Side wins (rare elite enemy defeats in attacks.js) drop a single coin.
+  // 10 coins auto-stack into 1 bar in the HUD.
+  const GOLD_PER_COIN     = 1;
+  const GOLD_PER_BAR      = 10;
+  const GOLD_BARS_PER_BOSS = 5;
 
   // Leitner-style review boxes
   const BOX_INTERVAL = { 1: 2, 2: 5, 3: 12, 4: 30, 5: 70 };
   const REVIEW_QUEUE_MAX = 80;
   const REVIEW_PROBABILITY = 0.20;
   const MAX_REVIEWS_IN_A_ROW = 2;
-  const SENZU_REVIEW_MAX = 3;
+  const CHAI_REVIEW_MAX = 3;
 
+  // Rank ladder, Punjabi-roti themed (bottom → top).
+  // Same XP thresholds as before so existing saves keep their tier.
   const RANKS = [
-    { min: 0,         name: "🌍 EARTHLING",            namePa: "ਧਰਤੀਵਾਸੀ" },
-    { min: 1_000,     name: "🥋 Z FIGHTER",            namePa: "ਜ਼ੈੱਡ ਯੋਧਾ" },
-    { min: 9_000,     name: "💥 OVER 9000!",           namePa: "9000 ਤੋਂ ਪਾਰ!" },
-    { min: 25_000,    name: "🔥 ELITE FIGHTER",        namePa: "ਚੋਟੀ ਦਾ ਯੋਧਾ" },
-    { min: 75_000,    name: "🟠 SAIYAN",               namePa: "ਸਾਇਆਨ" },
-    { min: 200_000,   name: "✨ SUPER SAIYAN TRAINEE", namePa: "ਸੁਪਰ ਸਾਇਆਨ ਸਿੱਖਿਆਰਥੀ" },
-    { min: 500_000,   name: "💛 ASCENDED WARRIOR",     namePa: "ਉੱਚ ਯੋਧਾ" },
-    { min: 1_000_000, name: "🌟 SUPER SAIYAN",         namePa: "ਸੁਪਰ ਸਾਇਆਨ" }
+    { min: 0,         name: "🫓 ROTI",               namePa: "ਰੋਟੀ" },
+    { min: 1_000,     name: "🥯 POORI",              namePa: "ਪੂਰੀ" },
+    { min: 9_000,     name: "🫓 BHATURA",            namePa: "ਭਟੂਰਾ" },
+    { min: 25_000,    name: "🧄 GARLIC NAAN",        namePa: "ਲਸਣ ਨਾਨ" },
+    { min: 75_000,    name: "🌶️ MOOLI PARANTHA",     namePa: "ਮੂਲੀ ਪਰਾਂਠਾ" },
+    { min: 200_000,   name: "🔥 GARLIC-CHILI NAAN",  namePa: "ਲਸਣ-ਮਿਰਚ ਨਾਨ" },
+    { min: 500_000,   name: "🥔 ALOO PARANTHA",      namePa: "ਆਲੂ ਪਰਾਂਠਾ" },
+    { min: 1_000_000, name: "🌽 MAKKI KI ROTI",      namePa: "ਮੱਕੀ ਦੀ ਰੋਟੀ" }
   ];
   function rankFor(power) {
     let r = RANKS[0];
@@ -81,40 +93,40 @@
     return MAX_HP_BY_TIER[rankIndex(power)] || MAX_HP_BY_TIER[0];
   }
 
-  // Bilingual hype/fail lines — both rendered
+  // Bilingual hype/fail lines — Punjabi vibes + Punjabi-food themed.
   const HYPES = [
-    { en: "OVER 9000! 💥",            pa: "9000 ਤੋਂ ਪਾਰ!" },
-    { en: "KAMEHAMEHA! 🌊⚡",          pa: "ਜ਼ਬਰਦਸਤ!" },
-    { en: "SUPER SAIYAN! 💛",         pa: "ਸ਼ਾਬਾਸ਼!" },
-    { en: "POWER UP! 🔥",             pa: "ਤਾਕਤ ਵਧੀ!" },
-    { en: "FINAL FLASH! ✨",          pa: "ਚਮਕਦਾਰ!" },
-    { en: "GALICK GUN! 💜",           pa: "ਕਮਾਲ!" },
-    { en: "SPIRIT BOMB! 🌟",          pa: "ਸ਼ਾਨਦਾਰ!" },
-    { en: "INSTANT TRANSMISSION! ⚡",  pa: "ਫਟਾਫਟ ਸਹੀ!" },
-    { en: "BOOM! 💥",                 pa: "ਧਮਾਕਾ!" },
-    { en: "NICE! ⭐",                 pa: "ਵਾਹ!" },
-    { en: "SMART! 🧠",                pa: "ਸਿਆਣੇ!" },
-    { en: "YOU ROCK! 🤘",             pa: "ਤੁਸੀਂ ਜ਼ਬਰਦਸਤ ਹੋ!" },
-    { en: "DRAGON FIST! 🐲",          pa: "ਡ੍ਰੈਗਨ ਵਾਰ!" },
-    { en: "MASENKO! ✨",              pa: "ਚਮਤਕਾਰ!" },
-    { en: "BIG BANG ATTACK! 💥",      pa: "ਵੱਡਾ ਧਮਾਕਾ!" },
-    { en: "LEGENDARY! 👑",            pa: "ਸ਼ਾਹੀ ਜਿੱਤ!" },
+    { en: "BALLE BALLE! 🕺",            pa: "ਬੱਲੇ ਬੱਲੇ!" },
+    { en: "SHAVA SHAVA! 🎉",            pa: "ਸ਼ਾਵਾ ਸ਼ਾਵਾ!" },
+    { en: "CHAK DE PHATTE! ⚡",         pa: "ਚੱਕ ਦੇ ਫੱਟੇ!" },
+    { en: "OYE HOYE! ✨",               pa: "ਓਏ ਹੋਏ!" },
+    { en: "WAH JI WAH! 🌟",             pa: "ਵਾਹ ਜੀ ਵਾਹ!" },
+    { en: "JEEONDE RAHO! 💛",           pa: "ਜੀਉਂਦੇ ਰਹੋ!" },
+    { en: "SAMOSA SMASH! 🥟",           pa: "ਸਮੋਸਾ ਧਮਾਕਾ!" },
+    { en: "JALEBI SWIRL! 🍥",           pa: "ਜਲੇਬੀ ਗੇੜਾ!" },
+    { en: "BUTTER CHICKEN BOMB! 🍗",    pa: "ਮੱਖਣ ਮੁਰਗ ਧਮਾਕਾ!" },
+    { en: "LASSI BLAST! 🥛",            pa: "ਲੱਸੀ ਧਮਾਕਾ!" },
+    { en: "MAKKI ROTI SMASH! 🌽",       pa: "ਮੱਕੀ ਰੋਟੀ ਧਮਾਕਾ!" },
+    { en: "GULAB JAMUN GO! 🍮",         pa: "ਗੁਲਾਬ ਜਾਮੁਨ ਚੱਲੋ!" },
+    { en: "PARATHA POUND! 🫓",          pa: "ਪਰਾਂਠਾ ਠੋਕ!" },
+    { en: "NICE! ⭐",                   pa: "ਵਾਹ!" },
+    { en: "SMART! 🧠",                  pa: "ਸਿਆਣੇ!" },
+    { en: "PIND DA SHER! 🦁",           pa: "ਪਿੰਡ ਦਾ ਸ਼ੇਰ!" },
   ];
   const FAILS = [
-    { en: "Almost! Train harder, young warrior!",  pa: "ਨੇੜੇ ਸੀ! ਹੋਰ ਮਿਹਨਤ ਕਰੋ, ਨੌਜਵਾਨ ਯੋਧਾ!" },
-    { en: "Not quite — power up and try again!",   pa: "ਬਿਲਕੁਲ ਨਹੀਂ — ਤਾਕਤ ਵਧਾਓ ਤੇ ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ!" },
-    { en: "Senzu bean time! Keep going!",          pa: "ਸੈਨਜ਼ੂ ਬੀਨ ਦਾ ਵੇਲਾ! ਜਾਰੀ ਰੱਖੋ!" },
-    { en: "A true Saiyan never gives up!",         pa: "ਸੱਚਾ ਸਾਇਆਨ ਕਦੇ ਹਾਰ ਨਹੀਂ ਮੰਨਦਾ!" },
-    { en: "Close one — even Goku misses sometimes.", pa: "ਨੇੜੇ ਸੀ — ਗੋਕੂ ਵੀ ਕਈ ਵਾਰ ਖੁੰਝਦਾ ਹੈ।" },
-    { en: "Shake it off — the next one is yours!", pa: "ਛੱਡੋ — ਅਗਲਾ ਤੁਹਾਡਾ ਹੋਵੇਗਾ!" },
+    { en: "Oye hoye! Try kar phir!",                pa: "ਓਏ ਹੋਏ! ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ!" },
+    { en: "Koi gal nahi — agla sahi karo!",         pa: "ਕੋਈ ਗੱਲ ਨਹੀਂ — ਅਗਲਾ ਸਹੀ ਕਰੋ!" },
+    { en: "Lassi peeke aa, fer try kar!",           pa: "ਲੱਸੀ ਪੀ ਕੇ ਆ, ਫਿਰ ਕੋਸ਼ਿਸ਼ ਕਰ!" },
+    { en: "Sardar Saab vi miss karda kade kade!",   pa: "ਸਰਦਾਰ ਸਾਬ੍ਹ ਵੀ ਕਦੇ ਕਦੇ ਖੁੰਝ ਜਾਂਦਾ!" },
+    { en: "Chai break, fer chak de!",                pa: "ਚਾਹ ਦੀ ਛੁੱਟੀ, ਫਿਰ ਚੱਕ ਦੇ!" },
+    { en: "Hosla rakh — agla tuhada!",              pa: "ਹੌਸਲਾ ਰੱਖ — ਅਗਲਾ ਤੁਹਾਡਾ!" },
   ];
   const COMBO_LINES = {
-    3:  { en: "🔥 3x COMBO!",                  pa: "🔥 3 ਵਾਰੀ ਲਗਾਤਾਰ!" },
-    5:  { en: "⚡ 5x KAMEHAMEHA STREAK!",       pa: "⚡ 5 ਵਾਰੀ ਲਗਾਤਾਰ!" },
-    7:  { en: "💫 7x SUPER SAIYAN STREAK!",    pa: "💫 7 ਵਾਰੀ ਲਗਾਤਾਰ!" },
-    10: { en: "🌟 10x LEGENDARY STREAK!",      pa: "🌟 10 ਵਾਰੀ ਲਗਾਤਾਰ!" },
-    15: { en: "👑 15x UNSTOPPABLE!",            pa: "👑 15 ਵਾਰੀ — ਨਾ ਰੁਕਣ ਵਾਲੇ!" },
-    20: { en: "🐲 20x DRAGON MASTERY!",         pa: "🐲 20 ਵਾਰੀ — ਡ੍ਰੈਗਨ ਮਾਹਿਰ!" },
+    3:  { en: "🔥 3x COMBO!",                pa: "🔥 3 ਵਾਰੀ ਲਗਾਤਾਰ!" },
+    5:  { en: "⚡ 5x JALEBI STREAK!",         pa: "⚡ 5 ਵਾਰੀ — ਜਲੇਬੀ ਲੜੀ!" },
+    7:  { en: "💫 7x SHAVA SHAVA STREAK!",   pa: "💫 7 ਵਾਰੀ — ਸ਼ਾਵਾ ਸ਼ਾਵਾ!" },
+    10: { en: "🌟 10x BALLE BALLE STREAK!",  pa: "🌟 10 ਵਾਰੀ — ਬੱਲੇ ਬੱਲੇ!" },
+    15: { en: "👑 15x UNSTOPPABLE!",          pa: "👑 15 ਵਾਰੀ — ਨਾ ਰੁਕਣ ਵਾਲੇ!" },
+    20: { en: "🌽 20x MAKKI MAHARAJ!",        pa: "🌽 20 ਵਾਰੀ — ਮੱਕੀ ਮਹਾਰਾਜ!" },
   };
 
   // Common bilingual button labels (English  ·  Punjabi)
@@ -249,7 +261,7 @@
           ${mode === "full" ? `
             <p class="welcome-label">Your fighter name <span class="pa pa-inline" lang="pa">· ਆਪਣਾ ਨਾਂ</span></p>
             <input class="welcome-input" id="welcome-name" type="text" maxlength="20"
-                   autocomplete="off" spellcheck="false" placeholder="e.g. Goku"
+                   autocomplete="off" spellcheck="false" placeholder="e.g. Bittu"
                    value="${safeName}" />
           ` : ""}
           <p class="welcome-label">Choose your fighter <span class="pa pa-inline" lang="pa">· ਯੋਧਾ ਚੁਣੋ</span></p>
@@ -366,6 +378,7 @@
 
     // First-run migration: any existing solo dl_* progress becomes this child's slot.
     ["dl_pos_v2","dl_hp_v2","dl_power_v2","dl_zeni_v2","dl_balls_v2",
+     "dl_rupees_v2","dl_gold_v2",
      "dl_review_v2","dl_cleared_v2","dl_history_v2","dl_seen_v2"].forEach(base => {
       const v = localStorage.getItem(base);
       const ns = `${base}__${child.id}`;
@@ -378,6 +391,7 @@
 
   // Ensure legacy name-keyed progress is available on child-id keys.
   ["dl_pos_v2","dl_hp_v2","dl_power_v2","dl_zeni_v2","dl_balls_v2",
+   "dl_rupees_v2","dl_gold_v2",
    "dl_review_v2","dl_cleared_v2","dl_history_v2","dl_seen_v2","dl_daily_v2"].forEach(base => {
     const oldKey = `${base}__${currentPlayer}`;
     const newKey = `${base}__${currentChildId}`;
@@ -417,6 +431,7 @@
     const name = child.name;
     if (!confirm(`Delete fighter "${name}" and all their progress?\n\nਯੋਧਾ "${name}" ਅਤੇ ਉਹਨਾਂ ਦੀ ਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਉਣੀ ਹੈ?`)) return;
     ["dl_pos_v2","dl_hp_v2","dl_power_v2","dl_zeni_v2","dl_balls_v2",
+     "dl_rupees_v2","dl_gold_v2",
      "dl_review_v2","dl_cleared_v2","dl_history_v2","dl_seen_v2","dl_daily_v2"]
       .forEach(base => {
         localStorage.removeItem(`${base}__${child.id}`);
@@ -497,7 +512,7 @@
     if (!fpEl) return;
     const max    = maxHpFor(state.power);
     const lowHp  = max > 0 && state.hp / max <= 0.34;
-    const superR = state.power >= 75_000;          // SAIYAN+
+    const superR = state.power >= 75_000;          // top food tiers (Mooli Parantha+)
     const streak = (state.streak || 0) >= 3;
     const wasStreak = fpEl.classList.contains("aura-streak");
     fpEl.classList.toggle("aura-low",    lowHp);
@@ -565,16 +580,19 @@
 
   // ===== Storage =====
   const KEY = {
-    pos:    `dl_pos_v2__${currentChildId}`,
-    hp:     `dl_hp_v2__${currentChildId}`,
-    power:  `dl_power_v2__${currentChildId}`,
-    zeni:   `dl_zeni_v2__${currentChildId}`,
-    balls:  `dl_balls_v2__${currentChildId}`,
-    review: `dl_review_v2__${currentChildId}`,
-    cleared:`dl_cleared_v2__${currentChildId}`,
-    history:`dl_history_v2__${currentChildId}`,
-    daily:  `dl_daily_v2__${currentChildId}`,
-    muted:  "dl_muted_v2",
+    pos:     `dl_pos_v2__${currentChildId}`,
+    hp:      `dl_hp_v2__${currentChildId}`,
+    power:   `dl_power_v2__${currentChildId}`,
+    rupees:  `dl_rupees_v2__${currentChildId}`,
+    gold:    `dl_gold_v2__${currentChildId}`,
+    // Legacy DBZ-named keys (read once for migration, then phased out).
+    legacyZeni:  `dl_zeni_v2__${currentChildId}`,
+    legacyBalls: `dl_balls_v2__${currentChildId}`,
+    review:  `dl_review_v2__${currentChildId}`,
+    cleared: `dl_cleared_v2__${currentChildId}`,
+    history: `dl_history_v2__${currentChildId}`,
+    daily:   `dl_daily_v2__${currentChildId}`,
+    muted:   "dl_muted_v2",
   };
   function loadJSON(k, fb) {
     try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; }
@@ -582,10 +600,18 @@
   }
   function saveJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
-  // legacy migration (from old verb-based app)
+  // legacy migration (from old verb-based app + old DBZ-themed keys)
   const legacyPower = Number(localStorage.getItem("vtk_power") || 0);
-  const legacyZeni  = Number(localStorage.getItem("vtk_zeni")  || 0);
-  const legacyBalls = Number(localStorage.getItem("vtk_balls") || 0);
+  // Old DBZ-themed values: prefer new key, then per-child legacy, then global legacy.
+  const legacyRupees = Number(
+    localStorage.getItem(KEY.legacyZeni) ?? localStorage.getItem("vtk_zeni") ?? 0
+  );
+  // Old `balls` was capped at 7 dragonballs. Convert each ball to one full
+  // gold bar (10 coins) so returners feel rewarded by the new system.
+  const legacyBallsRaw = Number(
+    localStorage.getItem(KEY.legacyBalls) ?? localStorage.getItem("vtk_balls") ?? 0
+  );
+  const legacyGold = Math.max(0, Math.min(7, legacyBallsRaw)) * GOLD_PER_BAR;
 
   const savedPos = loadJSON(KEY.pos, null);
   const startIdx = (savedPos && savedPos.ladderVersion === LADDER_VERSION)
@@ -617,8 +643,9 @@
       return n;
     })(),
     power: Number(localStorage.getItem(KEY.power) ?? legacyPower),
-    zeni:  Number(localStorage.getItem(KEY.zeni)  ?? legacyZeni),
-    balls: Math.min(7, Number(localStorage.getItem(KEY.balls) ?? legacyBalls)),
+    rupees: Number(localStorage.getItem(KEY.rupees) ?? legacyRupees),
+    // Gold is uncapped; HUD splits it into bars (×10) + coins (mod 10).
+    gold:   Number(localStorage.getItem(KEY.gold)   ?? legacyGold),
     reviewQueue: migrateReviewQueue(loadJSON(KEY.review, [])),
     cleared:     loadJSON(KEY.cleared, []),
     history:     loadJSON(KEY.history, []),
@@ -628,8 +655,8 @@
     answered: false,
     activeReviewId: null,
     reviewsInARow: 0,
-    senzuMode: false,
-    senzuRemaining: 0,
+    chaiMode: false,
+    chaiRemaining: 0,
     boss: null,
     read: null,
     match: null,
@@ -649,8 +676,8 @@
     saveJSON(KEY.pos, { idx: state.idx, ladderVersion: LADDER_VERSION });
     localStorage.setItem(KEY.hp, state.hp);
     localStorage.setItem(KEY.power, state.power);
-    localStorage.setItem(KEY.zeni,  state.zeni);
-    localStorage.setItem(KEY.balls, state.balls);
+    localStorage.setItem(KEY.rupees, state.rupees);
+    localStorage.setItem(KEY.gold,   state.gold);
     localStorage.setItem(`dl_seen_v2__${currentChildId}`, state.cardsSeen);
     saveJSON(KEY.review, state.reviewQueue);
     saveJSON(KEY.cleared, state.cleared);
@@ -666,11 +693,11 @@
       childId: currentChildId,
       player: currentPlayer,
       device: deviceId,
-      power: state.power | 0,
-      zeni:  state.zeni  | 0,
-      balls: state.balls | 0,
-      rank:  r.name,
-      step:  state.idx + 1,
+      power:  state.power  | 0,
+      rupees: state.rupees | 0,
+      gold:   state.gold   | 0,
+      rank:   r.name,
+      step:   state.idx + 1,
       stepTotal: LADDER_FLAT.length,
       updatedAt: Date.now(),
     };
@@ -707,7 +734,7 @@
 
   // ===== Header =====
   // Cached previous values so renderHeader can tween the deltas instead of snapping.
-  const _prev = { hp: null, zeni: null, balls: null, power: null };
+  const _prev = { hp: null, rupees: null, gold: null, power: null };
   function renderHeader() {
     const max = maxHpFor(state.power);
     const pctHp = Math.max(0, Math.min(100, (state.hp / max) * 100));
@@ -721,15 +748,19 @@
       const from = _prev.hp == null ? state.hp : _prev.hp;
       tweenNumber(hpText, from, state.hp, 420, (n) => `${Math.round(n)} / ${max}`);
     }
-    if (zeniEl) {
-      const from = _prev.zeni == null ? state.zeni : _prev.zeni;
-      tweenNumber(zeniEl, from, state.zeni, 600);
+    if (rupeesEl) {
+      const from = _prev.rupees == null ? state.rupees : _prev.rupees;
+      tweenNumber(rupeesEl, from, state.rupees, 600);
     }
-    if (ballsEl) {
-      const before = _prev.balls == null ? state.balls : _prev.balls;
-      ballsEl.textContent = `${state.balls}/7`;
-      if (state.balls > before) {
-        ballsEl.classList.remove("bump"); void ballsEl.offsetWidth; ballsEl.classList.add("bump");
+    if (goldBarsEl || goldCoinsEl) {
+      const before = _prev.gold == null ? state.gold : _prev.gold;
+      const bars  = Math.floor(state.gold / GOLD_PER_BAR);
+      const coins = state.gold % GOLD_PER_BAR;
+      if (goldBarsEl)  goldBarsEl.textContent  = String(bars);
+      if (goldCoinsEl) goldCoinsEl.textContent = String(coins);
+      if (state.gold > before) {
+        const bumped = (Math.floor(before / GOLD_PER_BAR) !== bars) ? goldBarsEl : goldCoinsEl;
+        if (bumped) { bumped.classList.remove("bump"); void bumped.offsetWidth; bumped.classList.add("bump"); }
       }
     }
     if (powerLevel) {
@@ -742,10 +773,10 @@
         setTimeout(() => powerLevel && powerLevel.classList.remove("bumped"), 320);
       }
     }
-    const pct = Math.min(100, (state.power / SUPER_SAIYAN) * 100);
+    const pct = Math.min(100, (state.power / MAX_RANK_POWER) * 100);
     if (powerFill) {
       powerFill.style.width = pct + "%";
-      powerFill.classList.toggle("super-saiyan", state.power >= SUPER_SAIYAN);
+      powerFill.classList.toggle("max-tier", state.power >= MAX_RANK_POWER);
       // Sheen pulse whenever power moved up
       if (_prev.power != null && state.power > _prev.power) {
         powerFill.classList.remove("charging"); void powerFill.offsetWidth;
@@ -753,8 +784,8 @@
         setTimeout(() => powerFill && powerFill.classList.remove("charging"), 760);
       }
     }
-    _prev.hp = state.hp; _prev.zeni = state.zeni;
-    _prev.balls = state.balls; _prev.power = state.power;
+    _prev.hp = state.hp; _prev.rupees = state.rupees;
+    _prev.gold = state.gold; _prev.power = state.power;
     if (rankLabel) {
       const r = rankFor(state.power);
       rankLabel.innerHTML = `${r.name}<span class="pa pa-rank" lang="pa"> · ${r.namePa}</span>`;
@@ -819,16 +850,16 @@
     setTimeout(() => k.remove(), 720);
   }
 
-  // Dragon-ball arc: spawn a 🐉 at originEl center, fly to #balls in HUD.
-  function dragonBallArc(originEl) {
+  // Gold-bar arc: spawn a 🟨 at originEl center, fly to the gold counter in HUD.
+  function goldBarArc(originEl) {
     if (!motionOK()) return;
-    const target = document.getElementById("balls");
+    const target = document.getElementById("gold-bars") || document.getElementById("gold-coins");
     if (!target) return;
     const src = (originEl || document.body).getBoundingClientRect();
     const dst = target.getBoundingClientRect();
     const fly = document.createElement("div");
-    fly.className = "ball-fly";
-    fly.textContent = "🐉";
+    fly.className = "gold-fly";
+    fly.textContent = "🟨";
     fly.style.left = (src.left + src.width/2 - 22) + "px";
     fly.style.top  = (src.top  + src.height/2 - 22) + "px";
     document.body.appendChild(fly);
@@ -954,7 +985,7 @@
   // toast() accepts a string OR { en, pa }; renders both lines if pa given.
   function toast(textOrObj, cls = "") {
     const t = document.createElement("div");
-    t.className = "ball-toast " + cls;
+    t.className = "gold-toast " + cls;
     if (typeof textOrObj === "string") {
       t.innerHTML = textOrObj;
     } else {
@@ -1061,7 +1092,10 @@
       haptic([30, 50, 30, 50, 80]);
     }
   }
-  function addZeni(n) { state.zeni = Math.max(0, state.zeni + n); }
+  function addRupees(n) { state.rupees = Math.max(0, state.rupees + n); }
+  // Add raw gold coins. 10 coins auto-stack into 1 bar in the HUD.
+  function addGold(coins)   { state.gold   = Math.max(0, state.gold   + (coins | 0)); }
+  function addGoldBars(bars) { addGold((bars | 0) * GOLD_PER_BAR); }
   function dealDamage(n) {
     state.hp = Math.max(0, state.hp - (n | 0));
     if (n > 0) {
@@ -1143,22 +1177,20 @@
       if (!state.cleared.includes(entry.blockId)) {
         state.cleared.push(entry.blockId);
         if (entry.isBoss) {
-          if (state.balls < 7) state.balls += 1;
-          addZeni(ZENI_BOSS_CLEAR);
-          // Cinematic dragon-ball arc from card center to HUD
+          // Generous boss payout: a fat satchel of gold + bonus rupees.
+          addGoldBars(GOLD_BARS_PER_BOSS);
+          addRupees(RUPEES_BOSS_CLEAR);
+          // Cinematic gold-bar arc from card center to HUD
           const card = document.querySelector(".card");
-          dragonBallArc(card);
+          goldBarArc(card);
           slowMo();
+          const bars = Math.floor(state.gold / GOLD_PER_BAR);
           toast({
-            en: `🐉 Dragon Ball! (${state.balls}/7) — +${ZENI_BOSS_CLEAR} 💰`,
-            pa: `🐉 ਡ੍ਰੈਗਨ ਬਾਲ! (${state.balls}/7) — +${ZENI_BOSS_CLEAR} 💰`
-          });
+            en: `🏆 BOSS DOWN! +${GOLD_BARS_PER_BOSS} 🟨 gold bars (×${GOLD_PER_BAR}) · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · Total bars: ${bars}`,
+            pa: `🏆 ਬੌਸ ਹਾਰਿਆ! +${GOLD_BARS_PER_BOSS} 🟨 ਸੋਨੇ ਦੀਆਂ ਇੱਟਾਂ · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · ਕੁਲ ਇੱਟਾਂ: ${bars}`
+          }, "rank");
           SFX.bossWin(); SFX.ball();
-          confetti(60, ["🐉", "⭐", "✨", "🏆", "🔥", "💫"]);
-          if (state.balls >= 7) {
-            toast({ en: "🐉 ALL 7 BALLS! Make a wish!", pa: "🐉 ਸਾਰੇ 7 ਬਾਲ! ਇੱਕ ਇੱਛਾ ਕਰੋ!" }, "rank");
-            confetti(80);
-          }
+          confetti(60, ["🟨", "🪙", "⭐", "✨", "🏆", "🔥", "💫"]);
         } else {
           toast({
             en: `✅ Block cleared: ${entry.blockTitle}`,
@@ -1170,16 +1202,16 @@
       }
       refillHp();
       const due = dueReviews();
-      if (due.length && !state.senzuMode) {
-        state.senzuMode = true;
-        state.senzuRemaining = Math.min(SENZU_REVIEW_MAX, due.length);
+      if (due.length && !state.chaiMode) {
+        state.chaiMode = true;
+        state.chaiRemaining = Math.min(CHAI_REVIEW_MAX, due.length);
         toast({
-          en: `🌿 Senzu Review — ${state.senzuRemaining} quick recap${state.senzuRemaining > 1 ? "s" : ""}`,
-          pa: `🌿 ਸੈਨਜ਼ੂ ਦੁਹਰਾਈ — ${state.senzuRemaining} ਛੋਟੇ ਸਵਾਲ`
+          en: `☕ Chai Break — ${state.chaiRemaining} quick recap${state.chaiRemaining > 1 ? "s" : ""}`,
+          pa: `☕ ਚਾਹ ਦੀ ਛੁੱਟੀ — ${state.chaiRemaining} ਛੋਟੇ ਸਵਾਲ`
         }, "rank");
         resetCardLocalState();
         persist();
-        return renderSenzuIntro();
+        return renderChaiIntro();
       }
     }
 
@@ -1196,18 +1228,18 @@
     render();
   }
 
-  function renderSenzuIntro() {
+  function renderChaiIntro() {
     renderHeader();
     app.innerHTML = `
       <div class="ladder-frame">
         <div class="card senzu-card">
-          <div class="emoji-big">🌿</div>
-          <h2>Senzu Review!${paInline("ਸੈਨਜ਼ੂ ਦੁਹਰਾਈ!")}</h2>
-          <p>Quick recap of <b>${state.senzuRemaining}</b> things you missed earlier.<br>Master them and they'll graduate from your review pile!</p>
-          ${paLine(`ਪਹਿਲਾਂ ਖੁੰਝੀਆਂ <b>${state.senzuRemaining}</b> ਚੀਜ਼ਾਂ ਦੀ ਛੋਟੀ ਦੁਹਰਾਈ। ਸਹੀ ਕਰੋ ਤੇ ਇਹ ਦੁਹਰਾਈ-ਸੂਚੀ ਵਿੱਚੋਂ ਪਾਸ ਹੋ ਜਾਣਗੀਆਂ!`)}
+          <div class="emoji-big">☕</div>
+          <h2>Chai Break!${paInline("ਚਾਹ ਦੀ ਛੁੱਟੀ!")}</h2>
+          <p>Quick recap of <b>${state.chaiRemaining}</b> things you missed earlier.<br>Master them and they'll graduate from your review pile!</p>
+          ${paLine(`ਪਹਿਲਾਂ ਖੁੰਝੀਆਂ <b>${state.chaiRemaining}</b> ਚੀਜ਼ਾਂ ਦੀ ਛੋਟੀ ਦੁਹਰਾਈ। ਸਹੀ ਕਰੋ ਤੇ ਇਹ ਦੁਹਰਾਈ-ਸੂਚੀ ਵਿੱਚੋਂ ਪਾਸ ਹੋ ਜਾਣਗੀਆਂ!`)}
           <p class="ko-note">+30 ⚡ bonus per correct review.${paInline("ਹਰ ਸਹੀ ਜਵਾਬ ਤੇ +30 ⚡")}</p>
           <div class="controls" style="justify-content:center">
-            <button id="senzu-go">${bi("letsGo")} 🌿</button>
+            <button id="senzu-go">${bi("letsGo")} ☕</button>
           </div>
         </div>
       </div>`;
@@ -1229,8 +1261,8 @@
     state.idx = entry.blockStart;
     refillHp();
     state.streak = 0;
-    state.senzuMode = false;
-    state.senzuRemaining = 0;
+    state.chaiMode = false;
+    state.chaiRemaining = 0;
     resetCardLocalState();
     persist();
     renderKO(entry);
@@ -1240,8 +1272,8 @@
   function render() {
     renderHeader();
 
-    if (state.senzuMode) {
-      if (state.senzuRemaining > 0) {
+    if (state.chaiMode) {
+      if (state.chaiRemaining > 0) {
         const item = pickDueReview();
         if (item) {
           const re = entryById(item.id);
@@ -1251,13 +1283,13 @@
             return renderCard(re, true);
           } else {
             clearReview(item.id);
-            state.senzuRemaining -= 1;
+            state.chaiRemaining -= 1;
             return render();
           }
         }
       }
-      state.senzuMode = false;
-      state.senzuRemaining = 0;
+      state.chaiMode = false;
+      state.chaiRemaining = 0;
       if (state.idx + 1 < LADDER_FLAT.length) {
         state.idx += 1;
         resetCardLocalState();
@@ -1301,7 +1333,7 @@
     // ⚔️ Random Attack hook — fires occasionally between regular cards.
     // Skips on intro/boss/read; never during senzu or active review.
     if (cardType !== "intro" && cardType !== "boss" && cardType !== "read"
-        && !state.activeReviewId && !state.senzuMode
+        && !state.activeReviewId && !state.chaiMode
         && window.Attacks && typeof Attacks.maybeRun === "function") {
       try { if (Attacks.maybeRun(state)) return; } catch (e) { console.warn("[Attacks]", e); }
     }
@@ -1539,7 +1571,7 @@
       };
       document.getElementById("got-btn").onclick = () => {
         addPower(XP.flash);
-        addZeni(ZENI_BASE);
+        addRupees(RUPEES_BASE);
         flash();
         state.history.push({ id: card.id, t: Date.now(), ok: true });
         if (isReview) { clearReview(state.activeReviewId); finishReview(); }
@@ -1682,7 +1714,7 @@
           flash();
           state.streak += 1;
           addPower(XP.read + state.streak * STREAK_BONUS);
-          addZeni(ZENI_BASE);
+          addRupees(RUPEES_BASE);
           const h = pickHype();
           fb.innerHTML = `${h.en}${paLine(h.pa)}`;
           SFX.correct();
@@ -1785,13 +1817,13 @@
           SFX.correct();
           if (m.solved === total) {
             const xp = XP.match + state.streak * STREAK_BONUS - m.mistakes * 10;
-            const z = ZENI_BASE + 30;
+            const z = RUPEES_BASE + 30;
             state.streak += 1;
             addPower(Math.max(20, xp));
-            addZeni(z);
+            addRupees(z);
             state.history.push({ id: card.id, t: Date.now(), ok: m.mistakes === 0 });
             if (m.mistakes > 1) queueReview(card.id);
-            fb.innerHTML = `🎉 All matched! +${Math.max(20, xp)} ⚡ · +${z} 💰${paLine(`ਸਾਰੇ ਜੋੜੇ ਮਿਲ ਗਏ! +${Math.max(20, xp)} ⚡ · +${z} 💰`)}`;
+            fb.innerHTML = `🎉 All matched! +${Math.max(20, xp)} ⚡ · +${z} ₹${paLine(`ਸਾਰੇ ਜੋੜੇ ਮਿਲ ਗਏ! +${Math.max(20, xp)} ⚡ · +${z} ₹`)}`;
             confetti(36);
             juiceCard("pop");
             renderHeader();
@@ -1871,14 +1903,14 @@
       const f = t.items.filter(x => x.correct && x.picked).length;
       const ok = f === correctTotal && t.mistakes === 0;
       const xp = XP.tap + state.streak * STREAK_BONUS + f * 10 - t.mistakes * 12;
-      const z = ZENI_BASE + 20;
+      const z = RUPEES_BASE + 20;
       if (ok) state.streak += 1; else state.streak = 0;
       addPower(Math.max(15, xp));
-      addZeni(z);
+      addRupees(z);
       state.history.push({ id: card.id, t: Date.now(), ok });
       if (!ok) queueReview(card.id);
       fb.innerHTML = ok
-        ? `🎯 PERFECT! +${Math.max(15, xp)} ⚡ · +${z} 💰${paLine(`ਬਿਲਕੁਲ ਸਹੀ! +${Math.max(15, xp)} ⚡ · +${z} 💰`)}`
+        ? `🎯 PERFECT! +${Math.max(15, xp)} ⚡ · +${z} ₹${paLine(`ਬਿਲਕੁਲ ਸਹੀ! +${Math.max(15, xp)} ⚡ · +${z} ₹`)}`
         : `Found ${f}/${correctTotal}, missed ${correctTotal - f}. +${Math.max(15, xp)} ⚡${paLine(`${f}/${correctTotal} ਲੱਭੇ, ${correctTotal - f} ਖੁੰਝੇ। +${Math.max(15, xp)} ⚡`)}`;
       t.items.forEach(it => { if (it.correct && !it.picked) it.picked = true; });
       refresh();
@@ -1930,12 +1962,12 @@
       const xpPerCorrect = XP.speed;
       const bonus = (s.score === total) ? 200 : 0;
       const xp = s.score * xpPerCorrect + bonus + state.streak * STREAK_BONUS;
-      const z = ZENI_BASE + s.score * 10;
+      const z = RUPEES_BASE + s.score * 10;
       app.innerHTML = wrap(`
         <div class="emoji-big">${s.score === total ? "🏁" : "⏱️"}</div>
         <h2 class="intro-title">${s.score === total ? "PERFECT SPRINT!" : "Sprint complete!"}</h2>
         ${paLine(s.score === total ? "ਬਿਲਕੁਲ ਸਹੀ ਦੌੜ!" : "ਦੌੜ ਪੂਰੀ ਹੋਈ!")}
-        <p class="intro-body">${T.score.en}: <b>${s.score}/${total}</b><br>+${xp} ⚡ · +${z} 💰${bonus ? ` · 🎁 +${bonus} bonus` : ""}</p>
+        <p class="intro-body">${T.score.en}: <b>${s.score}/${total}</b><br>+${xp} ⚡ · +${z} ₹${bonus ? ` · 🎁 +${bonus} bonus` : ""}</p>
         ${paLine(`${T.score.pa}: ${s.score}/${total}`)}
         <div class="controls" style="justify-content:center">
           <button id="next-btn">${bi("continue")} ➡️</button>
@@ -1943,7 +1975,7 @@
       `, "speed-card");
       if (!s.awarded) {
         s.awarded = true;
-        addPower(xp); addZeni(z);
+        addPower(xp); addRupees(z);
         if (s.score === total) { state.streak += 1; confetti(40); SFX.bossWin(); }
         else state.streak = 0;
         state.history.push({ id: card.id, t: Date.now(), ok: s.score === total });
@@ -1959,8 +1991,8 @@
         <div class="emoji-big">⏱️</div>
         <h2 class="intro-title">${card.title || "Speed Round!"}</h2>
         ${paLine(card.titlePa || "ਤੇਜ਼ ਦੌੜ!")}
-        <p class="intro-body">${card.questions.length} quick questions · <b>${card.seconds || 8}s</b> each.<br>Get them all = bonus 💰💰</p>
-        ${paLine(`${card.questions.length} ਛੋਟੇ ਸਵਾਲ · ਹਰੇਕ ਲਈ ${card.seconds || 8} ਸਕਿੰਟ। ਸਾਰੇ ਸਹੀ = ਵਾਧੂ 💰💰`)}
+        <p class="intro-body">${card.questions.length} quick questions · <b>${card.seconds || 8}s</b> each.<br>Get them all = bonus ₹₹</p>
+        ${paLine(`${card.questions.length} ਛੋਟੇ ਸਵਾਲ · ਹਰੇਕ ਲਈ ${card.seconds || 8} ਸਕਿੰਟ। ਸਾਰੇ ਸਹੀ = ਵਾਧੂ ₹₹`)}
         <div class="controls" style="justify-content:center">
           <button id="speed-go">${bi("start")} ⚡</button>
         </div>
@@ -2065,8 +2097,8 @@
           <div class="emoji-big">🏆</div>
           <h2>${card.name} DEFEATED!</h2>
           ${paLine(`${card.namePa || card.name} ਹਾਰ ਗਿਆ!`)}
-          <p>You did it, warrior!<br>+${ZENI_BOSS_CLEAR} 💰 · 🐉 +1 Dragon Ball</p>
-          ${paLine(`ਤੁਸੀਂ ਜਿੱਤ ਗਏ, ਯੋਧਾ! +${ZENI_BOSS_CLEAR} 💰 · 🐉 +1 ਡ੍ਰੈਗਨ ਬਾਲ`)}
+          <p>Chak de phatte, yodha!<br>+${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · 🟨 +${GOLD_BARS_PER_BOSS} Gold Bars</p>
+          ${paLine(`ਚੱਕ ਦੇ ਫੱਟੇ, ਯੋਧਾ! +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · 🟨 +${GOLD_BARS_PER_BOSS} ਸੋਨੇ ਦੀਆਂ ਇੱਟਾਂ`)}
           <div class="controls" style="justify-content:center">
             <button id="next-btn">${bi("continue")} ➡️</button>
           </div>
@@ -2114,7 +2146,7 @@
           kiBurst();
           state.streak += 1;
           addPower(XP.boss + state.streak * STREAK_BONUS);
-          addZeni(ZENI_BASE + 40);
+          addRupees(RUPEES_BASE + 40);
           b.hp -= 1;
           // Smoothly drain the boss HP bar (CSS transition) + flash impact
           const fillEl = document.querySelector(".boss-hp-fill");
@@ -2185,14 +2217,14 @@
     state.streak += 1;
     const gain = xpBase + state.streak * STREAK_BONUS + (isReview ? 30 : 0);
     addPower(gain);
-    const z = ZENI_BASE + (isReview ? ZENI_REVIEW_BONUS : 0) + state.streak * 4;
-    addZeni(z);
+    const z = RUPEES_BASE + (isReview ? RUPEES_REVIEW_BONUS : 0) + state.streak * 4;
+    addRupees(z);
     if (isReview) heal(HEAL_ON_REVIEW);
     state.history.push({ id: cardId, t: Date.now(), ok: true });
     // Modern game-feel: floating XP popup + particle burst at click point
     const pt = pickPoint();
     xpPop("+" + gain + " ⚡", pt.x, pt.y - 10);
-    xpPop("+" + z + " 💰",  pt.x, pt.y + 14, "zeni");
+    xpPop("+" + z + " ₹",  pt.x, pt.y + 14, "rupees");
     particleBurst(pt.x, pt.y, 12, state.streak >= 5 ? "cyan" : "green");
     comboMeter(state.streak);
     flashCard("flash-correct");
@@ -2213,8 +2245,8 @@
       }
     }
     const h = pickHype();
-    fb.innerHTML = `${h.en} &nbsp; +${gain} ⚡ · +${z} 💰${promoteMsg}` +
-                   paLine(`${h.pa} +${gain} ⚡ · +${z} 💰${promoteMsgPa}`);
+    fb.innerHTML = `${h.en} &nbsp; +${gain} ⚡ · +${z} ₹${promoteMsg}` +
+                   paLine(`${h.pa} +${gain} ⚡ · +${z} ₹${promoteMsgPa}`);
     SFX.correct();
     juiceCard("pop");
     if (COMBO_LINES[state.streak]) comboBanner(state.streak);
@@ -2251,8 +2283,8 @@
     state.activeReviewId = null;
     state.flipped = false;
     state.answered = false;
-    if (state.senzuMode) {
-      state.senzuRemaining = Math.max(0, state.senzuRemaining - 1);
+    if (state.chaiMode) {
+      state.chaiRemaining = Math.max(0, state.chaiRemaining - 1);
     }
     persist();
     render();
@@ -2318,7 +2350,7 @@
       fpShout("POWER UP!", "super");
       setTimeout(() => document.body.classList.remove("win-now"), 1200);
       setTimeout(() => { confetti(40, ["🌟","✨","⭐","💛"]); }, 350);
-      setTimeout(() => { confetti(40, ["🐉","🔥","⚡","💫"]); }, 750);
+      setTimeout(() => { confetti(40, ["�","🪙","✨","🏆"]); }, 750);
       confetti(60, ["🌟","✨","⭐","💛","🏆"]);
       SFX.bossWin();
     }
@@ -2329,8 +2361,8 @@
           <h2>LADDER COMPLETE!</h2>
           ${paLine("ਪੌੜੀ ਪੂਰੀ ਹੋਈ!")}
           <p>You climbed every step. Power Level: <b>${state.power.toLocaleString()}</b></p>
-          <p>Dragon Balls: <b>${state.balls}/7</b> · Zeni: <b>${state.zeni.toLocaleString()}</b></p>
-          ${paLine(`ਤੁਸੀਂ ਹਰ ਕਦਮ ਪੂਰਾ ਕੀਤਾ। ਤਾਕਤ: <b>${state.power.toLocaleString()}</b><br>ਡ੍ਰੈਗਨ ਬਾਲ: <b>${state.balls}/7</b> · ਜ਼ੈਨੀ: <b>${state.zeni.toLocaleString()}</b>`)}
+          <p>Rupees: <b>₹${state.rupees.toLocaleString()}</b> · Gold: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} bars · 🪙 ${state.gold % GOLD_PER_BAR} coins</b></p>
+          ${paLine(`ਤੁਸੀਂ ਹਰ ਕਦਮ ਪੂਰਾ ਕੀਤਾ। ਤਾਕਤ: <b>${state.power.toLocaleString()}</b><br>ਰੁਪਏ: <b>₹${state.rupees.toLocaleString()}</b> · ਸੋਨਾ: <b>🟨 ${Math.floor(state.gold/GOLD_PER_BAR)} ਇੱਟਾਂ · 🪙 ${state.gold % GOLD_PER_BAR} ਸਿੱਕੇ</b>`)}
           <p class="ko-note">More units coming soon. Open the Map to revisit any block.${paInline("ਹੋਰ ਯੂਨਿਟ ਜਲਦੀ ਆਉਣਗੇ। ਨਕਸ਼ੇ ਤੋਂ ਕਿਸੇ ਵੀ ਪੜਾਅ ਨੂੰ ਦੁਹਰਾਓ।")}</p>
           <div class="controls" style="justify-content:center">
             <button id="map-from-victory">🗺️ ${bi("openMap")}</button>
@@ -2357,7 +2389,14 @@
     }
 
     function renderRows(rows) {
-      rows = rows.slice().sort((a, b) => (b.power|0) - (a.power|0) || (b.zeni|0) - (a.zeni|0));
+      // Back-compat: older rows use {zeni, balls}; newer rows use {rupees, gold}.
+      // Coerce both into the new fields so sorting & display stay consistent.
+      rows = rows.map(r => ({
+        ...r,
+        rupees: (r.rupees != null ? r.rupees : (r.zeni  | 0)) | 0,
+        gold:   (r.gold   != null ? r.gold   : (r.balls | 0) * GOLD_PER_BAR) | 0,
+      }));
+      rows = rows.slice().sort((a, b) => (b.power|0) - (a.power|0) || (b.rupees|0) - (a.rupees|0));
       const medal = (i) => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i+1}`;
       const fmtTime = (t) => {
         if (!t) return "—";
@@ -2369,14 +2408,17 @@
       };
       const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
       if (!rows.length) return `<tr><td colspan="8" class="empty">No fighters yet — start training!${paInline("ਅਜੇ ਕੋਈ ਯੋਧਾ ਨਹੀਂ — ਸਿਖਲਾਈ ਸ਼ੁਰੂ ਕਰੋ!")}</td></tr>`;
-      return rows.map((r, i) => `
+      return rows.map((r, i) => {
+        const bars  = Math.floor((r.gold|0) / GOLD_PER_BAR);
+        const coins = (r.gold|0) % GOLD_PER_BAR;
+        return `
         <tr class="${r._mine ? "me" : ""}">
           <td class="rk">${medal(i)}</td>
           <td class="nm">${esc(r.player || "?")}${r._mine ? ' <span class="me-tag">YOU · <span class="pa" lang="pa">ਤੁਸੀਂ</span></span>' : ""}</td>
           <td class="pw">${(r.power|0).toLocaleString()} ⚡</td>
           <td class="rn">${esc(r.rank || rankFor(r.power|0).name)}</td>
-          <td class="zn">${(r.zeni|0).toLocaleString()} 💰</td>
-          <td class="db">${(r.balls|0)}/7 🐉</td>
+          <td class="rp">₹${(r.rupees|0).toLocaleString()}</td>
+          <td class="gd">🟨 ${bars} · 🪙 ${coins}</td>
           <td class="ts">${fmtTime(r.updatedAt)}</td>
           <td class="ax">${
             scope === "device"
@@ -2386,7 +2428,8 @@
                      <button class="board-btn del" data-del="${encodeURIComponent(r.childId || r.player)}" title="Delete · ਮਿਟਾਓ">🗑️</button>`)
               : (r._mine ? '<span class="me-pill">you · <span class="pa" lang="pa">ਤੁਸੀਂ</span></span>' : "")
           }</td>
-        </tr>`).join("");
+        </tr>`;
+      }).join("");
     }
 
     const rows = scope === "global" ? globalRows() : deviceRows();
@@ -2418,8 +2461,8 @@
                 <th>Fighter<br><span class="pa pa-inline" lang="pa">ਯੋਧਾ</span></th>
                 <th>Power<br><span class="pa pa-inline" lang="pa">ਤਾਕਤ</span></th>
                 <th>Title<br><span class="pa pa-inline" lang="pa">ਖਿਤਾਬ</span></th>
-                <th>Zeni<br><span class="pa pa-inline" lang="pa">ਜ਼ੈਨੀ</span></th>
-                <th>Balls<br><span class="pa pa-inline" lang="pa">ਗੇਂਦ</span></th>
+                <th>Rupees<br><span class="pa pa-inline" lang="pa">ਰੁਪਏ</span></th>
+                <th>Gold<br><span class="pa pa-inline" lang="pa">ਸੋਨਾ</span></th>
                 <th>Last seen<br><span class="pa pa-inline" lang="pa">ਆਖਰੀ ਵਾਰ</span></th>
                 <th></th>
               </tr></thead>
