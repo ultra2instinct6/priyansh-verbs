@@ -1013,15 +1013,15 @@
         _ac = new (window.AudioContext || window.webkitAudioContext)();
         // Master bus
         _master = _ac.createGain();
-        _master.gain.value = 0.9;
+        _master.gain.value = 0.85;
         _comp = _ac.createDynamicsCompressor();
-        _comp.threshold.value = -14; _comp.knee.value = 24;
-        _comp.ratio.value = 3; _comp.attack.value = 0.003; _comp.release.value = 0.18;
+        _comp.threshold.value = -16; _comp.knee.value = 26;
+        _comp.ratio.value = 4; _comp.attack.value = 0.003; _comp.release.value = 0.20;
         _master.connect(_comp); _comp.connect(_ac.destination);
-        // Reverb send (parallel) — short algorithmic impulse for "stage" feel
-        _verbSend = _ac.createGain(); _verbSend.gain.value = 0.18;
-        _verb = _ac.createConvolver(); _verb.buffer = _makeImpulse(0.4, 2.2);
-        const verbOut = _ac.createGain(); verbOut.gain.value = 0.55;
+        // Reverb send (parallel) — short tight impulse for "stage" feel
+        _verbSend = _ac.createGain(); _verbSend.gain.value = 0.16;
+        _verb = _ac.createConvolver(); _verb.buffer = _makeImpulse(0.32, 3.4);
+        const verbOut = _ac.createGain(); verbOut.gain.value = 0.50;
         _verbSend.connect(_verb); _verb.connect(verbOut); verbOut.connect(_comp);
         // Noise buffer (1 s mono) reused for percussive hits
         _noiseBuf = _ac.createBuffer(1, _ac.sampleRate, _ac.sampleRate);
@@ -1077,21 +1077,28 @@
     _route(g, 1, 0.25);
     o.start(t); o.stop(t + dur + 0.02);
   }
-  // Dhol: low boom (sine bell) + percussive slap (filtered noise burst)
+  // Dhol: low boom (sine + detuned sub for body) + percussive slap (filtered noise burst)
   function dhol(vol = 0.32, when = 0, deep = 1) {
     const a = ac(); if (!a) return;
     const t = a.currentTime + when;
-    // Boom
-    const o = a.createOscillator(); o.type = "sine";
-    const f0 = 90 * deep, f1 = 55 * deep;
-    o.frequency.setValueAtTime(f0, t);
-    o.frequency.exponentialRampToValueAtTime(f1, t + 0.18);
+    // Boom: two oscillators (fundamental + sub-octave) for fat body
+    const f0 = 95 * deep, f1 = 55 * deep;
     const og = a.createGain();
     og.gain.setValueAtTime(0.0001, t);
     og.gain.exponentialRampToValueAtTime(vol, t + 0.005);
-    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    o.connect(og); _route(og, 1, 0.30);
-    o.start(t); o.stop(t + 0.26);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+    [
+      { type: "sine",     mul: 1.0,  amp: 1.0 },
+      { type: "triangle", mul: 0.5,  amp: 0.55 }, // sub-octave warmth
+    ].forEach(v => {
+      const o = a.createOscillator(); o.type = v.type;
+      o.frequency.setValueAtTime(f0 * v.mul, t);
+      o.frequency.exponentialRampToValueAtTime(f1 * v.mul, t + 0.18);
+      const vg = a.createGain(); vg.gain.value = v.amp;
+      o.connect(vg); vg.connect(og);
+      o.start(t); o.stop(t + 0.28);
+    });
+    _route(og, 1, 0.30);
     // Slap (noise burst)
     const n = a.createBufferSource(); n.buffer = _noiseBuf;
     const bp = a.createBiquadFilter(); bp.type = "bandpass";
@@ -1177,13 +1184,15 @@
       sweep(330, 200, 0.22, "triangle", 0.10, 0.02);
     },
     combo(n) {
-      if (_spam("combo", 90)) return;
-      const notes = [659, 784, 988, 1046]; // Ga Pa Ni Sa'
-      const k = Math.min(notes.length, Math.max(2, Math.floor(n / 2)));
+      // Per-n spam key so different milestones can fire close together
+      if (_spam("combo:" + (n | 0), 90)) return;
+      const notes = [659, 784, 880, 988, 1046, 1175]; // Ga Pa Dha Ni Sa' Re'
+      const k = Math.min(notes.length, Math.max(2, Math.floor(n / 2) + 1));
       for (let i = 0; i < k; i++) tumbi(notes[i], 0.20, 0.20, i * 0.06);
       clap(0.16, 0);
       if (n >= 5) clap(0.18, 0.18);
       if (n >= 10) chimta(7000, 0.18, 0.30, 0.20);
+      if (n >= 15) dhol(0.24, 0.04, 0.95);
     },
     blockClear() {
       if (_spam("blockClear", 200)) return;
@@ -1206,14 +1215,20 @@
     },
     bossWin() {
       if (_spam("bossWin", 600)) return;
-      // Bhangra rhythm DHA-ge-na-DHIN under a tumbi flourish
-      dhol(0.32, 0.00, 1.0);
-      dhol(0.20, 0.18, 0.95);
-      dhol(0.20, 0.30, 0.95);
-      dhol(0.34, 0.46, 1.0);
-      [523, 659, 784, 988, 1046, 1175].forEach((f, i) => tumbi(f, 0.26, 0.22, 0.05 + i * 0.10));
-      clap(0.20, 0.20); clap(0.20, 0.40); clap(0.20, 0.60);
-      chimta(7000, 0.20, 0.72, 0.30);
+      // Bhangra cadence at ~140 BPM. Eighth-note step ≈ 107 ms.
+      // Pattern: DHA . ge na DHIN . DHA . ge na DHIN .
+      const E = 0.107;
+      [0, 2, 3, 4, 6, 7, 8, 9, 10].forEach((step, i) => {
+        const t = step * E;
+        const accent = (step === 0 || step === 4 || step === 8);
+        dhol(accent ? 0.34 : 0.20, t, accent ? 1.0 : 0.95);
+      });
+      // Tumbi flourish over the rhythm — Sa Re Ga Pa Dha Ni Sa'
+      [523, 587, 659, 784, 880, 988, 1046].forEach((f, i) => tumbi(f, 0.28, 0.22, 0.05 + i * 0.10));
+      // Taali every quarter
+      [0.21, 0.43, 0.64, 0.86].forEach(t => clap(0.22, t));
+      chimta(6500, 0.22, 0.10, 0.18);
+      chimta(7500, 0.24, 0.96, 0.36);
     },
     rankUp() {
       if (_spam("rankUp", 400)) return;
@@ -1247,8 +1262,10 @@
     },
     coin() {
       if (_spam("coin", 40)) return;
+      // Ka-ching: chimta + two-octave pluck stack
       chimta(7000, 0.10, 0.00, 0.06);
       pluck(1320, 0.10, "triangle", 0.14, 0.04);
+      pluck(1760, 0.10, "triangle", 0.10, 0.06); // octave shimmer
     },
     click() {
       if (_spam("click", 30)) return;
@@ -1279,7 +1296,8 @@
     },
     tick() {
       if (_spam("tick", 200)) return;
-      chimta(7500, 0.06, 0.00, 0.05);
+      // Lowered from 7500 to 5500 Hz — less piercing on phone speakers.
+      chimta(5500, 0.06, 0.00, 0.05);
     },
     timeout() {
       if (_spam("timeout", 300)) return;
@@ -1291,6 +1309,26 @@
       chimta(6500, 0.08, 0.00, 0.06);
       chimta(7500, 0.08, 0.06, 0.06);
       chimta(8500, 0.10, 0.12, 0.06);
+    },
+    streakBreak() {
+      if (_spam("streakBreak", 250)) return;
+      // Short "aww" — descending tumbi pair, no dhol (already covered by damage)
+      tumbi(440, 0.22, 0.16);
+      tumbi(330, 0.30, 0.14, 0.10);
+    },
+    welcome() {
+      // Splash-tap stinger: short bhangra hello
+      if (_spam("welcome", 600)) return;
+      dhol(0.30, 0.00, 1.0);
+      [659, 784, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, 0.06 + i * 0.08));
+      clap(0.20, 0.10);
+      chimta(6500, 0.20, 0.18, 0.18);
+    },
+    // Force AudioContext creation inside a user gesture (iOS Safari requirement).
+    // Safe to call repeatedly. Returns true if context is live.
+    unlock() {
+      const a = ac();
+      return !!(a && a.state !== "suspended");
     },
   };
   // Track first-time enemy appearances for bossAppear vs enemyAppear distinction.

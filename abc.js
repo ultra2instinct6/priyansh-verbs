@@ -663,7 +663,7 @@
       const stars = (p.starsPerLevel && p.starsPerLevel[L.id]) || 0;
       // Unlock rule: L1 always open; later levels open once previous level has ≥1 star
       const prevStars = idx === 0 ? 99 : ((p.starsPerLevel && p.starsPerLevel[LEVELS[idx-1].id]) || 0);
-      const locked = idx > 0 && prevStars < 1;
+      const locked = false; // TEMP: all levels unlocked for testing
       const isSel  = L.id === lvl.id;
       const starHtml = [0,1,2].map(k => k < stars ? "\u2605" : "\u2606").join("");
       const lockTag = locked ? '<span class="abc-lvl-lock">\uD83D\uDD12</span>' : "";
