@@ -48,7 +48,7 @@
   const XP_WRONG = 5;
   const STREAK_BONUS = 5;
 
-  // Rupees (₹) replace the old DBZ "zeni" currency.
+  // Rupees (₹) replace the old currency.
   const RUPEES_BASE = 80;
   const RUPEES_REVIEW_BONUS = 30;
   // Boss clears now drop a satchel of gold + a fat rupee bonus.
@@ -1506,18 +1506,18 @@
     renderHeader();
     app.innerHTML = `
       <div class="ladder-frame">
-        <div class="card senzu-card">
+        <div class="card chai-card">
           <div class="emoji-big">☕</div>
           <h2>Chai Break!${paInline("ਚਾਹ ਦੀ ਛੁੱਟੀ!")}</h2>
           <p>Quick recap of <b>${state.chaiRemaining}</b> things you missed earlier.<br>Master them and they'll graduate from your review pile!</p>
           ${paLine(`ਪਹਿਲਾਂ ਖੁੰਝੀਆਂ <b>${state.chaiRemaining}</b> ਚੀਜ਼ਾਂ ਦੀ ਛੋਟੀ ਦੁਹਰਾਈ। ਸਹੀ ਕਰੋ ਤੇ ਇਹ ਦੁਹਰਾਈ-ਸੂਚੀ ਵਿੱਚੋਂ ਪਾਸ ਹੋ ਜਾਣਗੀਆਂ!`)}
           <p class="ko-note">+30 ⚡ bonus per correct review.${paInline("ਹਰ ਸਹੀ ਜਵਾਬ ਤੇ +30 ⚡")}</p>
           <div class="controls" style="justify-content:center">
-            <button id="senzu-go">${bi("letsGo")} ☕</button>
+            <button id="chai-go">${bi("letsGo")} ☕</button>
           </div>
         </div>
       </div>`;
-    document.getElementById("senzu-go").onclick = () => render();
+    document.getElementById("chai-go").onclick = () => render();
   }
 
   function knockout() {
@@ -1605,7 +1605,7 @@
     state.reviewsInARow = 0;
 
     // ⚔️ Random Attack hook — fires occasionally between regular cards.
-    // Skips on intro/boss/read; never during senzu or active review.
+    // Skips on intro/boss/read; never during chai break or active review.
     if (cardType !== "intro" && cardType !== "boss" && cardType !== "read"
         && !state.activeReviewId && !state.chaiMode
         && window.Attacks && typeof Attacks.maybeRun === "function") {

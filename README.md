@@ -35,10 +35,10 @@ A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **
 ## Units
 1. 🌍 **Pind Basics** — foundations (10 blocks + Saibaman boss)
 2. 🥋 **Dhol Drills** — building (13 blocks + Nappa boss)
-3. 💥 **Over 9000!** — advanced (13 blocks + Vegeta boss)
+3. 💥 **Bhangra Blast** — advanced (13 blocks + Vegeta boss)
 4. 🟡 **Yodha Awakening** — multiplication, division, prefixes/suffixes,
    states of matter, plants (17 blocks + Frieza boss)
-5. 🏆 **Galactic Tournament** — bigger math, homophones, planets, oceans,
+5. 🏆 **Pind Da Akhada** — bigger math, homophones, planets, oceans,
    nutrition, critical thinking (18 blocks + Cell boss)
 
 ## Files
