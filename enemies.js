@@ -15,8 +15,8 @@
     // ---- Tier 1: Common (40% of spawns) ----
     {
       id: "saibaman",
-      name_en: "Saibaman",
-      name_pa: "ਸਾਈਬਾਮਨ",
+      name_en: "Pind Goblin",
+      name_pa: "ਪਿੰਡ ਗੋਬਲਿਨ",
       emoji: "👹",
       png: "images/saibaman.png",
       tier: 1,

@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r26-deshform";
+const CACHE_VERSION = "punjabiji-v20260502-r28-ladderqc200";
 const CORE_ASSETS = [
   "/",
   "/index.html",
