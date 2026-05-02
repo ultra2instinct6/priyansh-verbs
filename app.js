@@ -297,6 +297,7 @@
           overlay.querySelectorAll(".avatar-pick").forEach(x => x.classList.remove("selected"));
           b.classList.add("selected");
           chosenAv = b.dataset.av;
+          try { SFX.select(); } catch (_) {}
           validate();
         });
       });
@@ -1166,166 +1167,300 @@
     o.connect(g); _route(g, 1, 0.20);
     o.start(t); o.stop(t + dur + 0.02);
   }
+  // Tabla bol — high-pitched membrane hit (DHIN/NA/TIN), sharper and ringier than dhol
+  // bol: "DHIN" (long ring), "NA" (sharp), "TIN" (closed), "TA" (slap)
+  function tabla(bol, vol = 0.22, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const cfg = {
+      DHIN: { f0: 320, f1: 200, dur: 0.32, ring: 0.18, slap: 0.10 },
+      NA:   { f0: 480, f1: 380, dur: 0.16, ring: 0.06, slap: 0.16 },
+      TIN:  { f0: 540, f1: 460, dur: 0.10, ring: 0.04, slap: 0.14 },
+      TA:   { f0: 380, f1: 280, dur: 0.12, ring: 0.05, slap: 0.18 },
+    }[bol] || { f0: 380, f1: 280, dur: 0.18, ring: 0.08, slap: 0.12 };
+    // Ring (membrane resonance) — sine pitch-bend
+    const o = a.createOscillator(); o.type = "sine";
+    o.frequency.setValueAtTime(cfg.f0, t);
+    o.frequency.exponentialRampToValueAtTime(cfg.f1, t + cfg.dur);
+    const og = a.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + cfg.dur + cfg.ring);
+    o.connect(og); _route(og, 1, 0.25);
+    o.start(t); o.stop(t + cfg.dur + cfg.ring + 0.02);
+    // Slap (filtered noise transient)
+    const n = a.createBufferSource(); n.buffer = _noiseBuf;
+    const bp = a.createBiquadFilter(); bp.type = "bandpass";
+    bp.frequency.value = 2400; bp.Q.value = 1.2;
+    const ng = a.createGain();
+    ng.gain.setValueAtTime(0.0001, t);
+    ng.gain.exponentialRampToValueAtTime(vol * cfg.slap * 4, t + 0.001);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    n.connect(bp); bp.connect(ng); _route(ng, 1, 0.10);
+    n.start(t); n.stop(t + 0.06);
+  }
+  // Vocal formant sting — fakes a Punjabi shout ("AA", "OH", "EH") via 3 bandpass
+  // resonators tuned to vowel formants. Crude but unmistakably "voice-like".
+  // vowel: "AA" = balle/haa,  "OH" = ho/oye,  "EH" = hey/wah
+  function vox(vowel, freq = 220, dur = 0.32, vol = 0.22, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const formants = ({
+      AA: [[730, 1.0], [1090, 0.55], [2440, 0.30]], // open "aa"  (balle, haa)
+      OH: [[570, 1.0], [840,  0.55], [2410, 0.25]], // rounded "oh" (ho, oye)
+      EH: [[530, 0.85], [1840, 0.65], [2480, 0.30]], // bright "eh" (hey, wah)
+    })[vowel] || [[600, 1], [1200, 0.5], [2400, 0.3]];
+    // Source: sawtooth (rich harmonics) with slight pitch bend up then down — natural shout contour
+    const src = a.createOscillator(); src.type = "sawtooth";
+    src.frequency.setValueAtTime(freq, t);
+    src.frequency.exponentialRampToValueAtTime(freq * 1.18, t + dur * 0.25);
+    src.frequency.exponentialRampToValueAtTime(freq * 0.85, t + dur);
+    // Vibrato LFO (~6 Hz, ±3% depth) for human-ness
+    const lfo = a.createOscillator(); lfo.frequency.value = 6;
+    const lfoGain = a.createGain(); lfoGain.gain.value = freq * 0.03;
+    lfo.connect(lfoGain); lfoGain.connect(src.frequency);
+    // Master envelope on the voice
+    const vEnv = a.createGain();
+    vEnv.gain.setValueAtTime(0.0001, t);
+    vEnv.gain.exponentialRampToValueAtTime(vol, t + 0.04);
+    vEnv.gain.setValueAtTime(vol, t + dur * 0.6);
+    vEnv.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    // Three parallel formant bandpass filters
+    formants.forEach(([f, amp]) => {
+      const bp = a.createBiquadFilter(); bp.type = "bandpass";
+      bp.frequency.value = f; bp.Q.value = 12;
+      const fg = a.createGain(); fg.gain.value = amp;
+      src.connect(bp); bp.connect(fg); fg.connect(vEnv);
+    });
+    _route(vEnv, 1, 0.30);
+    src.start(t); src.stop(t + dur + 0.02);
+    lfo.start(t); lfo.stop(t + dur + 0.02);
+  }
+  // Crowd cheer — long filtered noise swell (great for rank-up / boss-win)
+  function crowd(dur = 1.4, vol = 0.16, when = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + when;
+    const n = a.createBufferSource(); n.buffer = _noiseBuf; n.loop = true;
+    const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 800;
+    const bp = a.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1600; bp.Q.value = 0.8;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.25);
+    g.gain.setValueAtTime(vol, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(hp); hp.connect(bp); bp.connect(g); _route(g, 1, 0.45);
+    n.start(t); n.stop(t + dur + 0.05);
+  }
 
   // ---------- SFX (bhangra-flavored recipes) ----------
-  // Notes (Hz): Sa=523 (C5), Re=587, Ga=659, Ma=698, Pa=784, Dha=880, Ni=988, Sa'=1046
+  // Raag Mand (Punjabi folk scale): Sa Re Ga Pa Dha Sa'  = C D E G A C
+  //   C5=523, D5=587, E5=659, G5=784, A5=880, C6=1046, D6=1175, E6=1318
+  // 8-beat Kaherwa theka (the bhangra heartbeat):
+  //   beats:  1   2   3   4   5   6   7   8
+  //   bols:  DHA DHIN NA TIN | NA DHIN DHIN NA
+  // We map DHA → dhol+DHIN-tabla, others → tabla bols on top.
   const SFX = {
     correct() {
       if (_spam("correct", 60)) return;
+      // Sa-Pa pluck + tabla NA + chimta — quick dopamine hit
       tumbi(784, 0.22, 0.22);                  // Pa
-      chimta(6500, 0.14, 0.02, 0.10);
-      clap(0.10, 0.02);
+      tabla("NA", 0.16, 0.02);
+      chimta(6500, 0.14, 0.04, 0.10);
     },
     wrong() {
       if (_spam("wrong", 80)) return;
-      // Soft, kid-friendly: muted dhol + downward tumbi bend
+      // Soft, kid-friendly: muted dhol + downward tumbi bend + brief "oh" (no harsh formant)
       dhol(0.18, 0, 0.85);
       tumbi(330, 0.30, 0.16, 0.04);
       sweep(330, 200, 0.22, "triangle", 0.10, 0.02);
     },
     combo(n) {
-      // Per-n spam key so different milestones can fire close together
       if (_spam("combo:" + (n | 0), 90)) return;
-      const notes = [659, 784, 880, 988, 1046, 1175]; // Ga Pa Dha Ni Sa' Re'
+      // Raag Mand ascending: Sa Ga Pa Dha Sa' Re' Ga'
+      const notes = [523, 659, 784, 880, 1046, 1175, 1318];
       const k = Math.min(notes.length, Math.max(2, Math.floor(n / 2) + 1));
       for (let i = 0; i < k; i++) tumbi(notes[i], 0.20, 0.20, i * 0.06);
-      clap(0.16, 0);
-      if (n >= 5) clap(0.18, 0.18);
-      if (n >= 10) chimta(7000, 0.18, 0.30, 0.20);
-      if (n >= 15) dhol(0.24, 0.04, 0.95);
+      tabla("NA", 0.18, 0);
+      clap(0.16, 0.04);
+      if (n >= 5) { clap(0.18, 0.18); tabla("DHIN", 0.18, 0.20); }
+      if (n >= 10) { vox("AA", 330, 0.34, 0.20, 0.10); chimta(7000, 0.18, 0.30, 0.20); } // "haaa!"
+      if (n >= 15) { dhol(0.26, 0.04, 0.95); vox("EH", 392, 0.28, 0.18, 0.30); }         // "wah!"
     },
     blockClear() {
       if (_spam("blockClear", 200)) return;
-      // Ascending bhangra riff: Sa Ga Pa Sa'
-      [523, 659, 784, 1046].forEach((f, i) => tumbi(f, 0.26, 0.22, i * 0.10));
-      chimta(6500, 0.18, 0.08, 0.12);
-      chimta(7500, 0.16, 0.32, 0.14);
-      clap(0.18, 0.42);
+      // Mand riff with tabla underneath: Sa Ga Pa Dha Sa'
+      [523, 659, 784, 880, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, i * 0.09));
+      tabla("DHIN", 0.20, 0.00);
+      tabla("NA",   0.16, 0.18);
+      tabla("DHIN", 0.20, 0.36);
+      chimta(6500, 0.18, 0.10, 0.12);
+      vox("AA", 392, 0.36, 0.20, 0.42); // "shabaash!" feel
+      clap(0.20, 0.50);
     },
     bossHit(tier) {
       if (_spam("bossHit", 50)) return;
-      // Visceral double-hit
-      dhol(0.34, 0, 1.0);
-      dhol(0.26, 0.08, 1.0);
+      // Visceral double-hit + tabla TA accent
+      dhol(0.36, 0, 1.0);
+      tabla("TA", 0.20, 0.02);
+      dhol(0.26, 0.10, 1.0);
       sweep(220, 90, 0.18, "sawtooth", 0.14, 0);
       if ((tier | 0) >= 3) {
-        // Tier 3+ get a vocal-style chime sting
-        tumbi(330, 0.22, 0.18, 0.10);
+        // Tier 3+: brief warrior shout
+        vox("EH", 330, 0.22, 0.18, 0.10); // "hai!"
       }
     },
     bossWin() {
-      if (_spam("bossWin", 600)) return;
-      // Bhangra cadence at ~140 BPM. Eighth-note step ≈ 107 ms.
-      // Pattern: DHA . ge na DHIN . DHA . ge na DHIN .
-      const E = 0.107;
-      [0, 2, 3, 4, 6, 7, 8, 9, 10].forEach((step, i) => {
-        const t = step * E;
-        const accent = (step === 0 || step === 4 || step === 8);
-        dhol(accent ? 0.34 : 0.20, t, accent ? 1.0 : 0.95);
+      if (_spam("bossWin", 700)) return;
+      // ===== Authentic 8-beat Kaherwa theka @ 130 BPM =====
+      // Eighth-note step ≈ 115 ms
+      // beats:  1     2    3   4    | 5   6     7     8
+      // bols:   DHA   DHIN NA  TIN  | NA  DHIN  DHIN  NA
+      const E = 0.115;
+      const theka = [
+        ["DHA",  1.0], ["DHIN", 0.7], ["NA", 0.6], ["TIN", 0.55],
+        ["NA",   0.7], ["DHIN", 0.8], ["DHIN", 0.7], ["NA", 0.7],
+      ];
+      // Play the theka twice for a full cycle
+      for (let cycle = 0; cycle < 2; cycle++) {
+        theka.forEach(([bol, accent], i) => {
+          const t = (cycle * 8 + i) * E;
+          if (bol === "DHA") {
+            // DHA = dhol boom + tabla DHIN together
+            dhol(0.32 * accent, t, 1.0);
+            tabla("DHIN", 0.20 * accent, t + 0.005);
+          } else {
+            tabla(bol, 0.22 * accent, t);
+            // Add subtle dhol on beat 5 (sam of second half) for groove
+            if (i === 4) dhol(0.18, t, 0.95);
+          }
+        });
+      }
+      // Tumbi melody in raag Mand over both cycles — call & response
+      const totalDur = 8 * E * 2; // ~1.84 s
+      [523, 659, 784, 880, 1046, 880, 1046, 1175, 1318, 1046, 880, 784].forEach((f, i) => {
+        tumbi(f, 0.28, 0.22, 0.08 + i * (totalDur / 14));
       });
-      // Tumbi flourish over the rhythm — Sa Re Ga Pa Dha Ni Sa'
-      [523, 587, 659, 784, 880, 988, 1046].forEach((f, i) => tumbi(f, 0.28, 0.22, 0.05 + i * 0.10));
-      // Taali every quarter
-      [0.21, 0.43, 0.64, 0.86].forEach(t => clap(0.22, t));
+      // Taali (claps) on beats 2, 4, 6, 8 — bhangra clap pattern
+      [1, 3, 5, 7, 9, 11, 13, 15].forEach(step => clap(0.20, step * E + 0.02));
+      // Chimta accents at top
       chimta(6500, 0.22, 0.10, 0.18);
-      chimta(7500, 0.24, 0.96, 0.36);
+      chimta(7500, 0.24, totalDur - 0.20, 0.36);
+      // Big "BALLE!" shout at the end + crowd cheer
+      vox("AA", 330, 0.50, 0.26, totalDur - 0.30);
+      crowd(1.5, 0.14, totalDur - 0.20);
     },
     rankUp() {
-      if (_spam("rankUp", 400)) return;
-      // Rising arpeggio + claps — "balle balle!"
-      [523, 659, 784, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, i * 0.09));
-      clap(0.20, 0.10); clap(0.20, 0.28);
-      chimta(6500, 0.20, 0.36, 0.22);
-      dhol(0.28, 0.36, 0.95);
+      if (_spam("rankUp", 500)) return;
+      // Rising raag Mand + tabla DHIN-NA-DHIN + "BALLE BALLE!" double shout
+      [523, 659, 784, 880, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, i * 0.08));
+      tabla("DHIN", 0.22, 0.00);
+      tabla("NA",   0.18, 0.16);
+      tabla("DHIN", 0.22, 0.32);
+      dhol(0.30, 0.32, 1.0);
+      clap(0.22, 0.10); clap(0.22, 0.26); clap(0.22, 0.42);
+      chimta(6500, 0.22, 0.40, 0.22);
+      // "Balle... balle!" — two AA shouts, second one higher
+      vox("AA", 294, 0.30, 0.22, 0.18);
+      vox("AA", 392, 0.40, 0.26, 0.55);
+      crowd(1.2, 0.12, 0.40);
     },
     ko() {
       if (_spam("ko", 400)) return;
-      // Disappointed, not punishing
+      // Disappointed sigh: descending tumbi + soft "oh" + low dhol
       tumbi(440, 0.40, 0.20);
       tumbi(330, 0.40, 0.18, 0.18);
       tumbi(220, 0.55, 0.16, 0.36);
       dhol(0.22, 0.04, 0.85);
+      vox("OH", 196, 0.55, 0.16, 0.12); // soft "oh nooo"
     },
     ball() {
       if (_spam("ball", 200)) return;
-      // Sparkle reward
+      // Sparkle reward + tiny tabla TIN flourish
       chimta(6500, 0.10, 0.00, 0.08);
       chimta(7500, 0.12, 0.08, 0.10);
       chimta(8500, 0.14, 0.18, 0.12);
+      tabla("TIN", 0.16, 0.02);
       tumbi(1046, 0.22, 0.18, 0.06);
     },
     // ---- New SFX ----
     damage() {
       if (_spam("damage", 60)) return;
-      dhol(0.26, 0, 0.85);
+      dhol(0.28, 0, 0.85);
+      tabla("TA", 0.16, 0.01);
       sweep(380, 180, 0.16, "triangle", 0.10, 0.02);
     },
     coin() {
       if (_spam("coin", 40)) return;
-      // Ka-ching: chimta + two-octave pluck stack
       chimta(7000, 0.10, 0.00, 0.06);
       pluck(1320, 0.10, "triangle", 0.14, 0.04);
-      pluck(1760, 0.10, "triangle", 0.10, 0.06); // octave shimmer
+      pluck(1760, 0.10, "triangle", 0.10, 0.06);
     },
     click() {
       if (_spam("click", 30)) return;
-      pluck(880, 0.05, "triangle", 0.08);
+      tabla("TIN", 0.08, 0); // dry tabla tick — way more "Punjabi" than a sine pluck
     },
     select() {
       if (_spam("select", 80)) return;
       tumbi(659, 0.18, 0.18);
-      chimta(6500, 0.10, 0.04, 0.08);
+      tabla("NA", 0.14, 0.02);
+      chimta(6500, 0.10, 0.06, 0.08);
     },
     enemyAppear(tier) {
       if (_spam("enemyAppear", 200)) return;
       const t = (tier | 0) || 1;
       dhol(0.26 + t * 0.03, 0.00, 1.0);
-      if (t >= 2) dhol(0.22, 0.10, 0.95);
+      tabla("TA", 0.16, 0.02);
+      if (t >= 2) dhol(0.22, 0.12, 0.95);
       if (t >= 3) {
         sweep(330, 220, 0.30, "sawtooth", 0.16, 0.06);
-        tumbi(294, 0.30, 0.18, 0.12); // "oye!" sting
+        vox("OH", 220, 0.28, 0.20, 0.14); // "oye!"
       }
     },
     bossAppear() {
-      if (_spam("bossAppear", 400)) return;
-      // Crescendo: 4 dhol hits, last one big
-      [0.00, 0.12, 0.22, 0.32].forEach((off, i) => dhol(0.20 + i * 0.04, off, 1.0));
+      if (_spam("bossAppear", 500)) return;
+      // Crescendo: 4 dhol hits, big tabla DHIN, then a "OYE!" shout
+      [0.00, 0.12, 0.22, 0.32].forEach((off, i) => dhol(0.20 + i * 0.05, off, 1.0));
+      tabla("DHIN", 0.26, 0.36);
       sweep(220, 110, 0.40, "sawtooth", 0.20, 0.20);
-      tumbi(294, 0.40, 0.22, 0.30); // dramatic low pluck
-      chimta(7000, 0.24, 0.42, 0.30);
+      vox("OH", 196, 0.40, 0.26, 0.30); // dramatic "oye!"
+      chimta(7000, 0.24, 0.46, 0.30);
     },
     tick() {
       if (_spam("tick", 200)) return;
-      // Lowered from 7500 to 5500 Hz — less piercing on phone speakers.
-      chimta(5500, 0.06, 0.00, 0.05);
+      tabla("TIN", 0.12, 0); // ticking tabla — much more characterful than chimta
     },
     timeout() {
       if (_spam("timeout", 300)) return;
       sweep(440, 110, 0.36, "sawtooth", 0.20);
-      dhol(0.28, 0.30, 0.85);
+      dhol(0.30, 0.30, 0.85);
+      vox("OH", 165, 0.34, 0.18, 0.30); // "ohh nooo"
     },
     hint() {
       if (_spam("hint", 150)) return;
       chimta(6500, 0.08, 0.00, 0.06);
       chimta(7500, 0.08, 0.06, 0.06);
       chimta(8500, 0.10, 0.12, 0.06);
+      tabla("TIN", 0.10, 0.04);
     },
     streakBreak() {
       if (_spam("streakBreak", 250)) return;
-      // Short "aww" — descending tumbi pair, no dhol (already covered by damage)
       tumbi(440, 0.22, 0.16);
       tumbi(330, 0.30, 0.14, 0.10);
+      vox("OH", 196, 0.30, 0.14, 0.06);
     },
     welcome() {
-      // Splash-tap stinger: short bhangra hello
+      // Splash-tap stinger: short bhangra hello with vocal "WAH!"
       if (_spam("welcome", 600)) return;
-      dhol(0.30, 0.00, 1.0);
-      [659, 784, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, 0.06 + i * 0.08));
-      clap(0.20, 0.10);
-      chimta(6500, 0.20, 0.18, 0.18);
+      dhol(0.32, 0.00, 1.0);
+      tabla("DHIN", 0.20, 0.005);
+      [659, 784, 880, 1046].forEach((f, i) => tumbi(f, 0.24, 0.22, 0.06 + i * 0.07));
+      tabla("NA", 0.18, 0.14);
+      tabla("DHIN", 0.20, 0.28);
+      clap(0.20, 0.10); clap(0.20, 0.28);
+      vox("EH", 330, 0.32, 0.22, 0.18); // "WAH!" greeting
+      chimta(6500, 0.22, 0.34, 0.22);
     },
     // Force AudioContext creation inside a user gesture (iOS Safari requirement).
-    // Safe to call repeatedly. Returns true if context is live.
     unlock() {
       const a = ac();
       return !!(a && a.state !== "suspended");
@@ -1399,6 +1534,11 @@
   function addRupees(n) {
     state.rupees = Math.max(0, state.rupees + n);
     if (n > 0) { try { SFX.coin(); } catch (_) {} }
+  }
+  // Reset streak; play "streakBreak" sting only if it was a meaningful streak (≥3).
+  function breakStreak() {
+    if ((state.streak | 0) >= 3) { try { SFX.streakBreak(); } catch (_) {} }
+    state.streak = 0;
   }
   // Add raw gold coins. 10 coins auto-stack into 1 bar in the HUD.
   function addGold(coins)   {
@@ -2066,7 +2206,7 @@
           SFX.correct();
         } else {
           btn.classList.add("wrong");
-          state.streak = 0;
+          breakStreak();
           r.allCorrect = false;
           addPower(XP_WRONG);
           dealDamage(DAMAGE.mcq);
@@ -2180,7 +2320,7 @@
         } else {
           b.status = "wrong"; a.status = "wrong"; m.locked = true;
           m.mistakes += 1;
-          state.streak = 0;
+          breakStreak();
           dealDamage(DAMAGE.match);
           SFX.wrong();
           juiceCard("shake");
@@ -2250,7 +2390,7 @@
       const ok = f === correctTotal && t.mistakes === 0;
       const xp = XP.tap + state.streak * STREAK_BONUS + f * 10 - t.mistakes * 12;
       const z = RUPEES_BASE + 20;
-      if (ok) state.streak += 1; else state.streak = 0;
+      if (ok) state.streak += 1; else breakStreak();
       addPower(Math.max(15, xp));
       addRupees(z);
       state.history.push({ id: card.id, t: Date.now(), ok });
@@ -2323,7 +2463,7 @@
         s.awarded = true;
         addPower(xp); addRupees(z);
         if (s.score === total) { state.streak += 1; confetti(40); SFX.bossWin(); }
-        else state.streak = 0;
+        else breakStreak();
         state.history.push({ id: card.id, t: Date.now(), ok: s.score === total });
         if (s.score < total - 1) queueReview(card.id);
         renderHeader();
@@ -2505,7 +2645,7 @@
           SFX.bossHit();
         } else {
           btn.classList.add("wrong");
-          state.streak = 0;
+          breakStreak();
           addPower(XP_WRONG);
           dealDamage(DAMAGE.boss);
           const f = pickFail();

@@ -32,32 +32,36 @@
   };
 
   // Phoneme map for ALL letters used across levels (extend as you add levels).
+  // Phoneme map. `speak` is what TTS says for the letter sound. We avoid
+  // adding a schwa to stops (no "buh", "duh", "guh"), and pair every letter
+  // with an `example` word the engine plays after the bare sound to make the
+  // phoneme unambiguous: "/p/ — as in pat".
   const LETTERS = {
-    m: { phoneme: "/m/",  speak: "mmm" },
-    s: { phoneme: "/s/",  speak: "sss" },
-    t: { phoneme: "/t/",  speak: "tuh" },
-    p: { phoneme: "/p/",  speak: "puh" },
-    a: { phoneme: "/\u0103/", speak: "ah" },
-    n: { phoneme: "/n/",  speak: "nnn" },
-    i: { phoneme: "/\u012D/", speak: "ih" },
-    d: { phoneme: "/d/",  speak: "duh" },
-    o: { phoneme: "/\u014F/", speak: "ah" },
-    g: { phoneme: "/g/",  speak: "guh" },
-    c: { phoneme: "/k/",  speak: "kuh" },
-    h: { phoneme: "/h/",  speak: "huh" },
-    f: { phoneme: "/f/",  speak: "fff" },
-    e: { phoneme: "/e/",   speak: "eh" },
-    r: { phoneme: "/r/",   speak: "rrr" },
-    b: { phoneme: "/b/",   speak: "buh" },
-    k: { phoneme: "/k/",   speak: "kuh" },
-    l: { phoneme: "/l/",   speak: "lll" },
-    u: { phoneme: "/u/",   speak: "uh" },
-    w: { phoneme: "/w/",   speak: "wuh" },
-    j: { phoneme: "/j/",   speak: "juh" },
-    sh:{ phoneme: "/sh/",  speak: "shh" },
-    ch:{ phoneme: "/ch/",  speak: "chuh" },
-    th:{ phoneme: "/th/",  speak: "thh" },
-    z: { phoneme: "/z/",   speak: "zzz" },
+    m: { phoneme: "/m/",  speak: "mmm",  example: "mat" },
+    s: { phoneme: "/s/",  speak: "sss",  example: "sat" },
+    t: { phoneme: "/t/",  speak: "t",    example: "top",  stop: true },
+    p: { phoneme: "/p/",  speak: "p",    example: "pan",  stop: true },
+    a: { phoneme: "/a/",  speak: "a",    example: "apple" },
+    n: { phoneme: "/n/",  speak: "nnn",  example: "net" },
+    i: { phoneme: "/i/",  speak: "i",    example: "igloo" },
+    d: { phoneme: "/d/",  speak: "d",    example: "dog",  stop: true },
+    o: { phoneme: "/o/",  speak: "o",    example: "octopus" },
+    g: { phoneme: "/g/",  speak: "g",    example: "go",   stop: true },
+    c: { phoneme: "/k/",  speak: "k",    example: "cat",  stop: true },
+    h: { phoneme: "/h/",  speak: "h",    example: "hat" },
+    f: { phoneme: "/f/",  speak: "fff",  example: "fan" },
+    e: { phoneme: "/e/",  speak: "e",    example: "egg" },
+    r: { phoneme: "/r/",  speak: "rrr",  example: "run" },
+    b: { phoneme: "/b/",  speak: "b",    example: "ball", stop: true },
+    k: { phoneme: "/k/",  speak: "k",    example: "kite", stop: true },
+    l: { phoneme: "/l/",  speak: "lll",  example: "log" },
+    u: { phoneme: "/u/",  speak: "u",    example: "up" },
+    w: { phoneme: "/w/",  speak: "w",    example: "win" },
+    j: { phoneme: "/j/",  speak: "j",    example: "jet",  stop: true },
+    sh:{ phoneme: "/sh/", speak: "shh",  example: "ship" },
+    ch:{ phoneme: "/ch/", speak: "ch",   example: "chip", stop: true },
+    th:{ phoneme: "/th/", speak: "th",   example: "thin" },
+    z: { phoneme: "/z/",  speak: "zzz",  example: "zip" },
     ee:{ phoneme: "/\u0113/", speak: "ee" },
     ea:{ phoneme: "/\u0113/", speak: "ee" },
     oa:{ phoneme: "/\u014D/", speak: "oh" },
@@ -86,11 +90,77 @@
     { text: "Sam sat at mat.", q: "Where did Sam sit?",  a: "mat", choices: ["mat", "tap", "Pat"] }
   ];
 
+  // Word glosses: emoji + Punjabi (Gurmukhi) translation. Used by the engine
+  // to tag target words on blend / sentence steps so bilingual learners get
+  // immediate meaning support. Kept small and high-frequency; words missing
+  // from the map render without a gloss.
+  const WORD_GLOSSES = {
+    // L1\u2013L8 CVC core
+    Sam:  { emoji: "\uD83D\uDC66" }, Pat: { emoji: "\uD83D\uDC67" }, Dad: { emoji: "\uD83D\uDC68" }, Mom: { emoji: "\uD83D\uDC69" },
+    cat:  { emoji: "\uD83D\uDC31", pa: "\u0A2C\u0A3F\u0A71\u0A32\u0A40" },
+    dog:  { emoji: "\uD83D\uDC36", pa: "\u0A15\u0A41\u0A71\u0A24\u0A3E" },
+    pig:  { emoji: "\uD83D\uDC37", pa: "\u0A38\u0A42\u0A30" },
+    hen:  { emoji: "\uD83D\uDC14", pa: "\u0A2E\u0A41\u0A30\u0A17\u0A40" },
+    rat:  { emoji: "\uD83D\uDC00", pa: "\u0A1A\u0A42\u0A39\u0A3E" },
+    bug:  { emoji: "\uD83D\uDC1B", pa: "\u0A15\u0A40\u0A5C\u0A3E" },
+    sun:  { emoji: "\u2600\uFE0F", pa: "\u0A38\u0A42\u0A30\u0A1C" },
+    cup:  { emoji: "\u2615", pa: "\u0A15\u0A71\u0A2A" },
+    hat:  { emoji: "\uD83C\uDFA9", pa: "\u0A1F\u0A4B\u0A2A\u0A40" },
+    cap:  { emoji: "\uD83E\uDDE2", pa: "\u0A1F\u0A4B\u0A2A\u0A40" },
+    bed:  { emoji: "\uD83D\uDECF\uFE0F", pa: "\u0A2C\u0A3F\u0A38\u0A24\u0A30\u0A3E" },
+    bag:  { emoji: "\uD83D\uDC5C", pa: "\u0A2C\u0A48\u0A17" },
+    pen:  { emoji: "\uD83D\uDD8A\uFE0F", pa: "\u0A15\u0A32\u0A2E" },
+    pan:  { emoji: "\uD83C\uDF73", pa: "\u0A15\u0A5C\u0A3E\u0A39\u0A40" },
+    pot:  { emoji: "\uD83C\uDFFA", pa: "\u0A2D\u0A3E\u0A02\u0A21\u0A3E" },
+    fan:  { emoji: "\uD83C\uDF00", pa: "\u0A2A\u0A71\u0A16\u0A3E" },
+    fish: { emoji: "\uD83D\uDC1F", pa: "\u0A2E\u0A71\u0A1B\u0A40" },
+    ham:  { emoji: "\uD83C\uDF56" },
+    jet:  { emoji: "\u2708\uFE0F" },
+    web:  { emoji: "\uD83D\uDD78\uFE0F" },
+    // L9\u2013L12
+    frog: { emoji: "\uD83D\uDC38", pa: "\u0A21\u0A71\u0A21\u0A42" },
+    crab: { emoji: "\uD83E\uDD80" },
+    flag: { emoji: "\uD83C\uDFC1" },
+    drum: { emoji: "\uD83E\uDD41" },
+    ship: { emoji: "\uD83D\uDEA2" },
+    chip: { emoji: "\uD83C\uDF5F" },
+    cake: { emoji: "\uD83C\uDF82", pa: "\u0A15\u0A47\u0A15" },
+    bike: { emoji: "\uD83D\uDEB2" },
+    snake:{ emoji: "\uD83D\uDC0D", pa: "\u0A38\u0A71\u0A2A" },
+    flame:{ emoji: "\uD83D\uDD25" },
+    plate:{ emoji: "\uD83C\uDF7D\uFE0F" },
+    globe:{ emoji: "\uD83C\uDF0D" },
+    // L13\u2013L20
+    tree: { emoji: "\uD83C\uDF33", pa: "\u0A30\u0A41\u0A71\u0A16" },
+    leaf: { emoji: "\uD83C\uDF43", pa: "\u0A2A\u0A71\u0A24\u0A3E" },
+    beach:{ emoji: "\uD83C\uDFD6\uFE0F" },
+    seat: { emoji: "\uD83D\uDC8E" },
+    boat: { emoji: "\u26F5", pa: "\u0A15\u0A3F\u0A36\u0A24\u0A40" },
+    rain: { emoji: "\uD83C\uDF27\uFE0F", pa: "\u0A2E\u0A40\u0A02\u0A39" },
+    train:{ emoji: "\uD83D\uDE82" },
+    coat: { emoji: "\uD83E\uDDE5" },
+    car:  { emoji: "\uD83D\uDE97", pa: "\u0A17\u0A71\u0A21\u0A40" },
+    star: { emoji: "\u2B50" },
+    fork: { emoji: "\uD83C\uDF74" },
+    bird: { emoji: "\uD83D\uDC26", pa: "\u0A2A\u0A70\u0A1B\u0A40" },
+    girl: { emoji: "\uD83D\uDC67", pa: "\u0A15\u0A41\u0A5C\u0A40" },
+    boy:  { emoji: "\uD83D\uDC66", pa: "\u0A2E\u0A41\u0A70\u0A21\u0A3E" },
+    cow:  { emoji: "\uD83D\uDC04", pa: "\u0A17\u0A3E\u0A02" },
+    coin: { emoji: "\uD83E\uDE99" },
+    rabbit:{ emoji: "\uD83D\uDC07", pa: "\u0A16\u0A30\u0A17\u0A4B\u0A36" },
+    kitten:{ emoji: "\uD83D\uDC08" },
+    sunset:{ emoji: "\uD83C\uDF06" },
+    picnic:{ emoji: "\uD83E\uDDFA" },
+    basket:{ emoji: "\uD83E\uDDFA" },
+    muffin:{ emoji: "\uD83E\uDDC1" }
+  };
+
   // 5 progressive levels. Each adds 1–2 new letters + new decodable words.
   const LEVELS = [
     {
       id: "L1",
       title: "Level 1: First Sounds",
+      lesson: "Letters make sounds. Tap a letter to hear its sound.",
       letters: ["m", "s", "t", "p", "a"],
       words:   WORDS,
       sentences: SENTENCES
@@ -98,6 +168,7 @@
     {
       id: "L2",
       title: "Level 2: Add n, i",
+      lesson: "Each new letter adds new words you can read.",
       letters: ["m", "s", "t", "p", "a", "n", "i"],
       words:   ["in", "it", "sit", "pin", "tin", "man", "pan", "nap", "sip", "tip"],
       sentences: [
@@ -189,6 +260,7 @@
     {
       id: "L9",
       title: "Level 9: Blends (st, sp, pl, fl, fr, cl, cr, dr)",
+      lesson: "A blend is two letters that keep BOTH sounds: s-t \u2192 \u201cst\u201d.",
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
       words:   ["stop", "step", "spot", "plan", "plot", "flag", "frog", "clip", "crab", "drum"],
       sentences: [
@@ -202,6 +274,7 @@
     {
       id: "L10",
       title: "Level 10: Digraphs sh, ch, th",
+      lesson: "A digraph is two letters that make ONE new sound: s+h \u2192 /sh/.",
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","f","d","h","c"],
       words:   ["ship", "shop", "fish", "dish", "chip", "chop", "chin", "this", "that", "thin"],
       sentences: [
@@ -215,6 +288,7 @@
     {
       id: "L11",
       title: "Level 11: Magic e (CVCe)",
+      lesson: "Magic e at the end makes the vowel say its name: cap \u2192 cape.",
       letters: ["a","e","i","o","u","m","k","t","p","n","l","d","r","b","c","h"],
       words:   ["make", "cake", "lake", "bike", "like", "time", "home", "bone", "cube", "cute"],
       sentences: [
@@ -241,6 +315,7 @@
     {
       id: "L13",
       title: "Level 13: Vowel Teams ee, ea",
+      lesson: "Vowel teams ee and ea both say the long e sound: /\u0113/.",
       letters: ["a","e","i","o","u","ee","ea","s","t","p","n","r","l","f","b","d","m","h","ch"],
       words:   ["see", "feet", "tree", "feed", "leaf", "read", "team", "seat", "beach", "meat"],
       sentences: [
@@ -254,6 +329,7 @@
     {
       id: "L14",
       title: "Level 14: Vowel Teams oa, ai, ay",
+      lesson: "Vowel teams oa, ai, ay say long o (\u014D) and long a (\u0101).",
       letters: ["a","e","i","o","u","oa","ai","ay","s","t","p","n","r","l","b","d","m","c"],
       words:   ["boat", "coat", "road", "soap", "rain", "train", "pain", "day", "play", "may"],
       sentences: [
@@ -267,6 +343,7 @@
     {
       id: "L15",
       title: "Level 15: Bossy R (ar, or, er, ir, ur)",
+      lesson: "Bossy R changes the vowel: ar, or, er, ir, ur.",
       letters: ["a","e","i","o","u","ar","or","er","ir","ur","c","s","t","p","n","f","b","d","h","g","l","k"],
       words:   ["car", "star", "fork", "born", "fern", "bird", "stir", "hurt", "turn", "girl"],
       sentences: [
@@ -280,6 +357,7 @@
     {
       id: "L16",
       title: "Level 16: Diphthongs (ow, ou, oi, oy)",
+      lesson: "Diphthongs slide two sounds: ow/ou (cow) and oi/oy (boy).",
       letters: ["a","e","i","o","u","ow","ou","oi","oy","c","t","n","l","b","d","f","j","s","p","h"],
       words:   ["cow", "now", "down", "out", "loud", "shout", "coin", "boil", "boy", "joy"],
       sentences: [
@@ -293,6 +371,7 @@
     {
       id: "L17",
       title: "Level 17: Add -ing Suffix",
+      lesson: "Add -ing to a verb to show it is happening now: jump \u2192 jumping.",
       letters: ["a","e","i","o","u","ing","s","t","p","n","r","l","k","b","d","m","f","h","g","j","c","w","y"],
       words:   ["jumping", "running", "singing", "ringing", "helping", "hopping", "fishing", "talking", "playing", "yelling"],
       sentences: [
@@ -300,26 +379,28 @@
         { text: "The dog is running.",  q: "Who is running?",    a: "dog", choices: ["dog","cat","bird"] },
         { text: "Pat is singing a song.", q: "What is Pat doing?", a: "singing", choices: ["singing","playing","talking"] },
         { text: "The bell is ringing.", q: "What is ringing?",   a: "bell", choices: ["bell","dog","cat"] },
-        { text: "She is helping mom.",  q: "Who is she helping?", a: "mom", choices: ["mom","dad","sam"] }
+        { text: "She is helping Mom.",  q: "Who is she helping?", a: "Mom", choices: ["Mom","Dad","Sam"] }
       ]
     },
     {
       id: "L18",
       title: "Level 18: Sight Words",
+      lesson: "Sight words don\u2019t play by the rules \u2014 we just learn them by sight!",
       letters: ["the","a","is","of","was","said","you","are","to","my","he","she","we","they","it"],
       sightOnly: true,
       words:   ["the", "is", "was", "said", "you", "are", "my", "he", "she", "they"],
       sentences: [
-        { text: "The cat is mine.",     q: "Whose cat is it?",   a: "mine", choices: ["mine","yours","theirs"] },
-        { text: "She said hello.",      q: "What did she say?",  a: "hello", choices: ["hello","goodbye","yes"] },
-        { text: "You are my friend.",   q: "Who is my friend?",  a: "you", choices: ["you","they","he"] },
-        { text: "He was here.",         q: "Who was here?",      a: "he", choices: ["he","she","they"] },
-        { text: "They are at home.",    q: "Where are they?",    a: "home", choices: ["home","park","school"] }
+        { text: "The cat is here.",      q: "Which word means \"only one\"?", a: "the", choices: ["the","you","my"] },
+        { text: "She said hi.",          q: "Which word tells what she did?", a: "said", choices: ["said","is","are"] },
+        { text: "You are my friend.",    q: "Which word means \"belongs to me\"?", a: "my", choices: ["my","you","he"] },
+        { text: "He was here.",          q: "Which word is the boy?",          a: "he", choices: ["he","she","they"] },
+        { text: "They are happy.",       q: "Which word means more than one person?", a: "they", choices: ["they","he","she"] }
       ]
     },
     {
       id: "L19",
       title: "Level 19: Two-Syllable Readers",
+      lesson: "Big words split into syllables. Clap once for each beat: rab\u00b7bit.",
       letters: ["a","e","i","o","u","s","t","p","n","r","l","k","b","d","m","f","h","g","c"],
       words:   ["sunset", "picnic", "magnet", "rabbit", "basket", "kitten", "muffin", "napkin", "puppet", "tablet"],
       twoSyllable: {
@@ -345,6 +426,7 @@
     {
       id: "L20",
       title: "Level 20: Boss \u2014 Story Read",
+      lesson: "Boss round! Read the story, then answer each question carefully.",
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","w","ee","ai","oa"],
       bossMode: true,
       story: [
@@ -508,7 +590,24 @@
   }
   function speakLetter(letterKey) {
     const L = LETTERS[String(letterKey).toLowerCase()];
-    if (L) speak(L.speak, { rate: 0.7 });
+    if (!L) return;
+    // Stops (b, d, g, k, p, t, c, j, ch) need a clipped sound + example word
+    // because TTS swallows a bare consonant. Continuants (m, s, f, n, l, r,
+    // sh, th, z, vowels) can stand alone.
+    if (L.stop && L.example) {
+      try {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const u1 = new SpeechSynthesisUtterance(L.speak);
+        u1.lang = "en-US"; u1.rate = 0.55; u1.pitch = 1.0; u1.volume = 1;
+        const u2 = new SpeechSynthesisUtterance(L.example);
+        u2.lang = "en-US"; u2.rate = 0.75; u2.pitch = 1.0; u2.volume = 1;
+        window.speechSynthesis.speak(u1);
+        window.speechSynthesis.speak(u2);
+      } catch (_) {}
+    } else {
+      speak(L.speak, { rate: 0.6 });
+    }
   }
   function speakWord(word)     { speak(word, { rate: 0.8 });  }
   function speakSentence(text) { speak(text, { rate: 0.85 }); }
@@ -680,6 +779,7 @@
         <div class="abc-lvl-grid">${cards}</div>
         <div class="abc-lvl-detail">
           <h4 class="abc-h4">${escHtml(lvl.title)}</h4>
+          ${lvl.lesson ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(lvl.lesson)}</span></div>` : ""}
           <p class="abc-sub">Sounds you'll practice (tap to hear):</p>
           <div class="abc-letter-row">
             ${lvl.letters.map(k => LETTERS[k] ? `
@@ -767,12 +867,29 @@
     const soundN  = level.bossMode ? 2 : CONFIG.soundMatchSteps;
     const letterN = level.bossMode ? 2 : CONFIG.letterToSoundSteps;
     const phonicPool = letters.filter(k => LETTERS[k]);
+    // Group letters by phoneme so sound-match never has 2 correct answers.
+    // For sound-match we keep one representative per phoneme; the prompt uses
+    // an example word ("Tap the letter that starts `cat`") to disambiguate.
+    const byPhoneme = {};
+    phonicPool.forEach(k => {
+      const ph = LETTERS[k].phoneme;
+      (byPhoneme[ph] = byPhoneme[ph] || []).push(k);
+    });
+    const uniquePhonemePool = phonicPool.filter(k => byPhoneme[LETTERS[k].phoneme][0] === k);
     for (let i = 0; i < soundN; i++) {
-      const target = pick(phonicPool);
-      const choices = shuffle([target, ...pickN(phonicPool, 2, [target])]);
+      const target = pick(uniquePhonemePool);
+      // Distractors: only letters whose phoneme is different from target's,
+      // so all 3 buttons map to distinct sounds.
+      const targetPh = LETTERS[target].phoneme;
+      const distractorPool = phonicPool.filter(k => LETTERS[k].phoneme !== targetPh);
+      const choices = shuffle([target, ...pickN(distractorPool, 2, [target])]);
+      const ex = LETTERS[target].example;
+      const promptText = ex
+        ? `Tap the letter that starts the word "${ex}" (${LETTERS[target].phoneme})`
+        : `Tap the letter that says ${LETTERS[target].phoneme}`;
       steps.push({
         type: "sound-match",
-        prompt: `Tap the letter that says ${LETTERS[target].phoneme}`,
+        prompt: promptText,
         replay: () => speakLetter(target),
         target, choices,
         statKind: "sound", statKey: target
@@ -780,8 +897,10 @@
     }
 
     for (let i = 0; i < letterN; i++) {
-      const target = pick(phonicPool);
-      const choices = shuffle([target, ...pickN(phonicPool, 2, [target])]).map(k => LETTERS[k].phoneme);
+      const target = pick(uniquePhonemePool);
+      const targetPh = LETTERS[target].phoneme;
+      const distractorPool = phonicPool.filter(k => LETTERS[k].phoneme !== targetPh);
+      const choices = shuffle([target, ...pickN(distractorPool, 2, [target])]).map(k => LETTERS[k].phoneme);
       steps.push({
         type: "letter-to-sound",
         prompt: "What sound does this letter make?",
@@ -866,6 +985,10 @@
         <div class="abc-letter-huge">${escHtml(step.big)}</div>
       `;
     } else if (step.type === "blend") {
+      const g = WORD_GLOSSES[step.word] || WORD_GLOSSES[String(step.word).toLowerCase()];
+      const glossHtml = g
+        ? `<div class="abc-gloss"><span class="abc-gloss-emoji">${g.emoji || ""}</span>${g.pa ? `<span class="abc-gloss-pa pa" lang="pa">${escHtml(g.pa)}</span>` : ""}</div>`
+        : "";
       challenge = `
         <div class="abc-prompt small">Tap each sound, then say the word.</div>
         <div class="abc-blend-row">
@@ -874,25 +997,36 @@
             ${i < step.letters.length - 1 ? '<span class="abc-blend-sep">\u2014</span>' : ''}
           `).join("")}
         </div>
+        ${glossHtml}
         <div class="abc-prompt">${escHtml(step.prompt)}</div>
       `;
     } else if (step.type === "sentence") {
       const storyHtml = step.story
         ? `<div class="abc-story">${step.story.map(line => `<div>${escHtml(line)}</div>`).join("")}</div>`
         : "";
+      // Optional bilingual gloss for the answer word (helps EAL/Punjabi kids).
+      const g = WORD_GLOSSES[step.target] || WORD_GLOSSES[String(step.target).toLowerCase()];
+      const glossHtml = g
+        ? `<div class="abc-gloss"><span class="abc-gloss-emoji">${g.emoji || ""}</span>${g.pa ? `<span class="abc-gloss-pa pa" lang="pa">${escHtml(g.pa)}</span>` : ""}</div>`
+        : "";
       challenge = `
         ${storyHtml}
         <div class="abc-sentence">${escHtml(step.sentence)}</div>
         <div class="abc-prompt">${escHtml(step.prompt)}</div>
+        ${glossHtml}
       `;
     }
 
+    const lessonBanner = (state.level.lesson && state.stepIdx === 0)
+      ? `<div class="abc-lesson"><span class="abc-lesson-icon">\uD83D\uDCD6</span><span class="abc-lesson-text">${escHtml(state.level.lesson)}</span></div>`
+      : "";
     body.innerHTML = `
       <section class="abc-game">
         <div class="abc-game-top">
           <div class="abc-level-name">${escHtml(state.level.title)}</div>
           <div class="abc-progress">Step ${state.stepIdx + 1}/${CONFIG.stepsPerRound}</div>
         </div>
+        ${lessonBanner}
 
         <div class="abc-ladder" aria-hidden="true">
           ${renderLadder(state.stepIdx)}
