@@ -856,6 +856,76 @@
     setTimeout(() => document.body.classList.remove("slow-mo"), 720);
   }
 
+  // ===== Modern game-feel helpers =====
+  // Light vibration on supported phones (iOS Safari ignores; harmless).
+  function haptic(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (_) {}
+  }
+  // Floating "+200 XP" label that flies up from a screen point.
+  function xpPop(text, x, y, variant) {
+    if (!motionOK()) return;
+    const n = document.createElement("div");
+    n.className = "xp-pop" + (variant ? " " + variant : "");
+    n.textContent = text;
+    n.style.left = x + "px";
+    n.style.top  = y + "px";
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 1000);
+  }
+  // Burst N particles outward from a point in random directions.
+  function particleBurst(x, y, count, color) {
+    if (!motionOK()) return;
+    const colors = color ? [color] : ["", "cyan", "green", "pink"];
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement("div");
+      p.className = "particle " + colors[i % colors.length];
+      p.style.left = x + "px";
+      p.style.top  = y + "px";
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * 60;
+      p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+      p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+      p.style.animationDuration = (600 + Math.random() * 400) + "ms";
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1100);
+    }
+  }
+  // Persistent combo multiplier badge ("3x COMBO").
+  let _comboTimer = null;
+  function comboMeter(streak) {
+    let el = document.getElementById("combo-meter");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "combo-meter";
+      el.className = "combo-meter";
+      document.body.appendChild(el);
+    }
+    if (streak < 2) { el.classList.remove("show", "bump", "x5", "x10"); return; }
+    el.textContent = streak + "× COMBO";
+    el.classList.toggle("x5",  streak >= 5  && streak < 10);
+    el.classList.toggle("x10", streak >= 10);
+    el.classList.add("show");
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+    clearTimeout(_comboTimer);
+    _comboTimer = setTimeout(() => el.classList.remove("show"), 4500);
+  }
+  function flashCard(klass) {
+    const c = document.querySelector(".card");
+    if (!c) return;
+    c.classList.remove("flash-correct", "flash-wrong");
+    void c.offsetWidth;
+    c.classList.add(klass);
+    setTimeout(() => c && c.classList.remove(klass), 600);
+  }
+  // Resolve a screen point: prefer last pointer, fall back to card center.
+  let _lastPt = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  document.addEventListener("pointerdown", (e) => {
+    _lastPt = { x: e.clientX, y: e.clientY };
+  }, { passive: true });
+  function pickPoint() {
+    return { x: _lastPt.x, y: _lastPt.y };
+  }
+
   // Cinematic boss-name slam overlay; resolves after the show.
   function bossIntroOverlay(card) {
     return new Promise((resolve) => {
@@ -988,6 +1058,7 @@
       }, "rank rank-up");
       SFX.rankUp(); confetti(40);
       fpShout("RANK UP!", "super");
+      haptic([30, 50, 30, 50, 80]);
     }
   }
   function addZeni(n) { state.zeni = Math.max(0, state.zeni + n); }
@@ -1226,6 +1297,15 @@
       }
     }
     state.reviewsInARow = 0;
+
+    // ⚔️ Random Attack hook — fires occasionally between regular cards.
+    // Skips on intro/boss/read; never during senzu or active review.
+    if (cardType !== "intro" && cardType !== "boss" && cardType !== "read"
+        && !state.activeReviewId && !state.senzuMode
+        && window.Attacks && typeof Attacks.maybeRun === "function") {
+      try { if (Attacks.maybeRun(state)) return; } catch (e) { console.warn("[Attacks]", e); }
+    }
+
     state.cardsSeen += 1;
     renderCard(entry, false);
   }
@@ -2109,6 +2189,14 @@
     addZeni(z);
     if (isReview) heal(HEAL_ON_REVIEW);
     state.history.push({ id: cardId, t: Date.now(), ok: true });
+    // Modern game-feel: floating XP popup + particle burst at click point
+    const pt = pickPoint();
+    xpPop("+" + gain + " ⚡", pt.x, pt.y - 10);
+    xpPop("+" + z + " 💰",  pt.x, pt.y + 14, "zeni");
+    particleBurst(pt.x, pt.y, 12, state.streak >= 5 ? "cyan" : "green");
+    comboMeter(state.streak);
+    flashCard("flash-correct");
+    haptic(state.streak >= 5 ? [25, 30, 25] : 18);
     let promoteMsg = "";
     let promoteMsgPa = "";
     if (isReview) {
@@ -2140,6 +2228,12 @@
     dealDamage(DAMAGE.mcq);
     state.history.push({ id: cardId, t: Date.now(), ok: false });
     queueReview(cardId);
+    const pt = pickPoint();
+    xpPop("-" + DAMAGE.mcq + " HP", pt.x, pt.y, "dmg");
+    particleBurst(pt.x, pt.y, 8, "pink");
+    comboMeter(0);
+    flashCard("flash-wrong");
+    haptic([40, 20, 40]);
     const f = pickFail();
     fb.innerHTML = `${f.en} ${T.answer.en}: "<b>${correct}</b>" — added to 🔁 review.` +
                    paLine(`${f.pa} ${T.answer.pa}: "${correct}" — 🔁 ਦੁਹਰਾਈ ਵਿੱਚ ਜੋੜਿਆ।`);
@@ -2475,6 +2569,42 @@
         confetti(40);
       }, 1200);
     }
+  })();
+
+  // ===== Expose GameAPI for attack mini-games (vocab.js / enemies.js / attacks.js) =====
+  window.GameAPI = {
+    app,
+    state,
+    SFX,
+    paLine, paInline,
+    toast, confetti, kiBurst, screenShake, slowMo,
+    addPower, addZeni, dealDamage,
+    queueReview,
+    maxHpFor, rankIndex,
+    persist,
+    render,
+  };
+
+  // ⚔️ HUD toggle for random attacks (default ON).
+  (function wireAttackToggle() {
+    const btn = document.getElementById("attacks-btn");
+    if (!btn) return;
+    function paint() {
+      const on = window.Attacks ? Attacks.isEnabled() : true;
+      btn.classList.toggle("atk-off", !on);
+      btn.title = on
+        ? "Random attacks: ON · ਹਮਲੇ ਚਾਲੂ"
+        : "Random attacks: OFF · ਹਮਲੇ ਬੰਦ";
+    }
+    btn.addEventListener("click", () => {
+      if (!window.Attacks) return;
+      Attacks.setEnabled(!Attacks.isEnabled());
+      paint();
+      toast(Attacks.isEnabled()
+        ? { en: "⚔️ Attacks ON",  pa: "⚔️ ਹਮਲੇ ਚਾਲੂ" }
+        : { en: "🛡️ Attacks OFF", pa: "🛡️ ਹਮਲੇ ਬੰਦ" });
+    });
+    paint();
   })();
 
   persist();

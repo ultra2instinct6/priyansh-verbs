@@ -1,0 +1,464 @@
+// Daroach Learning — Random Attack mini-games (Spelling Strike + Definition Duel).
+//
+// Hooked into the ladder loop via app.js -> Attacks.maybeRun(state).
+// All side effects on game state go through window.GameAPI (exposed by app.js):
+//   GameAPI.dealDamage(n), GameAPI.addPower(n), GameAPI.addZeni(n),
+//   GameAPI.queueReview(id), GameAPI.persist(),
+//   GameAPI.kiBurst(), GameAPI.confetti(n,emojis), GameAPI.screenShake(ms),
+//   GameAPI.SFX, GameAPI.toast({en,pa}, cls), GameAPI.paLine(text),
+//   GameAPI.app  (the #app element), GameAPI.maxHpFor(power),
+//   GameAPI.rankIndex(power)
+//
+// Storage (separate keys so we don't disturb existing saves):
+//   dl_atk_v1__<childId>  -> { lastAt, spellingStreak, totalShown, totalRight, enabled }
+//
+// Trigger probability is gated by player skill / health / review-debt so
+// attacks lean toward strong players and back off when the kid is struggling.
+(function () {
+  "use strict";
+
+  const VERSION = 1;
+
+  // ---------- Storage ----------
+  function childId() {
+    // Mirror app.js logic loosely: prefer dl_active_child_v1, fall back to "default".
+    try {
+      const v = localStorage.getItem("dl_active_child_v1");
+      if (v) return v;
+    } catch (_) {}
+    return "default";
+  }
+  function key() { return `dl_atk_v${VERSION}__${childId()}`; }
+  function loadMeta() {
+    try {
+      const raw = localStorage.getItem(key());
+      if (!raw) return defaultMeta();
+      const obj = JSON.parse(raw);
+      return Object.assign(defaultMeta(), obj);
+    } catch (_) {
+      return defaultMeta();
+    }
+  }
+  function defaultMeta() {
+    return {
+      lastAt: -999,         // state.cardsSeen at last attack
+      spellingStreak: 0,    // consecutive spelling wins (gates Hard mode)
+      totalShown: 0,
+      totalRight: 0,
+      enabled: true,
+    };
+  }
+  function saveMeta(m) {
+    try { localStorage.setItem(key(), JSON.stringify(m)); } catch (_) {}
+  }
+
+  // ---------- Trigger ----------
+  // Only callable when state is not in a special mode (caller guards this too).
+  function shouldTrigger(state) {
+    const meta = loadMeta();
+    if (!meta.enabled) return false;
+    // Warm-up: no attacks before this many cards seen.
+    if ((state.cardsSeen || 0) < 8) return false;
+    // Cooldown: at least 4 cards since last attack.
+    const since = (state.cardsSeen || 0) - (meta.lastAt || 0);
+    if (since < 4) return false;
+    // Mercy: never when very low HP.
+    const hp = state.hp || 0;
+    const max = (window.GameAPI && window.GameAPI.maxHpFor)
+      ? window.GameAPI.maxHpFor(state.power || 0) : 30;
+    const pct = max > 0 ? hp / max : 1;
+    if (pct <= 0.20) return false;
+
+    let p = 0.06;                                          // base chance
+    p *= 1 + Math.min(state.streak || 0, 10) * 0.07;       // skill multiplier
+    p *= Math.max(0.3, Math.min(1, pct));                  // health multiplier
+    const dq = (state.reviewQueue && state.reviewQueue.length) || 0;
+    p *= 1 / (1 + 0.15 * dq);                              // review-debt multiplier
+    // Cooldown ramp: linear 0..1 from card 4 -> 8 since last attack
+    const ramp = Math.max(0, Math.min(1, (since - 4) / 4));
+    p *= 0.25 + 0.75 * ramp;
+    if (p > 0.5) p = 0.5;                                  // hard cap
+
+    return Math.random() < p;
+  }
+
+  // 60% Spelling, 40% Definition baseline; tweak by power tier.
+  function pickAttackKind(state) {
+    const tier = (window.GameAPI && window.GameAPI.rankIndex)
+      ? window.GameAPI.rankIndex(state.power || 0) : 0;
+    let pSpell = 0.60;
+    if (tier <= 1) pSpell = 0.40;
+    else if (tier >= 5) pSpell = 0.70;
+    return Math.random() < pSpell ? "spell" : "def";
+  }
+
+  // ---------- Public entry ----------
+  // Returns true if it took over rendering (caller should bail out of normal flow).
+  function maybeRun(state) {
+    if (typeof window.VocabAPI === "undefined") return false;
+    if (typeof window.EnemyAPI === "undefined") return false;
+    if (Attacks._active) return false;
+    if (!shouldTrigger(state)) return false;
+
+    Attacks._active = true;
+    const meta = loadMeta();
+    meta.lastAt = state.cardsSeen || 0;
+    saveMeta(meta);
+
+    const kind = pickAttackKind(state);
+    const tier = (window.GameAPI && window.GameAPI.rankIndex)
+      ? window.GameAPI.rankIndex(state.power || 0) : 0;
+    const enemy = window.EnemyAPI.pick({ maxTier: Math.min(4, 1 + Math.floor(tier / 2)) });
+    const word  = window.VocabAPI.pick();
+
+    runAttack({ kind, enemy, word, state });
+    return true;
+  }
+
+  // ---------- Slam intro ----------
+  function slamIntro(enemy, kind) {
+    return new Promise((resolve) => {
+      const o = document.createElement("div");
+      o.className = "attack-slam " + (kind === "spell" ? "atk-spell" : "atk-def");
+      const portrait = enemyPortraitHTML(enemy, "slam");
+      const labelEn = kind === "spell" ? "INCOMING! Spell it!" : "INCOMING! What does it mean?";
+      const labelPa = kind === "spell" ? "ਸਪੈੱਲ ਕਰੋ!"        : "ਮਤਲਬ ਦੱਸੋ!";
+      o.innerHTML = `
+        <div class="attack-slam-inner">
+          ${portrait}
+          <div class="attack-slam-name">${esc(enemy.name_en)}<div class="pa-block" lang="pa">${esc(enemy.name_pa)}</div></div>
+          <div class="attack-slam-label">${labelEn}<div class="pa-block" lang="pa">${labelPa}</div></div>
+        </div>`;
+      document.body.appendChild(o);
+      try { window.GameAPI && GameAPI.screenShake && GameAPI.screenShake(280); } catch (_) {}
+      try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.bossHit && GameAPI.SFX.bossHit(); } catch (_) {}
+      setTimeout(() => { o.remove(); resolve(); }, 1100);
+    });
+  }
+
+  // ---------- Render dispatcher ----------
+  function runAttack(ctx) {
+    slamIntro(ctx.enemy, ctx.kind).then(() => {
+      if (ctx.kind === "spell") renderSpelling(ctx);
+      else renderDefinition(ctx);
+    });
+  }
+
+  // ---------- Spelling Strike ----------
+  function renderSpelling(ctx) {
+    const meta = loadMeta();
+    const word = ctx.word;
+    const easy = meta.spellingStreak < 3; // Hard mode unlocks after 3 wins in a row
+    const promptStyle = Math.random() < 0.5 ? "emoji" : "sentence";
+    const app = (window.GameAPI && window.GameAPI.app) || document.getElementById("app");
+    if (!app) { finish(ctx, false, "no-app"); return; }
+
+    const choices = easy ? buildSpellChoices(word) : null;
+    const promptHTML = (promptStyle === "sentence" && word.example_en)
+      ? `<div class="atk-emoji-big">${esc(word.emoji || "📝")}</div>
+         <div class="atk-prompt-en">${blankExample(word)}</div>
+         <div class="pa-block" lang="pa">${esc(word.example_pa || "")}</div>`
+      : `<div class="atk-emoji-big">${esc(word.emoji || "📝")}</div>
+         <div class="atk-prompt-pa pa" lang="pa">${esc(word.pa_gloss || "")}</div>
+         <div class="atk-prompt-en">Spell it in English<span class="pa pa-inline" lang="pa">· ਅੰਗਰੇਜ਼ੀ ਵਿੱਚ ਲਿਖੋ</span></div>`;
+
+    const choicesHTML = easy
+      ? `<div class="atk-choices">${choices.map((c, i) =>
+            `<button class="atk-choice" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`
+      : `<div class="atk-input-row">
+            <input class="atk-input fill-input" id="atk-input" autocomplete="off" autocapitalize="off"
+                   spellcheck="false" maxlength="20" placeholder="type the word"/>
+            <button class="atk-submit" id="atk-submit">Spell ⚡</button>
+         </div>`;
+
+    app.innerHTML = `
+      <div class="ladder-frame">
+        <div class="card attack-card atk-spell">
+          <div class="atk-header">
+            <div class="atk-enemy">${enemyPortraitHTML(ctx.enemy, "card")}
+              <div class="atk-enemy-name">${esc(ctx.enemy.name_en)}
+                <div class="pa pa-inline" lang="pa">${esc(ctx.enemy.name_pa)}</div></div>
+            </div>
+            <div class="atk-timer-bar"><div class="atk-timer-fill"></div></div>
+          </div>
+          <h2 class="atk-title">Spelling Strike!<div class="pa-block" lang="pa">ਸਪੈੱਲਿੰਗ ਹਮਲਾ!</div></h2>
+          ${promptHTML}
+          ${choicesHTML}
+        </div>
+      </div>`;
+
+    const TIMER_MS = 8000;
+    const timer = startTimer(TIMER_MS, () => resolveSpell(ctx, word, null, true));
+
+    if (easy) {
+      app.querySelectorAll(".atk-choice").forEach(btn => {
+        btn.addEventListener("click", () => {
+          stopTimer(timer);
+          resolveSpell(ctx, word, btn.dataset.c, false);
+        });
+      });
+    } else {
+      const input = app.querySelector("#atk-input");
+      const submit = app.querySelector("#atk-submit");
+      if (input) { try { input.focus(); } catch (_) {} }
+      const submitFn = () => {
+        stopTimer(timer);
+        resolveSpell(ctx, word, (input && input.value) || "", false);
+      };
+      if (submit) submit.addEventListener("click", submitFn);
+      if (input) input.addEventListener("keydown", (e) => { if (e.key === "Enter") submitFn(); });
+    }
+  }
+
+  function buildSpellChoices(word) {
+    const correct = word.word;
+    const wrong = window.VocabAPI.misspellings(correct, 3);
+    while (wrong.length < 3) wrong.push(correct + "x"); // safety net
+    const arr = [correct, ...wrong.slice(0, 3)];
+    return arr.sort(() => Math.random() - 0.5);
+  }
+  function blankExample(word) {
+    const ex = word.example_en || "";
+    const re = new RegExp(`\\b${escapeRegex(word.word)}\\b`, "i");
+    if (!re.test(ex)) return `Spell: ${esc(word.meaning_en || word.word)}`;
+    return esc(ex).replace(re, "<b class='atk-blank'>____</b>");
+  }
+  function resolveSpell(ctx, word, answer, timedOut) {
+    const correct = String(word.word || "").toLowerCase();
+    const given = String(answer || "").trim().toLowerCase();
+    const ok = !timedOut && given === correct;
+    const meta = loadMeta();
+    meta.totalShown += 1;
+    if (ok) meta.totalRight += 1;
+    meta.spellingStreak = ok ? meta.spellingStreak + 1 : 0;
+    saveMeta(meta);
+
+    const fbEn = ok
+      ? `Nice spell! <b>${esc(correct)}</b> ${word.hint ? "— " + esc(word.hint) : ""}`
+      : (timedOut
+          ? `Time! It's <b>${spaced(correct)}</b>.`
+          : `Almost! It's <b>${spaced(correct)}</b>.${word.hint ? " " + esc(word.hint) : ""}`);
+    const fbPa = ok
+      ? `ਸ਼ਾਬਾਸ਼! <b>${esc(correct)}</b>${word.hint_pa ? " — " + esc(word.hint_pa) : ""}`
+      : (timedOut
+          ? `ਸਮਾਂ ਖ਼ਤਮ! ਸਹੀ: <b>${spaced(correct)}</b>।`
+          : `ਨੇੜੇ ਸੀ! ਸਹੀ: <b>${spaced(correct)}</b>।${word.hint_pa ? " " + esc(word.hint_pa) : ""}`);
+
+    showFeedback({
+      ok, en: fbEn, pa: fbPa,
+      meaning: { en: word.meaning_en, pa: word.meaning_pa },
+      example: { en: word.example_en, pa: word.example_pa },
+    }, () => applyOutcomeAndContinue(ctx, "spell", ok, timedOut, word));
+  }
+
+  // ---------- Definition Duel ----------
+  function renderDefinition(ctx) {
+    const word = ctx.word;
+    const app = (window.GameAPI && window.GameAPI.app) || document.getElementById("app");
+    if (!app) { finish(ctx, false, "no-app"); return; }
+
+    // Direction: 0 = word→meaning, 1 = meaning→word
+    const direction = Math.random() < 0.5 ? 0 : 1;
+
+    let promptHTML, choices, correctVal;
+    if (direction === 0) {
+      const distractors = window.VocabAPI.distractors(word, 2, "meaning_en");
+      const arr = [word.meaning_en, ...distractors];
+      const order = arr.map((v, i) => i).sort(() => Math.random() - 0.5);
+      choices = order.map(i => arr[i]);
+      correctVal = word.meaning_en;
+      const phon = word.phonetic ? `<div class="atk-phonetic">(${esc(word.phonetic)})</div>` : "";
+      promptHTML = `
+        <div class="atk-word-big">${esc(word.word)}</div>
+        ${phon}
+        <div class="atk-prompt-en">What does it mean?<div class="pa-block" lang="pa">ਇਸ ਦਾ ਕੀ ਮਤਲਬ?</div></div>`;
+    } else {
+      const distractors = window.VocabAPI.distractors(word, 2, "word");
+      const arr = [word.word, ...distractors];
+      const order = arr.map((v, i) => i).sort(() => Math.random() - 0.5);
+      choices = order.map(i => arr[i]);
+      correctVal = word.word;
+      promptHTML = `
+        <div class="atk-emoji-big">${esc(word.emoji || "📖")}</div>
+        <div class="atk-prompt-en"><b>${esc(word.meaning_en)}</b><div class="pa-block" lang="pa">${esc(word.meaning_pa || "")}</div></div>
+        <div class="atk-prompt-en">Pick the word<span class="pa pa-inline" lang="pa">· ਸਹੀ ਸ਼ਬਦ ਚੁਣੋ</span></div>`;
+    }
+
+    app.innerHTML = `
+      <div class="ladder-frame">
+        <div class="card attack-card atk-def">
+          <div class="atk-header">
+            <div class="atk-enemy">${enemyPortraitHTML(ctx.enemy, "card")}
+              <div class="atk-enemy-name">${esc(ctx.enemy.name_en)}
+                <div class="pa pa-inline" lang="pa">${esc(ctx.enemy.name_pa)}</div></div>
+            </div>
+            <div class="atk-timer-bar"><div class="atk-timer-fill"></div></div>
+          </div>
+          <h2 class="atk-title">Definition Duel!<div class="pa-block" lang="pa">ਮਤਲਬ ਦੀ ਲੜਾਈ!</div></h2>
+          ${promptHTML}
+          <div class="atk-choices atk-choices-col">
+            ${choices.map(c => `<button class="atk-choice" data-c="${esc(c)}">${esc(c)}</button>`).join("")}
+          </div>
+        </div>
+      </div>`;
+
+    const TIMER_MS = 10000;
+    const timer = startTimer(TIMER_MS, () => resolveDef(ctx, word, null, true, correctVal));
+    app.querySelectorAll(".atk-choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        stopTimer(timer);
+        resolveDef(ctx, word, btn.dataset.c, false, correctVal);
+      });
+    });
+  }
+
+  function resolveDef(ctx, word, answer, timedOut, correctVal) {
+    const ok = !timedOut && String(answer || "").trim().toLowerCase() === String(correctVal || "").trim().toLowerCase();
+    const meta = loadMeta();
+    meta.totalShown += 1;
+    if (ok) meta.totalRight += 1;
+    saveMeta(meta);
+
+    const fbEn = ok
+      ? `Yes! <b>${esc(word.word.toUpperCase())}</b> means <b>${esc(word.meaning_en)}</b>.`
+      : (timedOut
+          ? `Time! <b>${esc(word.word.toUpperCase())}</b> means <b>${esc(word.meaning_en)}</b>.`
+          : `Not quite. <b>${esc(word.word.toUpperCase())}</b> means <b>${esc(word.meaning_en)}</b>.`);
+    const fbPa = ok
+      ? `ਹਾਂ! <b>${esc(word.word)}</b> ਦਾ ਮਤਲਬ ਹੈ <b>${esc(word.meaning_pa || "")}</b>।`
+      : (timedOut
+          ? `ਸਮਾਂ ਖ਼ਤਮ! <b>${esc(word.word)}</b> ਦਾ ਮਤਲਬ ਹੈ <b>${esc(word.meaning_pa || "")}</b>।`
+          : `ਥੋੜਾ ਗਲਤ। <b>${esc(word.word)}</b> ਦਾ ਮਤਲਬ ਹੈ <b>${esc(word.meaning_pa || "")}</b>।`);
+
+    showFeedback({
+      ok, en: fbEn, pa: fbPa,
+      meaning: null,
+      example: { en: word.example_en, pa: word.example_pa },
+    }, () => applyOutcomeAndContinue(ctx, "def", ok, timedOut, word));
+  }
+
+  // ---------- Feedback panel ----------
+  function showFeedback(fb, onContinue) {
+    const app = (window.GameAPI && window.GameAPI.app) || document.getElementById("app");
+    if (!app) { onContinue(); return; }
+    const cls = fb.ok ? "atk-fb-ok" : "atk-fb-no";
+    const meaningHTML = fb.meaning && fb.meaning.en
+      ? `<div class="atk-fb-meaning">Means: <b>${esc(fb.meaning.en)}</b><div class="pa-block" lang="pa">ਮਤਲਬ: ${esc(fb.meaning.pa || "")}</div></div>`
+      : "";
+    const exampleHTML = fb.example && fb.example.en
+      ? `<div class="atk-fb-example"><i>${esc(fb.example.en)}</i><div class="pa-block" lang="pa"><i>${esc(fb.example.pa || "")}</i></div></div>`
+      : "";
+    const card = app.querySelector(".attack-card") || app;
+    const fbBox = document.createElement("div");
+    fbBox.className = "atk-feedback " + cls;
+    fbBox.innerHTML = `
+      <div class="atk-fb-en">${fb.en}</div>
+      <div class="pa-block atk-fb-pa" lang="pa">${fb.pa}</div>
+      ${meaningHTML}
+      ${exampleHTML}
+      <button class="atk-continue">Continue<span class="pa pa-inline" lang="pa">· ਜਾਰੀ</span></button>`;
+    card.appendChild(fbBox);
+    // Disable choices/inputs.
+    card.querySelectorAll(".atk-choice, .atk-submit, .atk-input").forEach(el => {
+      el.setAttribute("disabled", "true");
+      el.classList.add("disabled");
+    });
+    try {
+      if (fb.ok) GameAPI.SFX.correct(); else GameAPI.SFX.wrong();
+    } catch (_) {}
+    fbBox.querySelector(".atk-continue").addEventListener("click", onContinue);
+  }
+
+  // ---------- Outcome + resume ----------
+  function applyOutcomeAndContinue(ctx, kind, ok, timedOut, word) {
+    try {
+      if (ok) {
+        if (kind === "spell") {
+          GameAPI.addPower(20); GameAPI.addZeni(15);
+        } else {
+          GameAPI.addPower(15); GameAPI.addZeni(10);
+        }
+        try { GameAPI.kiBurst && GameAPI.kiBurst(); } catch (_) {}
+        try { GameAPI.confetti && GameAPI.confetti(18, ["✨", "⚡", "💥", "⭐"]); } catch (_) {}
+      } else {
+        const dmg = timedOut ? 0 : (kind === "spell" ? 6 : 5);
+        if (dmg > 0) GameAPI.dealDamage(dmg);
+        // Flag the word for review using a synthetic id (won't collide with LADDER ids).
+        try { GameAPI.queueReview && GameAPI.queueReview("vocab:" + word.word); } catch (_) {}
+      }
+      GameAPI.persist && GameAPI.persist();
+    } catch (e) { /* swallow — never break the loop */ }
+    finish(ctx, ok, "done");
+  }
+
+  function finish(ctx, ok, reason) {
+    Attacks._active = false;
+    // Resume normal game flow at the same card.
+    try {
+      if (window.GameAPI && typeof GameAPI.render === "function") GameAPI.render();
+    } catch (_) {}
+  }
+
+  // ---------- Helpers ----------
+  function startTimer(durMs, onTimeout) {
+    const fill = document.querySelector(".atk-timer-fill");
+    const start = performance.now();
+    const t = { id: 0, done: false };
+    function step(now) {
+      if (t.done) return;
+      const p = Math.min(1, (now - start) / durMs);
+      if (fill) fill.style.width = ((1 - p) * 100).toFixed(1) + "%";
+      if (p >= 1) { t.done = true; onTimeout(); return; }
+      t.id = requestAnimationFrame(step);
+    }
+    t.id = requestAnimationFrame(step);
+    return t;
+  }
+  function stopTimer(t) { if (t) { t.done = true; cancelAnimationFrame(t.id); } }
+
+  function enemyPortraitHTML(enemy, ctx) {
+    const cls = ctx === "slam" ? "atk-portrait-slam" : "atk-portrait";
+    // Use both <img> (preferred) and emoji fallback layered behind.
+    return `<div class="${cls}">
+      <span class="atk-portrait-emoji">${esc(enemy.emoji || "👹")}</span>
+      <img class="atk-portrait-img" src="${esc(enemy.png)}" alt=""
+           onerror="this.style.display='none'"/>
+    </div>`;
+  }
+
+  function spaced(s) {
+    return String(s || "").split("").join("-");
+  }
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function escapeRegex(s) {
+    return String(s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // ---------- Public API ----------
+  const Attacks = {
+    _active: false,
+    maybeRun,
+    isActive() { return !!Attacks._active; },
+    setEnabled(v) {
+      const m = loadMeta(); m.enabled = !!v; saveMeta(m);
+    },
+    isEnabled() { return loadMeta().enabled !== false; },
+    forceTrigger(state, kind) {
+      if (Attacks._active) return false;
+      Attacks._active = true;
+      const meta = loadMeta(); meta.lastAt = state.cardsSeen || 0; saveMeta(meta);
+      const tier = (window.GameAPI && window.GameAPI.rankIndex)
+        ? window.GameAPI.rankIndex(state.power || 0) : 0;
+      const enemy = window.EnemyAPI.pick({ maxTier: Math.min(4, 1 + Math.floor(tier / 2)) });
+      const word  = window.VocabAPI.pick();
+      runAttack({ kind: (kind === "def" ? "def" : "spell"), enemy, word, state });
+      return true;
+    },
+    stats() { return loadMeta(); },
+  };
+  window.Attacks = Attacks;
+})();

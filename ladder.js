@@ -307,7 +307,7 @@ const LADDER = [
             choices:["sunglasses","an umbrella","a snow shovel","a fan"], correct:"an umbrella" },
           { id:"u1.b6.c6", type:"fill",
             prompt:"Type the weather word: it is very hot and bright outside. ☀️",
-            accept:["sunny","hot","sun"],
+            accept:["sunny"],
             choices:["sunny","cloudy","rainy"] },
         ]
       },
@@ -725,7 +725,7 @@ const LADDER = [
             choices:["$1","$2","$3","$5"], correct:"$2" },
           { id:"u2.b8.c6", type:"fill",
             prompt:"💰 A pencil is ₹15. An eraser is ₹10. Total in rupees? (number only)",
-            accept:["25","₹25"], choices:["25","15","30"] },
+            accept:["25"], choices:["25","15","30"] },
           { id:"u2.b8.c7", type:"mcq",
             prompt:"Which is the <b>most</b> money?",
             choices:["3 quarters (75¢)","5 dimes (50¢)","$1","9 nickels (45¢)"], correct:"$1" },
@@ -1137,6 +1137,28 @@ const LADDER = [
             choices:["25","30","35","40"], correct:"30" },
           { id:"u3.b5b.c7", type:"fill", prompt:"🧮 5 × 8 = ?", accept:["40","forty"], choices:["40","35","45"] },
           { id:"u3.b5b.c8", type:"fill", prompt:"🧮 2 × 9 = ?", accept:["18","eighteen"], choices:["18","16","20"] },
+        ]
+      },
+
+      // ---- Block 5c: Early two-step thinking ----
+      {
+        id: "u3.b5c", title: "Two-step thinking (early)", emoji: "🧠",
+        cards: [
+          { id:"u3.b5c.c1", type:"intro",
+            title:"Do one step, then another",
+            body:"Some problems need <b>two moves</b>: first solve part A, then use that answer for part B.<br>Watch words like <b>then</b>, <b>after</b>, and <b>left</b>." },
+          { id:"u3.b5c.c2", type:"mcq",
+            prompt:"There are 4 bags with 3 marbles each. You lose 2 marbles. How many marbles are left?",
+            choices:["10","12","14","16"], correct:"10" },
+          { id:"u3.b5c.c3", type:"mcq",
+            prompt:"A bike has 2 wheels. 6 bikes are parked. Then 3 wheels are removed for repair. How many wheels are still on bikes?",
+            choices:["9","10","12","15"], correct:"9" },
+          { id:"u3.b5c.c4", type:"mcq",
+            prompt:"5 boxes hold 2 crayons each. Mia gives away 4 crayons. How many crayons remain?",
+            choices:["6","8","10","12"], correct:"6" },
+          { id:"u3.b5c.c5", type:"fill",
+            prompt:"3 plates have 5 cookies each. You eat 5 cookies. Cookies left? (number)",
+            accept:["10","ten"], choices:["10","12","15"] },
         ]
       },
 
@@ -1712,6 +1734,31 @@ const LADDER = [
         ]
       },
 
+      // ---- Block 8b: Error detectives ----
+      {
+        id: "u4.b8b", title: "Error detectives: spot the mistake", emoji: "🕵️",
+        cards: [
+          { id:"u4.b8b.c1", type:"intro",
+            title:"Smart learners check mistakes",
+            body:"Good problem-solvers ask: <b>What went wrong?</b> Spot the error, then fix it." },
+          { id:"u4.b8b.c2", type:"mcq",
+            prompt:"A student wrote: 23 + 18 = 311. What mistake happened?",
+            choices:["Forgot to carry the 1 ten","Subtracted instead of adding","Switched 23 and 18","311 is correct"], correct:"Forgot to carry the 1 ten" },
+          { id:"u4.b8b.c3", type:"mcq",
+            prompt:"True or false: In 405, the digit 4 means 4 tens.",
+            choices:["True","False"], correct:"False" },
+          { id:"u4.b8b.c4", type:"mcq",
+            prompt:"Which sentence has a verb mistake?",
+            choices:["He goes to school every day.","They play outside.","She eat lunch at noon.","I read at night."], correct:"She eat lunch at noon." },
+          { id:"u4.b8b.c5", type:"mcq",
+            prompt:"Is this correct: 6/8 = 3/4 ?",
+            choices:["Yes, both are equal fractions","No, 6/8 is bigger","No, 6/8 is smaller","No, they are unrelated"], correct:"Yes, both are equal fractions" },
+          { id:"u4.b8b.c6", type:"fill",
+            prompt:"Fix the sentence: <i>He go to school.</i> (one word)",
+            accept:["goes"], choices:["goes","go","going"] },
+        ]
+      },
+
       // ---- Block 9: Commas in lists ----
       {
         id: "u4.b9", title: "Commas in lists", emoji: "✏️",
@@ -2282,6 +2329,31 @@ const LADDER = [
         ]
       },
 
+      // ---- Block 9c: Inference variety ----
+      {
+        id: "u5.b9c", title: "Inference: predict and explain", emoji: "🧩",
+        cards: [
+          { id:"u5.b9c.c1", type:"intro",
+            title:"Read clues, then infer",
+            body:"An <b>inference</b> is a smart guess based on clues + what you already know." },
+          { id:"u5.b9c.c2", type:"mcq",
+            prompt:"Mom said, <i>'I need to sit down for a while.'</i> She is probably…",
+            choices:["tired","hungry","lost","angry"], correct:"tired" },
+          { id:"u5.b9c.c3", type:"mcq",
+            prompt:"The sky turned dark and thunder started. What will probably happen next?",
+            choices:["It will snow heavily","It will rain soon","The sun gets hotter","Nothing changes"], correct:"It will rain soon" },
+          { id:"u5.b9c.c4", type:"mcq",
+            prompt:"Ravi studied every night for a week. On test day, he will probably…",
+            choices:["forget his name","do well","miss school","lose his pencil"], correct:"do well" },
+          { id:"u5.b9c.c5", type:"mcq",
+            prompt:"The plant's leaves are yellow and dry. Best cause?",
+            choices:["Too little water","Too much homework","Too many books","Too many shoes"], correct:"Too little water" },
+          { id:"u5.b9c.c6", type:"fill",
+            prompt:"A boy packed an umbrella and rain boots. Weather is likely ___ .",
+            accept:["rainy"], choices:["rainy","sunny","snowy"] },
+        ]
+      },
+
       // ---- Block 10: Main idea ----
       {
         id: "u5.b10", title: "Main idea", emoji: "💡",
@@ -2326,6 +2398,34 @@ const LADDER = [
           { id:"u5.b11.c6", type:"fill",
             prompt:"book + worm = ?",
             accept:["bookworm"], choices:["bookworm","wormbook","book worm"] },
+        ]
+      },
+
+      // ---- Block 11b: Fractions in real life ----
+      {
+        id: "u5.b11b", title: "Fractions in real life: time, money, measure", emoji: "🕒",
+        cards: [
+          { id:"u5.b11b.c1", type:"intro",
+            title:"Fractions are everywhere",
+            body:"Fractions appear in clocks, coins, and recipes.<br><b>1/4 hour = 15 minutes</b> and <b>1/4 of $1 = 25 cents</b>." },
+          { id:"u5.b11b.c2", type:"mcq",
+            prompt:"$1 is 4 quarters. One quarter is…",
+            choices:["10 cents","20 cents","25 cents","50 cents"], correct:"25 cents" },
+          { id:"u5.b11b.c3", type:"mcq",
+            prompt:"From 3:00 to 3:15 is what fraction of an hour?",
+            choices:["1/2","1/3","1/4","3/4"], correct:"1/4" },
+          { id:"u5.b11b.c4", type:"mcq",
+            prompt:"30 minutes is what fraction of an hour?",
+            choices:["1/4","1/2","2/3","3/4"], correct:"1/2" },
+          { id:"u5.b11b.c5", type:"mcq",
+            prompt:"A recipe uses 1/2 cup flour. You make it twice. How much flour total?",
+            choices:["1/2 cup","1 cup","1 1/2 cups","2 cups"], correct:"1 cup" },
+          { id:"u5.b11b.c6", type:"fill",
+            prompt:"45 minutes is ___ of an hour.",
+            accept:["3/4","three fourths","three-fourths"], choices:["1/4","1/2","3/4"] },
+          { id:"u5.b11b.c7", type:"fill",
+            prompt:"25 cents is ___ of one dollar.",
+            accept:["1/4","one fourth","one-fourth"], choices:["1/2","1/3","1/4"] },
         ]
       },
 
@@ -2802,7 +2902,7 @@ const LADDER = [
           { id:"u6.b5.c5", type:"mcq", prompt:"Round <b>342</b> to the nearest 100:", choices:["200","300","340","400"], correct:"300" },
           { id:"u6.b5.c6", type:"mcq", prompt:"Round <b>2,650</b> to the nearest 1000:", choices:["2,000","2,500","3,000","3,500"], correct:"3,000" },
           { id:"u6.b5.c7", type:"mcq", prompt:"Which is the BIGGEST?", choices:["4,099","4,909","4,919","4,199"], correct:"4,919" },
-          { id:"u6.b5.c8", type:"fill", prompt:"Write the value of the 7 in <b>7,431</b> (number).", accept:["7000","7,000","seven thousand"], choices:["7000","700","7"] },
+          { id:"u6.b5.c8", type:"fill", prompt:"Write the value of the 7 in <b>7,431</b> (number).", accept:["7000","7,000"], choices:["7000","700","7"] },
         ]
       },
 

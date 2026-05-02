@@ -865,15 +865,15 @@ header { position: relative; }
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  border: 2px solid rgba(255, 213, 79, 0.7);
-  background: linear-gradient(135deg, rgba(255, 87, 34, 0.85), rgba(255, 138, 0, 0.85));
+  border: 1.5px solid rgba(15, 95, 215, 0.35);
+  background: linear-gradient(120deg, var(--goku-orange), #ff9e57);
   color: #fff;
   font-family: "Fredoka", "Comic Sans MS", sans-serif;
   font-size: 0.95rem;
   letter-spacing: 0.5px;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 3px 0 #1a0033, 0 0 12px rgba(255, 213, 79, 0.45);
+  box-shadow: 0 4px 12px rgba(255, 122, 24, 0.3), 0 0 0 1.5px rgba(255,255,255,0.15) inset;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   z-index: 5;
   max-width: 60vw;
@@ -881,8 +881,8 @@ header { position: relative; }
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.player-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 0 #1a0033, 0 0 16px rgba(255, 213, 79, 0.7); }
-.player-chip:active { transform: translateY(1px); box-shadow: 0 1px 0 #1a0033; }
+.player-chip:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255, 122, 24, 0.35); }
+.player-chip:active { transform: translateY(1px); box-shadow: 0 2px 6px rgba(255, 122, 24, 0.25); }
 .player-chip-icon { font-size: 1.05em; }
 .player-chip-name { font-weight: 600; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
 .player-chip-caret { opacity: 0.85; font-size: 0.85em; }
@@ -2075,3 +2075,400 @@ input[type="text"]:focus {
 .power-fill,
 .boss-hp-fill,
 .ball-toast { will-change: transform, opacity; }
+
+/* ============================================================
+   🎮 MODERN GAME-FEEL FX (juice pass v3)
+   ============================================================ */
+
+/* Floating "+200 XP" popup that flies up from the click point */
+.xp-pop {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-family: "Fredoka", "Impact", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: .5px;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(255, 122, 24, 0.65), 0 1px 3px rgba(10, 46, 115, 0.45);
+  transform: translate(-50%, -50%);
+  animation: xpPopUp 950ms var(--ease-out-quint) forwards;
+  white-space: nowrap;
+}
+.xp-pop.zeni { color: #ffb26b; text-shadow: 0 2px 8px rgba(255, 122, 24, 0.6); }
+.xp-pop.dmg  { color: #ff8080; text-shadow: 0 2px 8px rgba(239, 68, 68, 0.7); }
+.xp-pop.heal { color: #5eefc0; text-shadow: 0 2px 8px rgba(20, 184, 122, 0.7); }
+@keyframes xpPopUp {
+  0%   { opacity: 0; transform: translate(-50%, -30%) scale(.6); }
+  20%  { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -180%) scale(.95); }
+}
+
+/* Combo multiplier badge — pinned next to the power bar */
+.combo-meter {
+  position: fixed;
+  top: 8px; right: 12px;
+  z-index: 60;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--goku-orange), #ff9e57);
+  color: var(--white);
+  font-family: "Fredoka", "Impact", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: .5px;
+  text-shadow: 0 1px 4px rgba(10, 46, 115, 0.4);
+  box-shadow: 0 4px 14px rgba(255, 122, 24, 0.35), inset 0 0 0 1.5px rgba(255,255,255,0.25);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-12px) scale(.7);
+  transition: opacity .25s ease, transform .35s var(--ease-out-back);
+}
+.combo-meter.show { opacity: 1; transform: translateY(0) scale(1); }
+.combo-meter.bump { animation: comboBump .42s var(--ease-out-back); }
+@keyframes comboBump {
+  0%   { transform: translateY(0) scale(1); }
+  40%  { transform: translateY(-4px) scale(1.22); }
+  100% { transform: translateY(0) scale(1); }
+}
+.combo-meter.x5  { background: linear-gradient(135deg, var(--goku-sky), var(--goku-blue)); color: #fff; text-shadow: 0 1px 4px rgba(10, 46, 115, 0.5); }
+.combo-meter.x10 { background: linear-gradient(135deg, var(--goku-blue), var(--goku-blue-deep)); color: #fff; text-shadow: 0 1px 4px rgba(10, 46, 115, 0.5); box-shadow: 0 0 24px rgba(15, 95, 215, 0.55), inset 0 0 0 1.5px rgba(255,255,255,0.25); }
+
+/* Tiny particles that burst outward from a tap point */
+.particle {
+  position: fixed;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  background: var(--goku-orange);
+  box-shadow: 0 0 8px rgba(255, 122, 24, 0.8);
+  animation: particleFly 800ms ease-out forwards;
+}
+.particle.cyan  { background: var(--goku-sky); box-shadow: 0 0 8px rgba(110, 200, 255, 0.8); }
+.particle.pink  { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); }
+.particle.green { background: var(--success); box-shadow: 0 0 8px rgba(20, 184, 122, 0.7); }
+@keyframes particleFly {
+  to {
+    opacity: 0;
+    transform: translate(var(--dx, 0px), var(--dy, -60px)) scale(.3);
+  }
+}
+
+/* Card-wide green flash on correct, red on wrong */
+.card.flash-correct { animation: cardCorrectFlash .55s ease; }
+.card.flash-wrong   { animation: cardWrongFlash   .55s ease; }
+@keyframes cardCorrectFlash {
+  0%, 100% { box-shadow: 0 10px 26px rgba(10, 46, 115, 0.1); }
+  40%      { box-shadow: 0 0 0 3px rgba(20, 184, 122, 0.45), 0 0 28px rgba(20, 184, 122, 0.3); }
+}
+@keyframes cardWrongFlash {
+  0%, 100% { box-shadow: 0 10px 26px rgba(10, 46, 115, 0.1); }
+  40%      { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.45), 0 0 28px rgba(239, 68, 68, 0.3); }
+}
+
+/* Glassmorphism on the player chip (modern game HUD vibe) */
+.player-chip {
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  background: linear-gradient(135deg, rgba(10, 46, 115, 0.55), rgba(15, 95, 215, 0.35));
+  border: 1.5px solid rgba(110, 200, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(10, 46, 115, 0.35), inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .xp-pop, .particle, .combo-meter, .card.flash-correct, .card.flash-wrong { animation: none !important; }
+  .xp-pop, .particle { display: none !important; }
+}
+
+/* ============================================================
+   ⚔️ RANDOM ATTACK MINI-GAMES (Spelling Strike + Definition Duel)
+   ============================================================ */
+
+/* Slam intro overlay (red for spell, blue for def) */
+.attack-slam {
+  position: fixed; inset: 0;
+  z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at center, rgba(80,0,0,.85), rgba(0,0,0,.95));
+  animation: atkSlamIn .35s cubic-bezier(.2,.9,.3,1.4);
+}
+.attack-slam.atk-def {
+  background: radial-gradient(circle at center, rgba(0,30,80,.85), rgba(0,0,0,.95));
+}
+.attack-slam-inner {
+  text-align: center;
+  color: #fff;
+  padding: 24px;
+  animation: atkSlamPop .4s cubic-bezier(.2,.9,.3,1.4);
+}
+.attack-slam-name {
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 2rem; letter-spacing: 1px;
+  text-shadow: 3px 3px 0 #1a0033, 0 0 18px rgba(255,80,80,.85);
+  margin: 8px 0;
+}
+.attack-slam.atk-def .attack-slam-name {
+  text-shadow: 3px 3px 0 #001a44, 0 0 18px rgba(80,180,255,.85);
+}
+.attack-slam-label {
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 1.25rem; font-weight: 700;
+  color: #ffeb3b;
+  margin-top: 6px;
+}
+.atk-portrait-slam {
+  position: relative;
+  width: 200px; height: 200px;
+  margin: 0 auto;
+  display: grid; place-items: center;
+}
+.atk-portrait-slam .atk-portrait-emoji {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 8rem; line-height: 1;
+  z-index: 1;
+}
+.atk-portrait-slam .atk-portrait-img {
+  position: relative;
+  width: 200px; height: 200px;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.6));
+}
+@keyframes atkSlamIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes atkSlamPop { 0% { transform: scale(.4); opacity: 0; }
+                        60% { transform: scale(1.08); opacity: 1; }
+                        100% { transform: scale(1); } }
+
+/* Attack card (in #app) */
+.card.attack-card {
+  border: 3px solid #ff5078;
+  box-shadow: 6px 6px 0 #1a0033, 0 0 28px rgba(255,80,120,.45);
+  animation: atkCardEnter .35s ease-out;
+}
+.card.attack-card.atk-def {
+  border-color: #29b6f6;
+  box-shadow: 6px 6px 0 #1a0033, 0 0 28px rgba(80,180,255,.45);
+}
+@keyframes atkCardEnter {
+  from { transform: translateY(8px) scale(.98); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+.atk-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.atk-enemy { display: flex; align-items: center; gap: 10px; }
+.atk-portrait {
+  position: relative;
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.atk-portrait .atk-portrait-emoji {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 2.6rem; z-index: 1;
+}
+.atk-portrait .atk-portrait-img {
+  position: relative;
+  width: 64px; height: 64px;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.5));
+}
+.atk-enemy-name {
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 1.1rem;
+  color: #ffeb3b;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+
+/* Timer bar */
+.atk-timer-bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.15);
+  border: 1.5px solid #1a0033;
+  overflow: hidden;
+}
+.atk-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #00e676, #ffeb3b 60%, #ff5078);
+  border-radius: 999px;
+}
+
+/* Title */
+.atk-title {
+  text-align: center;
+  margin: 6px 0 12px;
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 1.6rem;
+  color: #ff5078;
+  text-shadow: 2px 2px 0 #1a0033;
+}
+.attack-card.atk-def .atk-title { color: #29b6f6; }
+
+/* Prompt area */
+.atk-emoji-big {
+  text-align: center; font-size: 3.4rem; line-height: 1;
+  margin: 4px 0 8px;
+}
+.atk-prompt-pa {
+  text-align: center;
+  font-size: 1.6rem;
+  margin: 4px 0 10px;
+  color: #ffd54f !important;
+  text-shadow: 2px 2px 0 #1a0033;
+}
+.atk-prompt-en {
+  text-align: center;
+  font-size: 1.05rem;
+  color: #fff;
+  margin: 4px 0 12px;
+  font-weight: 600;
+}
+.atk-word-big {
+  text-align: center;
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 2.6rem; letter-spacing: 2px;
+  color: #ffeb3b;
+  text-shadow: 2px 2px 0 #1a0033;
+  margin: 6px 0 2px;
+  text-transform: uppercase;
+}
+.atk-phonetic {
+  text-align: center;
+  font-size: 1rem;
+  color: #b388ff;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+.atk-blank {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 3px dashed #ffeb3b;
+  color: transparent;
+  margin: 0 4px;
+}
+
+/* Choice buttons */
+.atk-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
+.atk-choices.atk-choices-col { grid-template-columns: 1fr; }
+.atk-choice {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2.5px solid #1a0033;
+  background: linear-gradient(180deg, #ffffff 0%, #f0e7ff 100%);
+  color: #1a0033;
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1a0033;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.atk-choice:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 4px 5px 0 #1a0033; }
+.atk-choice:active:not(.disabled) { transform: translateY(1px); box-shadow: 1px 1px 0 #1a0033; }
+.atk-choice.disabled { opacity: .55; cursor: default; }
+
+/* Typed input (Hard mode) */
+.atk-input-row { display: flex; gap: 10px; margin-top: 10px; }
+.atk-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2.5px solid #1a0033;
+  font-size: 1.2rem;
+  background: #fff;
+  color: #1a0033;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.atk-submit {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 2.5px solid #1a0033;
+  background: linear-gradient(135deg, #ffeb3b, #ff8a00);
+  color: #1a0033;
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1a0033;
+}
+
+/* Feedback panel */
+.atk-feedback {
+  margin-top: 14px;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  border: 2.5px solid #1a0033;
+  background: rgba(26,0,51,.55);
+  color: #fff;
+  text-align: left;
+  animation: atkFbIn .3s ease;
+}
+.atk-feedback.atk-fb-ok {
+  background: linear-gradient(180deg, rgba(0,200,100,.85), rgba(0,150,80,.85));
+  box-shadow: 0 0 22px rgba(0,230,118,.55);
+}
+.atk-feedback.atk-fb-no {
+  background: linear-gradient(180deg, rgba(200,40,80,.85), rgba(140,20,60,.85));
+  box-shadow: 0 0 22px rgba(255,80,120,.55);
+}
+.atk-fb-en {
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+.atk-fb-pa {
+  font-size: 1rem !important;
+  color: #ffeb3b !important;
+  margin-top: 4px;
+}
+.atk-fb-meaning, .atk-fb-example {
+  margin-top: 8px;
+  font-size: .95rem;
+  background: rgba(0,0,0,.18);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.atk-continue {
+  display: block;
+  margin: 14px auto 2px;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: 2.5px solid #1a0033;
+  background: linear-gradient(135deg, #ffeb3b, #ff8a00);
+  color: #1a0033;
+  font-family: "Bangers", "Impact", sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: .5px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1a0033;
+}
+@keyframes atkFbIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* HUD toggle button (⚔️) */
+.hud-btn.atk-off { opacity: .45; filter: grayscale(.7); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .attack-slam, .attack-slam-inner, .card.attack-card, .atk-feedback {
+    animation: none !important;
+  }
+}
