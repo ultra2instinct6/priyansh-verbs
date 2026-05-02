@@ -3023,7 +3023,15 @@
         renderHeader();
         persist();
       }
-      document.getElementById("next-btn").onclick = () => advance();
+      document.getElementById("next-btn").onclick = () => {
+        if (isReview) {
+          if (s.score === card.questions.length) clearReview(state.activeReviewId);
+          state.speed = null;
+          finishReview();
+        } else {
+          advance();
+        }
+      };
       return;
     }
     if (!s.started) {
@@ -3039,7 +3047,7 @@
       `, "speed-card");
       document.getElementById("speed-go").onclick = () => {
         s.started = true;
-        renderCard(currentEntry(), false);
+        renderCard(curOrReview(isReview), isReview);
       };
       return;
     }
@@ -3072,7 +3080,7 @@
       s.qIdx += 1;
       s.answered = false;
       if (s.qIdx >= total) { s.finished = true; }
-      renderCard(currentEntry(), false);
+      renderCard(curOrReview(isReview), isReview);
     }
     function tick() {
       const elapsed = Date.now() - tickStart;

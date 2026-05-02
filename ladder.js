@@ -44,7 +44,7 @@ const LADDER = [
         id: "u1.a1", title: "Alphabet & letter sounds", emoji: "🔤",
         cards: [
           { id:"u1.a1.c1", type:"intro",
-            title:"Welcome, yodha!",
+            title:"Welcome, warrior!",
             body:"Each card you clear grows your <b>Power Level</b>. Wrong answers cost a ❤️. Lose all 3 hearts and you restart the block. Let's start with the <b>26 letters</b> of the alphabet." },
           { id:"u1.a1.c2", type:"flash",
             front:"How many letters are in the English alphabet?",
@@ -171,7 +171,7 @@ const LADDER = [
         id: "u1.b1", title: "Nouns: people, places, things", emoji: "🧱",
         cards: [
           { id:"u1.b1.c1", type:"intro",
-            title:"Welcome, yodha!",
+            title:"Welcome, warrior!",
             body:"You can read words. Now learn what KIND of word each one is. First up: <b>nouns</b>.<br>Each card you clear grows your <b>Power Level</b>. Wrong answers cost a ❤️." },
           { id:"u1.b1.c2", type:"flash",
             front:"What is a <b>NOUN</b>?",
@@ -533,18 +533,18 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 2 — Z FIGHTER  (build, ~Grade 2.0–2.5)
+  // UNIT 2 — DHOL DRILLS  (build, ~Grade 2.0–2.5)
   // ============================================================
   {
-    id: "u2", title: "Z Fighter Drills", emoji: "🥋",
+    id: "u2", title: "Dhol Drills", emoji: "🥁",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 1) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 1) ----
       {
-        id: "u2.recap", title: "Chai Recap: Unit 1", emoji: "☕",
+        id: "u2.recap", title: "Senzu Recap: Unit 1", emoji: "🌿",
         cards: [
           { id:"u2.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Quick refresh of Unit 1 before we level up. <b>Nouns, verbs, plurals, place value, +/− to 20.</b> Power through!" },
           { id:"u2.recap.c2", type:"mcq",
             prompt:"Pick the noun: <i>The bird sang loudly.</i>",
@@ -974,12 +974,12 @@ const LADDER = [
     id: "u3", title: "Over 9000!", emoji: "💥",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 2) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 2) ----
       {
-        id: "u3.recap", title: "Chai Recap: Unit 2", emoji: "☕",
+        id: "u3.recap", title: "Senzu Recap: Unit 2", emoji: "🌿",
         cards: [
           { id:"u3.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Quick refresh from Unit 2: <b>past tense, contractions, capitalization, 2-digit math, shapes.</b>" },
           { id:"u3.recap.c2", type:"mcq",
             prompt:"Past of <b>walk</b>?",
@@ -1388,7 +1388,7 @@ const LADDER = [
             prompt:"⭐⭐⭐⭐ Mon<br>⭐⭐ Tue<br>⭐⭐⭐⭐⭐ Wed<br>How many stars in <b>total</b>?",
             choices:["9","10","11","12"], correct:"11" },
           { id:"u3.b14.c5", type:"mcq",
-            prompt:"Tally chart of votes (each full group of 5 looks like <b>||||</b> with a slash):<br>Pizza: <b>(group of 5) |||</b><br>Tacos: <b>||||</b><br>Sushi: <b>||</b><br>How many <b>more</b> votes did Pizza get than Tacos?",
+            prompt:"Tally chart of votes (each full group = 5):<br>Pizza: <b>(group of 5) |||</b> &nbsp; (8 votes)<br>Tacos: <b>||||</b> &nbsp; (4 votes)<br>Sushi: <b>||</b> &nbsp; (2 votes)<br>How many <b>more</b> votes did Pizza get than Tacos?",
             choices:["2","3","4","6"], correct:"4" },
           { id:"u3.b14.c6", type:"mcq",
             prompt:"📕📕📕 Mon<br>📕📕📕📕📕 Tue<br>📕📕📕📕 Wed<br>Which day had the <b>fewest</b> books read?",
@@ -1497,12 +1497,12 @@ const LADDER = [
     id: "u4", title: "Saiyan Awakening", emoji: "🟡",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 3) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 3) ----
       {
-        id: "u4.recap", title: "Chai Recap: Unit 3", emoji: "☕",
+        id: "u4.recap", title: "Senzu Recap: Unit 3", emoji: "🌿",
         cards: [
           { id:"u4.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Refresh from Unit 3: <b>future tense, adjectives, synonyms/antonyms, ×2/×5/×10, punctuation.</b>" },
           { id:"u4.recap.c2", type:"mcq",
             prompt:"Future of <b>help</b>?",
@@ -2106,12 +2106,12 @@ const LADDER = [
     id: "u5", title: "Galactic Tournament", emoji: "🏆",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 4) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 4) ----
       {
-        id: "u5.recap", title: "Chai Recap: Unit 4", emoji: "☕",
+        id: "u5.recap", title: "Senzu Recap: Unit 4", emoji: "🌿",
         cards: [
           { id:"u5.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Refresh from Unit 4: <b>adverbs, prepositions, ×3/×4, division, place value to 100s, prefixes/suffixes.</b>" },
           { id:"u5.recap.c2", type:"mcq",
             prompt:"Pick the adverb: <i>She sang loudly.</i>",
@@ -2808,12 +2808,12 @@ const LADDER = [
     id: "u6", title: "Super Saiyan Saga", emoji: "🌟",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 5) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 5) ----
       {
-        id: "u6.recap", title: "Chai Recap: Unit 5", emoji: "☕",
+        id: "u6.recap", title: "Senzu Recap: Unit 5", emoji: "🌿",
         cards: [
           { id:"u6.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Refresh from Unit 5: <b>×6, ×9, division, place value to 1000s, fractions, planets, continents.</b>" },
           { id:"u6.recap.c2", type:"mcq", prompt:"6 × 7 = ?", choices:["36","42","48","54"], correct:"42" },
           { id:"u6.recap.c3", type:"mcq", prompt:"9 × 8 = ?", choices:["63","72","81","90"], correct:"72" },
@@ -3186,12 +3186,12 @@ const LADDER = [
     id: "u7", title: "Tournament of Power", emoji: "🏆",
     blocks: [
 
-      // ---- Block 0: ☕ Chai Recap (from Unit 6) ----
+      // ---- Block 0: 🌿 Senzu Recap (from Unit 6) ----
       {
-        id: "u7.recap", title: "Chai Recap: Unit 6", emoji: "☕",
+        id: "u7.recap", title: "Senzu Recap: Unit 6", emoji: "🌿",
         cards: [
           { id:"u7.recap.c1", type:"intro",
-            title:"☕ Chai Recap",
+            title:"🌿 Senzu Recap",
             body:"Quick refresh from Unit 6: <b>×7, ×8, division, place value to 10,000, equivalent fractions, area, body systems, water cycle.</b>" },
           { id:"u7.recap.c2", type:"mcq", prompt:"7 × 8 = ?", choices:["48","54","56","64"], correct:"56" },
           { id:"u7.recap.c3", type:"mcq", prompt:"72 ÷ 8 = ?", choices:["7","8","9","10"], correct:"9" },
@@ -3419,7 +3419,7 @@ const LADDER = [
 
       // ---- Block 14: Habitats & food chains ----
       {
-        id: "u7.b14", title: "Habitats & food chains", emoji: "☕",
+        id: "u7.b14", title: "Habitats & food chains", emoji: "🌿",
         cards: [
           { id:"u7.b14.c1", type:"intro",
             title:"Who eats what",
