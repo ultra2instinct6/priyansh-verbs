@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v2026.05.02-r14-noreed";
+const CACHE_VERSION = "punjabiji-v20260502-r16-pwa";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -17,9 +17,19 @@ const CORE_ASSETS = [
   "/ladder.js",
   "/online.js",
   "/abc.js",
+  "/attacks.js",
+  "/vocab.js",
   "/manifest.json",
   "/images/logo.png",
   "/images/og-image.png",
+  "/images/boystart.png",
+  "/images/girlstart.png",
+  "/images/bandit.png",
+  "/images/dragon.png",
+  "/images/ghost.png",
+  "/images/imp.png",
+  "/images/saibaman.png",
+  "/images/shadow.png",
   "/404.html",
 ];
 

@@ -4308,3 +4308,47 @@ body.hide-pa .abc-gloss-pa { display: none; }
   cursor: not-allowed;
   transform: none;
 }
+
+/* ==== ABC variety pass (theme banner, streak pill, boss meter) ==== */
+.abc-theme-banner { display:flex; align-items:center; gap:8px; padding:6px 12px; margin:6px 0;
+  background:rgba(255,255,255,0.05); border-radius:10px; color:#fff; font-size:0.85em; opacity:0.85; }
+.abc-theme-icon { font-size:1.1em; }
+.abc-theme-name { text-transform:uppercase; letter-spacing:1px; font-family:Bangers,sans-serif; }
+.abc-streak-pill { position:fixed; top:30%; left:50%; transform:translate(-50%,-50%) scale(1);
+  padding:14px 28px; background:linear-gradient(135deg,#ff7a18,#ffd23f); color:#1a0033;
+  font-family:Bangers,sans-serif; font-size:1.8rem; border-radius:999px;
+  box-shadow:0 8px 24px rgba(255,122,24,0.55);
+  animation:abcStreakIn 320ms cubic-bezier(0.34,1.56,0.64,1) both;
+  z-index:9999; pointer-events:none; letter-spacing:1px; }
+.abc-streak-pill.out { animation:abcStreakOut 480ms ease-in forwards; }
+@keyframes abcStreakIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.4);} to{opacity:1;transform:translate(-50%,-50%) scale(1);} }
+@keyframes abcStreakOut { to{opacity:0;transform:translate(-50%,-80%) scale(0.9);} }
+.abc-boss-meter { display:flex; align-items:center; gap:10px; padding:10px 14px; margin:10px 0;
+  background:linear-gradient(135deg,rgba(255,77,210,0.18),rgba(255,77,77,0.12));
+  border:1px solid rgba(255,77,210,0.45); border-radius:14px; }
+.abc-boss-label { font-family:Bangers,sans-serif; color:#ff4dd2; letter-spacing:1px; font-size:1rem; white-space:nowrap; }
+.abc-boss-bar { flex:1; height:14px; background:rgba(0,0,0,0.4); border-radius:999px; overflow:hidden; }
+.abc-boss-fill { height:100%; background:linear-gradient(90deg,#ff4dd2,#ffd23f); transition:width 600ms ease; }
+.abc-boss-hp { font-family:Bangers,sans-serif; color:#fff; font-size:0.9rem; min-width:42px; text-align:right; }
+
+/* ============================================================
+   A11Y: visible keyboard focus rings on interactive elements.
+   Uses :focus-visible so mouse clicks don't show rings, but
+   Tab navigation does. WCAG 2.4.7 (Focus Visible).
+   ============================================================ */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #ffd54f;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(15, 95, 215, 0.45);
+  border-radius: 6px;
+}
+.hud-btn:focus-visible {
+  outline-color: #ff7a18;
+  box-shadow: 0 0 0 4px rgba(255, 122, 24, 0.45);
+}
