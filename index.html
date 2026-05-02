@@ -35,8 +35,12 @@
 </style>
 </head>
 <body>
-  <div id="splash" role="presentation" aria-hidden="true">
+  <div id="splash" role="button" tabindex="0" aria-label="Tap to start">
     <img src="images/logo.png" alt="" class="splash-logo" decoding="async" fetchpriority="high" />
+    <div class="splash-cta">
+      <span class="splash-cta-en">Tap to Start</span>
+      <span class="splash-cta-pa" lang="pa">ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਛੂਹੋ</span>
+    </div>
   </div>
   <div class="stars-bg"></div>
 
@@ -99,14 +103,11 @@
   <script src="app.js"></script>
   <script type="module" src="online.js"></script>
   <script>
-    // Splash screen: show logo for ~3.2s, then fade. Tap/click/key to skip after a short minimum.
+    // Splash screen: shows until the user taps/clicks/presses a key. No auto-timer.
     (function () {
       var splash = document.getElementById("splash");
       if (!splash) return;
-      var MIN_MS = 800;   // earliest user can skip
-      var AUTO_MS = 3200; // automatic dismiss
-      var FADE_MS = 700;  // matches CSS transition + buffer
-      var startedAt = Date.now();
+      var FADE_MS = 700;
       var dismissed = false;
       function dismiss() {
         if (dismissed) return;
@@ -117,17 +118,16 @@
           if (done) return;
           done = true;
           splash.classList.add("gone");
+          splash.setAttribute("aria-hidden", "true");
         }
         splash.addEventListener("transitionend", gone, { once: true });
         setTimeout(gone, FADE_MS);
       }
-      function trySkip() {
-        if (Date.now() - startedAt >= MIN_MS) dismiss();
-      }
-      splash.addEventListener("click", trySkip);
-      splash.addEventListener("touchstart", trySkip, { passive: true });
-      window.addEventListener("keydown", trySkip, { once: true });
-      setTimeout(dismiss, AUTO_MS);
+      splash.addEventListener("click", dismiss);
+      splash.addEventListener("touchstart", dismiss, { passive: true });
+      splash.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dismiss(); }
+      });
     })();
   </script>
   <script>

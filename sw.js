@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v2026.05.02-r3-splash";
+const CACHE_VERSION = "punjabiji-v2026.05.02-r4-tap";
 const CORE_ASSETS = [
   "/",
   "/index.html",

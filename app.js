@@ -1369,6 +1369,40 @@
     if (c > 0) { try { SFX.coin(); } catch (_) {} }
   }
   function addGoldBars(bars) { addGold((bars | 0) * GOLD_PER_BAR); }
+
+  // ===== Public bridge API =====
+  // Exposed so side games (ABC Sound Ladder, etc.) can deposit rewards into
+  // the main player profile. All updates persist + sync to the leaderboard.
+  window.VTK = window.VTK || {};
+  window.VTK.reward = function (opts) {
+    opts = opts || {};
+    const power  = Math.max(0, (opts.power  | 0));
+    const rupees = Math.max(0, (opts.rupees | 0));
+    const gold   = Math.max(0, (opts.gold   | 0));
+    if (power)  addPower(power);
+    if (rupees) addRupees(rupees);
+    if (gold)   addGold(gold);
+    if (opts.message) {
+      const msg = typeof opts.message === "string"
+        ? opts.message
+        : { en: opts.message.en || "", pa: opts.message.pa || "" };
+      try { toast(msg, "rupee"); } catch (_) {}
+    }
+    if (opts.confetti) { try { confetti(opts.confetti | 0); } catch (_) {} }
+    try { renderHeader(); persist(); } catch (_) {}
+    return { power: state.power, rupees: state.rupees, gold: state.gold };
+  };
+  window.VTK.getProfile = function () {
+    return {
+      childId: currentChildId,
+      player:  currentPlayer,
+      power:   state.power,
+      rupees:  state.rupees,
+      gold:    state.gold,
+      rank:    rankFor(state.power).name
+    };
+  };
+
   function dealDamage(n) {
     state.hp = Math.max(0, state.hp - (n | 0));
     if (n > 0) {

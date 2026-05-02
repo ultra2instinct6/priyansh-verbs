@@ -3376,3 +3376,44 @@ main {
   #splash { transition: opacity 200ms linear; }
 }
 
+
+/* Splash "Tap to Start" CTA */
+#splash { flex-direction: column; gap: 28px; }
+.splash-cta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff7a18 0%, #ff5722 100%);
+  color: #fff;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  letter-spacing: 1.5px;
+  text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 8px 24px rgba(255, 87, 34, 0.45),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  animation: splashPulse 1.6s ease-in-out infinite;
+  user-select: none;
+}
+.splash-cta-en { font-size: 1.6rem; line-height: 1; }
+.splash-cta-pa {
+  font-family: "Noto Sans Gurmukhi", "Bangers", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffeb3b;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 8px 24px rgba(255, 87, 34, 0.45), inset 0 -3px 0 rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.25); }
+  50%      { transform: scale(1.06); box-shadow: 0 12px 32px rgba(255, 87, 34, 0.6),  inset 0 -3px 0 rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.25); }
+}
+#splash:focus { outline: none; }
+#splash:focus-visible .splash-cta { outline: 3px solid #fff; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  .splash-cta { animation: none; }
+}
