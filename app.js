@@ -1479,114 +1479,284 @@
   // Track first-time enemy appearances for bossAppear vs enemyAppear distinction.
   SFX._seenAppear = _seenAppear;
 
-  // ===== BGM — Punjabi folk × chiptune background loop =====
-  // Procedural music. Layers:
-  //   1. Drums   — Kaherwa theka: dhol on DHA, tabla bols on the rest
-  //   2. Bass    — gamey square-wave arpeggio (Sa-Pa-Sa-Pa) chiptune feel
-  //   3. Tumbi   — raag Mand melody phrases, varied each cycle
-  //   4. Pad     — soft sawtooth drone on Sa root for warmth
-  //   5. Taali   — claps on off-beats every other cycle
-  // Uses a 25 ms scheduling lookahead so timing stays tight even when the
-  // browser tab is throttled. Music routes through its own gain (separate
-  // from SFX) so the player can mute music while keeping SFX, and vice versa.
+  // ===== BGM — Modern Punjabi-Trap × Gurbani fusion loop =====
+  // 16th-note grid at 108 BPM. Production tricks:
+  //   • 808 sub-bass tied to kick (Diljit/AP Dhillon vibe)
+  //   • Trap hi-hats with rolls + open-hat off-beats
+  //   • Sidechain pump (master ducks on every kick) — that "breathing" feel
+  //   • Snare backbeat on 5 & 13
+  //   • Vocal chops (sliced alaap stabs)
+  //   • Reverse-swell + filter sweep build-ups every 4 bars
+  //   • Drop: drums mute for 2 beats every 8 cycles, then BIG return
+  // Preserved Gurbani layers: tanpura drone, harmonium reed, sung alaap.
+  // Lookahead scheduler (25 ms tick / 100 ms ahead) keeps timing tight
+  // even when the tab is throttled.
   const BGM = (function () {
-    let on = localStorage.getItem(KEY.music) !== "0"; // default ON
-    let _musicGain = null;
+    let on = localStorage.getItem(KEY.music) !== "0";
+    let _musicGain = null, _sideChain = null;
     let _running = false;
     let _timer = null;
     let _nextNoteTime = 0;
-    let _step = 0;            // 0..7 across the 8-beat cycle
-    let _cycle = 0;           // increments every full cycle
-    const BPM = 100;
-    const BEAT = 60 / BPM;            // 0.6 s per beat
-    const STEP = BEAT;                // one bol per quarter-note
-    const LOOKAHEAD = 0.10;           // schedule 100 ms ahead
-    const TICK_MS = 25;               // re-check every 25 ms
-    const SCALE = [523, 587, 659, 784, 880, 1046, 1175, 1318]; // raag Mand × 2 oct
-    // Bass roots (Sa octave below) used for chiptune arpeggio
-    const BASS = [131, 196, 131, 196, 131, 196, 165, 196]; // C3-G3 with a Eb-ish lift
-    // Tumbi phrase library (each phrase = 8 step pitch indices into SCALE; null = rest)
+    let _step = 0;            // 0..15 across one bar (16th notes)
+    let _cycle = 0;           // increments every full bar
+    const BPM = 108;
+    const BEAT = 60 / BPM;            // quarter-note duration
+    const STEP = BEAT / 2;            // 8th-note grid (16 per bar = 2 bars Kaherwa)
+    const STEPS_PER_BAR = 16;
+    const LOOKAHEAD = 0.10;
+    const TICK_MS = 25;
+    // Raag Mand × 2 octaves (kid-friendly major-pentatonic feel)
+    const SCALE = [523, 587, 659, 784, 880, 1046, 1175, 1318];
+    // 808 sub-bass roots — syncopated trap pattern (16 steps)
+    // Hits on: 0, 3, 6, 8, 11, 14 — classic trap groove
+    const BASS808 = [131, 0, 0, 131, 0, 0, 165, 0, 131, 0, 0, 196, 0, 0, 131, 0];
+    // Tumbi melody phrases (16 steps each) — syncopated, modern
     const PHRASES = [
-      [0, null, 2, null, 4, null, 5, null],          // Sa _ Ga _ Pa _ Dha _
-      [4, 5, 4, 2, 0, null, 2, 4],                   // Pa Dha Pa Ga Sa _ Ga Pa
-      [5, 4, 2, 4, 5, 7, 5, 4],                      // Dha Pa Ga Pa Dha Sa' Dha Pa
-      [0, 2, 4, 5, 7, 5, 4, 2],                      // ascend then descend
-      [7, 5, 4, 2, 0, null, null, null],             // descend riff
+      [0,0,2,0, 4,0,5,0, 4,0,2,0, 0,0,4,0],   // call
+      [4,5,7,5, 4,0,2,0, 0,0,2,4, 5,0,4,0],   // response
+      [7,0,5,0, 4,2,0,0, 2,4,5,7, 0,0,5,4],   // climb-fall
+      [5,4,2,4, 5,0,7,0, 5,4,2,0, 0,2,4,5],   // wave
+    ];
+    // Vocal chop phrases (Gurbani alaap glides)
+    const ALAAPS = [
+      [0, 2], [4, 5], [5, 4], [7, 4], [2, 0], [4, 7],
     ];
 
     function _initGain() {
       if (_musicGain || !_ac) return;
+      // Sidechain stage: _musicGain → _sideChain → _master
+      // We duck _sideChain.gain on every kick for the modern "pump" feel.
       _musicGain = _ac.createGain();
-      _musicGain.gain.value = on ? 0.55 : 0.0001; // ~half volume vs SFX
-      _musicGain.connect(_master);
+      _musicGain.gain.value = on ? 0.55 : 0.0001;
+      _sideChain = _ac.createGain();
+      _sideChain.gain.value = 1.0;
+      _musicGain.connect(_sideChain);
+      _sideChain.connect(_master);
     }
 
-    // Tanpura pattern (signature of Gurbani kirtan): Sa Sa Pa Sa (low oct).
-    // Plays each beat softly — provides the meditative drone backbone.
-    const TANPURA = [131, 131, 196, 131, 131, 131, 196, 131];
-    // Vocal alaap glide phrases (Gurbani-style): pairs of [fromIdx, toIdx]
-    // used as start→glide-to. Each cycle picks one phrase to sing softly.
-    const ALAAPS = [
-      [0, 2],   // Sa → Ga (rising sigh)
-      [4, 5],   // Pa → Dha (uplift)
-      [5, 4],   // Dha → Pa (descend)
-      [7, 4],   // Sa' → Pa (octave fall)
-      [2, 0],   // Ga → Sa (resolve)
-      [4, 7],   // Pa → Sa' (climb)
-    ];
+    // Sidechain pump: duck the bus briefly on each kick.
+    // Classic "EDM/trap breathing" production technique.
+    function _pump(when) {
+      if (!_sideChain || !_ac) return;
+      const t = _ac.currentTime + when;
+      _sideChain.gain.cancelScheduledValues(t);
+      _sideChain.gain.setValueAtTime(1.0, t);
+      _sideChain.gain.linearRampToValueAtTime(0.45, t + 0.01); // duck fast
+      _sideChain.gain.exponentialRampToValueAtTime(1.0, t + 0.22); // recover
+    }
 
-    // Schedule a single bar step (called from lookahead loop).
-    // step: 0..7 within one Kaherwa cycle.
+    // Schedule one 16th-note step.
     function _scheduleStep(step, when) {
       if (!_ac) return;
-      const drumOff = when - _ac.currentTime;
+      const off = when - _ac.currentTime;
+      const downbeat = (step % 4) === 0;     // every quarter
+      const eighth = (step % 2) === 0;       // every eighth
 
-      // ---------- LAYER 1 · Tanpura drone (Gurbani signature) ----------
-      _bgmTanpura(TANPURA[step], BEAT * 1.6, 0.06, drumOff);
+      // Drop: every 8 cycles, mute drums for the first 4 steps (1 beat) then return huge.
+      const inDrop = (_cycle % 8 === 7) && step < 4;
 
-      // ---------- LAYER 2 · Drums (Kaherwa theka — bhangra side) ----------
-      // beats:  0    1    2   3    | 4    5     6     7
-      // bols:   DHA  DHIN NA  TIN  | NA   DHIN  DHIN  NA
-      const drumScale = 0.55;
-      if (step === 0 || step === 4) {
-        _bgmDhol(0.30 * drumScale, drumOff, 1.0);
-        _bgmTabla("DHIN", 0.18 * drumScale, drumOff + 0.005);
-      } else {
-        const bols = ["DHA", "DHIN", "NA", "TIN", "NA", "DHIN", "DHIN", "NA"];
-        _bgmTabla(bols[step] || "NA", 0.16 * drumScale, drumOff);
-      }
-      // Taali on off-beats, alternating cycles
-      if ((_cycle % 2 === 1) && (step % 2 === 1)) {
-        _bgmClap(0.10 * drumScale, drumOff + 0.02);
+      // ---------- Tanpura drone (every quarter, soft) ----------
+      if (downbeat) {
+        const tIdx = (step / 4) | 0;
+        const tan = [131, 196, 131, 131][tIdx];
+        _bgmTanpura(tan, BEAT * 1.4, 0.05, off);
       }
 
-      // ---------- LAYER 3 · Bass (chiptune gaming side) ----------
-      _bgmBass(BASS[step], BEAT * 0.85, 0.09, drumOff);
-
-      // ---------- LAYER 4 · Harmonium chord (Gurbani reed) ----------
-      // Sa+Pa fifth on beats 1 and 5 — the kirtan foundation chord.
-      if (step === 0 || step === 4) {
-        _bgmHarmonium(SCALE[0], BEAT * 4.2, 0.07, drumOff);
+      // ---------- 808 KICK (with sidechain pump) ----------
+      // Hits: 0, 6, 8, 14 — syncopated trap pattern
+      if (!inDrop && (step === 0 || step === 6 || step === 8 || step === 14)) {
+        _bgm808Kick(0.55, off);
+        _pump(off);
       }
 
-      // ---------- LAYER 5 · Tumbi melody (folk lead) ----------
+      // ---------- 808 SUB BASS ----------
+      if (!inDrop && BASS808[step]) {
+        _bgm808Bass(BASS808[step], BEAT * 0.55, 0.40, off);
+      }
+
+      // ---------- SNARE / CLAP backbeat (5 & 13 in 16-step) ----------
+      if (!inDrop && (step === 4 || step === 12)) {
+        _bgmSnare(0.35, off);
+        _bgmClap(0.18, off + 0.005);
+      }
+
+      // ---------- HI-HATS (every 8th, with rolls) ----------
+      if (!inDrop && eighth) {
+        const accent = (step % 4 === 2) ? 0.16 : 0.10;
+        _bgmHat(accent, off, false);
+      }
+      // Open hat on the off-beat 7 + 15
+      if (!inDrop && (step === 7 || step === 15)) {
+        _bgmHat(0.10, off + STEP * 0.5, true);
+      }
+      // Trap hat roll on last quarter every 4 cycles (build-up)
+      if (!inDrop && step === 14 && (_cycle % 4 === 3)) {
+        for (let i = 1; i <= 4; i++) {
+          _bgmHat(0.08 + i * 0.01, off + (STEP / 4) * i, false);
+        }
+      }
+
+      // ---------- DHOL accent on bar-1 sam (keeps Punjabi DNA) ----------
+      if (!inDrop && step === 0) {
+        _bgmDhol(0.22, off, 1.0);
+      }
+      // Tabla NA flam on the "and" of beat 3 (step 11) — bhangra spice
+      if (!inDrop && step === 11) {
+        _bgmTabla("NA", 0.10, off);
+      }
+
+      // ---------- HARMONIUM (Gurbani reed) — long Sa+Pa chord, 1 per bar ----------
+      if (step === 0) {
+        _bgmHarmonium(SCALE[0], BEAT * 4 * 1.05, 0.06, off);
+      }
+
+      // ---------- TUMBI melody (folk lead, syncopated) ----------
       const phrase = PHRASES[_cycle % PHRASES.length];
       const noteIdx = phrase[step];
-      if (noteIdx != null) {
-        _bgmTumbi(SCALE[noteIdx], BEAT * 0.7, 0.11, drumOff + 0.02);
+      if (noteIdx) {
+        _bgmTumbi(SCALE[noteIdx], BEAT * 0.45, 0.10, off);
       }
 
-      // ---------- LAYER 6 · Vocal alaap (Gurbani sung phrase, with meend) ----------
-      // Sing one alaap on beat 2 every 3rd cycle to avoid crowding.
-      if (step === 2 && (_cycle % 3 === 0)) {
-        const al = ALAAPS[((_cycle / 3) | 0) % ALAAPS.length];
-        _bgmAlaap(SCALE[al[0]], SCALE[al[1]], BEAT * 2.4, 0.07, drumOff);
+      // ---------- VOCAL CHOP (sliced alaap stab) ----------
+      // Short stab every 2 bars on step 6 — gives the modern chop feel.
+      if (step === 6 && (_cycle % 2 === 0)) {
+        const al = ALAAPS[(_cycle / 2) | 0 % ALAAPS.length];
+        _bgmVocalChop(SCALE[al[0]], SCALE[al[1]], BEAT * 0.6, 0.18, off);
+      }
+      // Full sustained alaap every 4 bars on step 0 — the prayer line.
+      if (step === 0 && (_cycle % 4 === 1)) {
+        const al = ALAAPS[(_cycle | 0) % ALAAPS.length];
+        _bgmAlaap(SCALE[al[0]], SCALE[al[1]], BEAT * 3, 0.10, off);
       }
 
-      // ---------- LAYER 7 · Long Sa pad (warm glue) ----------
-      if (step === 0) {
-        _bgmPad(SCALE[0] / 2, BEAT * 8, 0.04, drumOff);
+      // ---------- REVERSE SWELL build-up before every 4th bar ----------
+      if (step === 12 && (_cycle % 4 === 3)) {
+        _bgmReverseSwell(BEAT * 1.0, 0.16, off);
       }
+
+      // ---------- LONG PAD (warm glue) ----------
+      if (step === 0 && (_cycle % 4 === 0)) {
+        _bgmPad(SCALE[0] / 2, BEAT * 16, 0.035, off);
+      }
+    }
+
+    // ----- Modern voices -----
+    // 808 KICK: low sine with fast pitch drop + click transient
+    function _bgm808Kick(vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const o = a.createOscillator(); o.type = "sine";
+      o.frequency.setValueAtTime(120, t);
+      o.frequency.exponentialRampToValueAtTime(45, t + 0.10);
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+      o.connect(g); g.connect(_musicGain);
+      o.start(t); o.stop(t + 0.36);
+      // Click transient (noise burst, 6 ms)
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3000;
+      const ng = a.createGain();
+      ng.gain.setValueAtTime(vol * 0.5, t);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+      n.connect(hp); hp.connect(ng); ng.connect(_musicGain);
+      n.start(t); n.stop(t + 0.02);
+    }
+    // 808 SUB BASS: pure sine with subtle saw layer for grit
+    function _bgm808Bass(freq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const oSub = a.createOscillator(); oSub.type = "sine"; oSub.frequency.value = freq;
+      const oSaw = a.createOscillator(); oSaw.type = "sawtooth"; oSaw.frequency.value = freq;
+      const lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 280; lp.Q.value = 3;
+      const sawG = a.createGain(); sawG.gain.value = 0.18; // saw layer for harmonics
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+      g.gain.setValueAtTime(vol * 0.85, t + dur * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      oSub.connect(lp);
+      oSaw.connect(sawG); sawG.connect(lp);
+      lp.connect(g); g.connect(_musicGain);
+      oSub.start(t); oSub.stop(t + dur + 0.02);
+      oSaw.start(t); oSaw.stop(t + dur + 0.02);
+    }
+    // Trap HI-HAT: filtered noise burst
+    function _bgmHat(vol, when, open) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 7500;
+      const bp = a.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 9000; bp.Q.value = 1.5;
+      const g = a.createGain();
+      const dur = open ? 0.18 : 0.04;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.001);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      n.connect(hp); hp.connect(bp); bp.connect(g); g.connect(_musicGain);
+      n.start(t); n.stop(t + dur + 0.02);
+    }
+    // SNARE: noise + tonal body for that crack
+    function _bgmSnare(vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      // Tonal body
+      const o = a.createOscillator(); o.type = "triangle";
+      o.frequency.setValueAtTime(200, t);
+      o.frequency.exponentialRampToValueAtTime(150, t + 0.05);
+      const og = a.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(vol * 0.6, t + 0.002);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + 0.10);
+      o.connect(og); og.connect(_musicGain);
+      o.start(t); o.stop(t + 0.12);
+      // Noise crack
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1200;
+      const ng = a.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.exponentialRampToValueAtTime(vol, t + 0.001);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      n.connect(hp); hp.connect(ng); ng.connect(_musicGain);
+      n.start(t); n.stop(t + 0.14);
+    }
+    // VOCAL CHOP: short alaap stab — sliced sample feel
+    function _bgmVocalChop(fromFreq, toFreq, dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const o = a.createOscillator(); o.type = "sawtooth";
+      o.frequency.setValueAtTime(fromFreq, t);
+      o.frequency.exponentialRampToValueAtTime(toFreq, t + dur * 0.4);
+      const bp1 = a.createBiquadFilter(); bp1.type = "bandpass"; bp1.frequency.value = 800; bp1.Q.value = 6;
+      const bp2 = a.createBiquadFilter(); bp2.type = "bandpass"; bp2.frequency.value = 1500; bp2.Q.value = 6;
+      const mix = a.createGain();
+      o.connect(bp1); bp1.connect(mix);
+      o.connect(bp2); bp2.connect(mix);
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);     // sharp pluck-style attack
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);    // tight release
+      mix.connect(g); g.connect(_musicGain);
+      if (_verbSend) { const s = a.createGain(); s.gain.value = 0.45; g.connect(s); s.connect(_verbSend); }
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+    // REVERSE SWELL: noise rising into a hit — classic build-up
+    function _bgmReverseSwell(dur, vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const bp = a.createBiquadFilter(); bp.type = "bandpass";
+      bp.frequency.setValueAtTime(800, t);
+      bp.frequency.exponentialRampToValueAtTime(6000, t + dur);
+      bp.Q.value = 2;
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.95);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      n.connect(bp); bp.connect(g); g.connect(_musicGain);
+      if (_verbSend) { const s = a.createGain(); s.gain.value = 0.50; g.connect(s); s.connect(_verbSend); }
+      n.start(t); n.stop(t + dur + 0.02);
     }
 
     // ----- Lighter BGM voices (lower vol, less reverb than SFX) -----
@@ -1799,7 +1969,7 @@
         _scheduleStep(_step, _nextNoteTime);
         _nextNoteTime += STEP;
         _step++;
-        if (_step >= 8) { _step = 0; _cycle++; }
+        if (_step >= STEPS_PER_BAR) { _step = 0; _cycle++; }
       }
     }
 
