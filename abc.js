@@ -911,6 +911,7 @@
     if (ok) {
       btnEl.classList.add("correct");
       recordAnswer(step.statKind, step.statKey, true);
+      try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.correct && GameAPI.SFX.correct(); } catch (_) {}
       fb.textContent = pick(PRAISE);
       fb.className = "abc-feedback ok";
       bodyEl().querySelectorAll(".abc-choice").forEach(b => b.disabled = true);
@@ -925,6 +926,7 @@
       btnEl.classList.add("wrong");
       btnEl.disabled = true;
       recordAnswer(step.statKind, step.statKey, false);
+      try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.wrong && GameAPI.SFX.wrong(); } catch (_) {}
       if (state.attempts >= 2) {
         if (step.type === "sound-match") {
           fb.innerHTML = `This is <b>${escHtml(step.statKey)}</b>. It says ${LETTERS[step.statKey].phoneme}. Now tap <b>${escHtml(step.target)}</b>.`;
