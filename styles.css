@@ -3417,3 +3417,259 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .splash-cta { animation: none; }
 }
+
+/* =====================================================================
+ * 2026-05-02 — Polish pass: unified glass + neon, smoother flow.
+ * Adds shared design tokens, glass chips, view transitions, refined ABC.
+ * Layered LAST so it overrides earlier rules without touching them.
+ * ===================================================================== */
+:root {
+  --neon-cyan:    #00e5ff;
+  --neon-amber:   #ffd23f;
+  --neon-magenta: #ff4dd2;
+  --glass-bg:     rgba(15, 25, 60, 0.55);
+  --glass-bg-2:   rgba(255, 255, 255, 0.08);
+  --glass-stroke: rgba(255, 255, 255, 0.18);
+  --glass-stroke-strong: rgba(255, 255, 255, 0.32);
+  --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --ease-pop:     cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-flow:    cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* -------- Glass chip primitive (HUD pills, ABC chips, etc.) -------- */
+.hud-row .hud-progress,
+.hud-row .hp-bar,
+.hud-row .hud-actions { transition: transform 200ms var(--ease-flow); }
+
+.hud-row .hud-progress {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 999px;
+  padding: 4px 12px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  letter-spacing: 0.3px;
+}
+.hud-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 12px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.hud-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 6px 18px rgba(0, 229, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.hud-btn:active { transform: translateY(0) scale(0.96); }
+.hud-btn.danger:hover { border-color: var(--neon-magenta); box-shadow: 0 6px 18px rgba(255, 77, 210, 0.35); }
+.hud-btn-abc {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(255, 77, 210, 0.25));
+  border-color: rgba(0, 229, 255, 0.45);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 6px 12px;
+}
+.hud-btn-abc:hover {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.45), rgba(255, 77, 210, 0.45));
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.55), 0 0 40px rgba(255, 77, 210, 0.25);
+}
+
+/* -------- Header refinement -------- */
+.player-chip {
+  border-radius: 999px;
+  border: 1px solid var(--glass-stroke);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 120ms var(--ease-pop), border-color 160ms ease;
+}
+.player-chip:hover { border-color: var(--neon-amber); transform: translateY(-1px); }
+.power-bar {
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--glass-shadow);
+}
+
+/* -------- View transition: gentle slide+fade on screen swap -------- */
+@keyframes vtkViewIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#app > * { animation: vtkViewIn 280ms var(--ease-pop) both; }
+@media (prefers-reduced-motion: reduce) {
+  #app > * { animation: none; }
+}
+
+/* -------- ABC overlay polish -------- */
+#abc-overlay.abc-root {
+  background: radial-gradient(circle at 30% 20%, rgba(0, 229, 255, 0.14), transparent 55%),
+              radial-gradient(circle at 75% 85%, rgba(255, 77, 210, 0.14), transparent 60%),
+              linear-gradient(165deg, #0a1230 0%, #0d1d4d 60%, #112a6a 100%);
+}
+.abc-card,
+.abc-home,
+.abc-level,
+.abc-game,
+.abc-reward-screen,
+.abc-parent,
+.abc-review,
+.abc-rewards {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 18px;
+  padding: 16px 14px;
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  animation: vtkViewIn 320ms var(--ease-pop) both;
+}
+.abc-cta {
+  border-radius: 14px;
+  border: 1px solid var(--glass-stroke);
+  background: var(--glass-bg-2);
+  color: #fff;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease;
+}
+.abc-cta:hover { transform: translateY(-1px); border-color: var(--neon-cyan); box-shadow: 0 6px 18px rgba(0, 229, 255, 0.3); }
+.abc-cta:active { transform: scale(0.97); }
+.abc-cta.primary {
+  background: linear-gradient(135deg, var(--neon-cyan), #6e8cff);
+  border-color: rgba(0, 229, 255, 0.6);
+  color: #001027;
+  font-weight: 800;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 22px rgba(0, 229, 255, 0.35);
+}
+.abc-cta.primary:hover {
+  box-shadow: 0 0 28px rgba(0, 229, 255, 0.55), 0 6px 22px rgba(0, 229, 255, 0.4);
+}
+
+/* ABC tiles & level cards refinement */
+.abc-letter-tile {
+  border-radius: 12px;
+  border: 1px solid var(--glass-stroke);
+  background: var(--glass-bg-2);
+  color: #fff;
+  padding: 6px 10px;
+  min-width: 48px;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease;
+}
+.abc-letter-tile:hover { transform: translateY(-2px); border-color: var(--neon-cyan); box-shadow: 0 4px 14px rgba(0, 229, 255, 0.35); }
+.abc-letter-big { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+.abc-letter-phn { display: block; font-size: 0.78rem; opacity: 0.8; }
+.abc-lvl-card { transition: transform 140ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease; }
+.abc-lvl-card:hover:not(:disabled) { box-shadow: 0 6px 20px rgba(0, 229, 255, 0.3); }
+.abc-lvl-card.sel { box-shadow: 0 0 0 2px var(--neon-amber), 0 6px 20px rgba(255, 210, 63, 0.35); }
+
+/* Sentence + story card polish */
+.abc-sentence {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-stroke);
+  border-radius: 14px;
+  margin: 10px 0;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.abc-prompt {
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--neon-amber);
+  margin: 6px 0 12px;
+  letter-spacing: 0.3px;
+}
+.abc-story {
+  background: linear-gradient(135deg, rgba(0, 60, 120, 0.55), rgba(0, 120, 180, 0.4));
+  border-left: 4px solid var(--neon-cyan);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #fff;
+  margin-bottom: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Reward bridge payout pill row */
+.abc-bridge-payout {
+  margin: 10px auto 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 210, 63, 0.18), rgba(255, 138, 0, 0.18));
+  border: 1px solid rgba(255, 210, 63, 0.5);
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(255, 138, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: vtkPayoutIn 500ms var(--ease-pop) both;
+}
+.abc-bridge-title { font-weight: 800; color: #fff; letter-spacing: 0.5px; margin-bottom: 6px; }
+.abc-bridge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.abc-bridge-pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--neon-amber);
+  font-weight: 800;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 210, 63, 0.55);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+@keyframes vtkPayoutIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Toast: a touch of neon on .rupee variant for the bridge payout */
+.gold-toast.rupee {
+  background: linear-gradient(135deg, rgba(255, 210, 63, 0.95), rgba(255, 138, 0, 0.95));
+  color: #1a0033;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 24px rgba(255, 138, 0, 0.45), 0 0 30px rgba(255, 210, 63, 0.35);
+}
+
+/* Splash CTA polish (image-only splash → invite to tap) */
+#splash .splash-cta {
+  position: absolute;
+  bottom: 14vh;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #fff;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  letter-spacing: 2px;
+  animation: vtkPulseCta 1.6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.splash-cta-en { display: block; font-size: 1.4rem; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55); }
+.splash-cta-pa { display: block; font-size: 1.05rem; opacity: 0.92; margin-top: 2px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55); }
+@keyframes vtkPulseCta {
+  from { opacity: 0.65; transform: translateX(-50%) translateY(0); }
+  to   { opacity: 1;    transform: translateX(-50%) translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) { #splash .splash-cta { animation: none; } }
+
+/* Choice button refinement (already exists; this is a non-destructive polish) */
+.choice {
+  transition: transform 140ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease;
+}
+.choice:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 229, 255, 0.25); }

@@ -423,10 +423,49 @@
     p.starsPerLevel = p.starsPerLevel || {};
     const _lvlIdNow = (state.level && state.level.id) || "";
     const _prev = p.starsPerLevel[_lvlIdNow] || 0;
+    let starsDelta = 0;
     if (earned > _prev) {
+      starsDelta = earned - _prev;
       p.starsPerLevel[_lvlIdNow] = earned;
-      p.stars = (p.stars || 0) + (earned - _prev);
+      p.stars = (p.stars || 0) + starsDelta;
     }
+
+    // -----------------------------------------------------------------
+    // Bridge: pay improvement into the main game economy (rupees + power
+    // + gold). Awards only on stars *gained* this session, never twice.
+    //   1 star  =>  60 rupees + 250 power
+    //   2 stars => 150 rupees + 600 power
+    //   3 stars => 320 rupees + 1300 power + 1 gold bar (10 coins)
+    // -----------------------------------------------------------------
+    if (starsDelta > 0 && window.VTK && typeof window.VTK.reward === "function") {
+      const TIER = {
+        1: { rupees:  60, power:  250, gold:  0 },
+        2: { rupees: 150, power:  600, gold:  0 },
+        3: { rupees: 320, power: 1300, gold: 10 }
+      };
+      // Sum tiers for each newly-earned star step.
+      let rupees = 0, power = 0, gold = 0;
+      for (let s = _prev + 1; s <= earned; s++) {
+        rupees += TIER[s].rupees;
+        power  += TIER[s].power;
+        gold   += TIER[s].gold;
+      }
+      const lvlNum = (LEVELS.findIndex(l => l === state.level) + 1) || 1;
+      const starGlyph = "\u2B50".repeat(starsDelta);
+      try {
+        window.VTK.reward({
+          rupees, power, gold,
+          confetti: starsDelta * 12,
+          message: {
+            en: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDE99` : ""}`,
+            pa: `${starGlyph} ABC L${lvlNum} +\u20B9${rupees} +${power}\u26A1${gold ? ` +${gold}\uD83E\uDE99` : ""}`
+          }
+        });
+        // Remember last bridge payout for the reward screen UI.
+        p.lastBridge = { rupees, power, gold, stars: starsDelta, lvl: lvlNum };
+      } catch (_) {}
+    }
+
     p.lastSession = state.sessionStats;
     // Per-level best + unlock: 7/10 unlocks the next level.
     const lvlIdx = LEVELS.findIndex(l => l === state.level);
@@ -1009,6 +1048,15 @@
       <section class="abc-reward-screen">
         <h3 class="abc-h3">${escHtml(state.level.title)}</h3>
         <div class="abc-reward-big">${escHtml(headline)}</div>
+        ${p.lastBridge && p.lastBridge.lvl === (lvlIdx + 1) ? `
+          <div class="abc-bridge-payout">
+            <div class="abc-bridge-title">\uD83C\uDF81 Earned in main game</div>
+            <div class="abc-bridge-row">
+              <span class="abc-bridge-pill">+\u20B9${p.lastBridge.rupees}</span>
+              <span class="abc-bridge-pill">+${p.lastBridge.power}\u26A1</span>
+              ${p.lastBridge.gold ? `<span class="abc-bridge-pill">+${p.lastBridge.gold}\uD83E\uDE99</span>` : ""}
+            </div>
+          </div>` : ""}
         <div class="abc-stats">
           <div>Score: <strong>${score}/${CONFIG.stepsPerRound}</strong></div>
           <div>Level: <strong>${lvlIdx + 1}/${LEVELS.length}</strong></div>
