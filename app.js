@@ -594,6 +594,7 @@
     history: `dl_history_v2__${currentChildId}`,
     daily:   `dl_daily_v2__${currentChildId}`,
     muted:   "dl_muted_v2",
+    music:   "dl_music_v1",
   };
   function loadJSON(k, fb) {
     try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; }

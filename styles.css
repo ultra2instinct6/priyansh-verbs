@@ -4076,3 +4076,40 @@ main {
 .abc-gloss-emoji { font-size: 1.6rem; line-height: 1; }
 .abc-gloss-pa { font-size: 1.05rem; color: var(--neon-amber); }
 body.hide-pa .abc-gloss-pa { display: none; }
+
+/* === Splash final layout (overrides earlier absolute-positioned CTA) === */
+#splash {
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px 20px max(80px, env(safe-area-inset-bottom));
+}
+#splash .splash-cta {
+  position: static !important;
+  transform: none !important;
+  bottom: auto !important;
+  left: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff7a18 0%, #ff5722 100%);
+  color: #fff;
+  pointer-events: auto;
+  box-shadow:
+    0 8px 24px rgba(255, 87, 34, 0.45),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  animation: splashPulse 1.6s ease-in-out infinite;
+}
+#splash .splash-cta-en,
+#splash .splash-cta-pa { display: block; }
+.splash-credit {
+  position: absolute !important;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+}
