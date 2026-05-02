@@ -33,10 +33,10 @@ const LADDER_VERSION = 13;
 const LADDER = [
 
   // ============================================================
-  // UNIT 1 — PIND BASICS  (foundations, ~Grade 1.5–2.0)
+  // UNIT 1 — EARTHLING BASICS  (foundations, ~Grade 1.5–2.0)
   // ============================================================
   {
-    id: "u1", title: "Pind Basics", emoji: "🌍",
+    id: "u1", title: "Earthling Basics", emoji: "🌍",
     blocks: [
 
       // ---- Block A1: Alphabet & letter sounds ----
@@ -62,8 +62,8 @@ const LADDER = [
             prompt:"How many vowels are there?",
             choices:["3","5","7","10"], correct:"5" },
           { id:"u1.a1.c7", type:"mcq",
-            prompt:"Which word starts with the same sound as <b>cat</b>?",
-            choices:["king","sun","tap","man"], correct:"king" },
+            prompt:"<b>cat</b> starts with which sound?",
+            choices:["/k/","/s/","/t/","/m/"], correct:"/k/" },
           { id:"u1.a1.c8", type:"fill",
             prompt:"Lowercase of <b>B</b> is ___ .", accept:["b"], choices:["b","d","p"] },
         ]
@@ -106,7 +106,7 @@ const LADDER = [
             title:"Compare numbers",
             body:"<b>More</b> = a bigger number. <b>Less (or fewer)</b> = a smaller number. On a number line, numbers grow as you move RIGHT." },
           { id:"u1.a3.c2", type:"mcq", prompt:"Which is MORE: <b>3</b> or <b>7</b>?", choices:["3","7","both equal","none"], correct:"7" },
-          { id:"u1.a3.c3", type:"mcq", prompt:"Which number is the <b>SMALLEST</b>?", choices:["12","9","15","20"], correct:"9" },
+          { id:"u1.a3.c3", type:"mcq", prompt:"Which is LESS?", choices:["12","9","15","20"], correct:"9" },
           { id:"u1.a3.c4", type:"mcq", prompt:"What number is between <b>5</b> and <b>7</b>?", choices:["4","6","8","9"], correct:"6" },
           { id:"u1.a3.c5", type:"mcq", prompt:"What is <b>1 more than 9</b>?", choices:["8","9","10","11"], correct:"10" },
           { id:"u1.a3.c6", type:"mcq", prompt:"What is <b>1 less than 6</b>?", choices:["4","5","6","7"], correct:"5" },
@@ -233,7 +233,7 @@ const LADDER = [
           { id:"u1.b3.c8", type:"fill", prompt:"🧮 7 + 8 = ?", accept:["15","fifteen"], choices:["15","14","16"] },
           { id:"u1.b3.c9", type:"fill", prompt:"🧮 11 + 6 = ?", accept:["17","seventeen"], choices:["17","16","18"] },
           { id:"u1.b3.c10", type:"mcq",
-            prompt:"🧮 Bittu has 8 samose. Simran gives him 6 more. How many now?",
+            prompt:"🧮 Goku has 8 senzu beans. Krillin gives him 6 more. How many now?",
             choices:["12","13","14","15"], correct:"14" },
         ]
       },
@@ -372,8 +372,8 @@ const LADDER = [
             prompt:"When should you <b>wash your hands</b>?",
             choices:["Only at night","Before eating and after the bathroom","Once a week","Never"], correct:"Before eating and after the bathroom" },
           { id:"u1.b9.c4", type:"mcq",
-            prompt:"How many hours of sleep does a 7–8 year old need each night?",
-            choices:["6–7","8–9","9–11","12–14"], correct:"9–11" },
+            prompt:"How many hours of sleep does a 7–8 year old need?",
+            choices:["3–4","5–6","9–11","15–16"], correct:"9–11" },
           { id:"u1.b9.c5", type:"mcq",
             prompt:"Which is the <b>healthiest</b> snack?",
             choices:["candy bar","soda","an apple","chips"], correct:"an apple" },
@@ -491,12 +491,12 @@ const LADDER = [
               { prompt:"11 + 4", choices:["13","14","15","16"], correct:"15" },
             ] },
           { id:"u1.fun.c6", type:"match",
-            title:"Match the doubles fact",
+            title:"Match capital with country",
             pairs:[
-              { a:"3 + 3", b:"6" },
-              { a:"5 + 5", b:"10" },
-              { a:"7 + 7", b:"14" },
-              { a:"9 + 9", b:"18" },
+              { a:"India", b:"New Delhi" },
+              { a:"USA", b:"Washington D.C." },
+              { a:"Japan", b:"Tokyo" },
+              { a:"France", b:"Paris" },
             ] },
           { id:"u1.fun.c7", type:"tap",
             prompt:"Tap all the <b>PLURALS</b> (more than one)",
@@ -533,10 +533,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 2 — DHOL DRILLS  (build, ~Grade 2.0–2.5)
+  // UNIT 2 — Z FIGHTER  (build, ~Grade 2.0–2.5)
   // ============================================================
   {
-    id: "u2", title: "Dhol Drills", emoji: "🥋",
+    id: "u2", title: "Z Fighter Drills", emoji: "🥋",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 1) ----
@@ -637,7 +637,7 @@ const LADDER = [
           { id:"u2.b4.c4", type:"fill", prompt:"🧮 41 + 25 = ?", accept:["66"], choices:["66","65","67"] },
           { id:"u2.b4.c5", type:"fill", prompt:"🧮 52 + 36 = ?", accept:["88"], choices:["88","78","98"] },
           { id:"u2.b4.c6", type:"mcq",
-            prompt:"🧮 Bittu trained 30 hours. He trained 25 more. Total?",
+            prompt:"🧮 Goku trained 30 hours. He trained 25 more. Total?",
             choices:["45","50","55","65"], correct:"55" },
         ]
       },
@@ -883,7 +883,7 @@ const LADDER = [
         cards: [
           { id:"u2.fun.c1", type:"intro",
             title:"🎮 Fun Arena!",
-            body:"Earn extra Rupees and a streak boost by acing these mini-games!" },
+            body:"Earn extra Zeni and a streak boost by acing these mini-games!" },
           { id:"u2.fun.c2", type:"match",
             title:"Match contractions",
             pairs:[
@@ -968,10 +968,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 3 — BHANGRA BLAST  (extend, ~Grade 2.5–3.0)
+  // UNIT 3 — OVER 9000  (extend, ~Grade 2.5–3.0)
   // ============================================================
   {
-    id: "u3", title: "Bhangra Blast", emoji: "💥",
+    id: "u3", title: "Over 9000!", emoji: "💥",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 2) ----
@@ -1053,7 +1053,7 @@ const LADDER = [
           { id:"u3.b3.c4", type:"fill", prompt:"🧮 68 − 35 = ?", accept:["33"], choices:["33","23","43"] },
           { id:"u3.b3.c5", type:"fill", prompt:"🧮 90 − 40 = ?", accept:["50","fifty"], choices:["50","40","60"] },
           { id:"u3.b3.c6", type:"mcq",
-            prompt:"🧮 Veer had 75 rupees. He spent 30. How many left?",
+            prompt:"🧮 Vegeta had 75 Zeni. He spent 30. How many left?",
             choices:["35","40","45","55"], correct:"45" },
         ]
       },
@@ -1071,7 +1071,7 @@ const LADDER = [
           { id:"u3.b3b.c5", type:"fill", prompt:"🧮 58 + 17 = ?", accept:["75"], choices:["75","65","85"] },
           { id:"u3.b3b.c6", type:"fill", prompt:"🧮 39 + 44 = ?", accept:["83"], choices:["83","73","93"] },
           { id:"u3.b3b.c7", type:"mcq",
-            prompt:"🧮 Bittu trained 26 hours, then 38 more. Total hours?",
+            prompt:"🧮 Goku trained 26 hours, then 38 more. Total hours?",
             choices:["54","64","74","66"], correct:"64" },
         ]
       },
@@ -1388,7 +1388,7 @@ const LADDER = [
             prompt:"⭐⭐⭐⭐ Mon<br>⭐⭐ Tue<br>⭐⭐⭐⭐⭐ Wed<br>How many stars in <b>total</b>?",
             choices:["9","10","11","12"], correct:"11" },
           { id:"u3.b14.c5", type:"mcq",
-            prompt:"Tally chart of votes (each full group = 5):<br>Pizza: <b>(group of 5) |||</b> &nbsp; (8 votes)<br>Tacos: <b>||||</b> &nbsp; (4 votes)<br>Sushi: <b>||</b> &nbsp; (2 votes)<br>How many <b>more</b> votes did Pizza get than Tacos?",
+            prompt:"Tally chart of votes (each full group of 5 looks like <b>||||</b> with a slash):<br>Pizza: <b>(group of 5) |||</b><br>Tacos: <b>||||</b><br>Sushi: <b>||</b><br>How many <b>more</b> votes did Pizza get than Tacos?",
             choices:["2","3","4","6"], correct:"4" },
           { id:"u3.b14.c6", type:"mcq",
             prompt:"📕📕📕 Mon<br>📕📕📕📕📕 Tue<br>📕📕📕📕 Wed<br>Which day had the <b>fewest</b> books read?",
@@ -1405,7 +1405,7 @@ const LADDER = [
         cards: [
           { id:"u3.fun.c1", type:"intro",
             title:"🎮 Fun Arena!",
-            body:"Three mini-games to warm up before the boss. PERFECT score = bonus rupees!" },
+            body:"Three mini-games to warm up before Vegeta. PERFECT score = bonus zeni!" },
           { id:"u3.fun.c2", type:"match",
             title:"Match synonyms",
             pairs:[
@@ -1491,10 +1491,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 4 — YODHA AWAKENING  (~Grade 2.5)
+  // UNIT 4 — SAIYAN AWAKENING  (~Grade 2.5)
   // ============================================================
   {
-    id: "u4", title: "Yodha Awakening", emoji: "🟡",
+    id: "u4", title: "Saiyan Awakening", emoji: "🟡",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 3) ----
@@ -1714,7 +1714,7 @@ const LADDER = [
             title:"Read carefully!",
             body:"Look for clue words: <b>in all / total</b> = add. <b>left / fewer</b> = subtract. <b>each / groups</b> = multiply or divide." },
           { id:"u4.b8.c2", type:"mcq",
-            prompt:"Bittu ate 7 jalebis. Simran ate 5. <b>How many in total?</b>",
+            prompt:"Goku ate 7 senzu beans. Vegeta ate 5. <b>How many in total?</b>",
             choices:["2","11","12","13"], correct:"12" },
           { id:"u4.b8.c3", type:"mcq",
             prompt:"There were 20 apples. 8 were eaten. <b>How many left?</b>",
@@ -1794,8 +1794,8 @@ const LADDER = [
             correct:"Sam said, \"hello.\"" },
           { id:"u4.b10.c3", type:"mcq",
             prompt:"Pick the right one:",
-            choices:["\"I am hungry,\" said Bittu.","I am hungry said Bittu.","\"I am hungry said Bittu.","I am hungry, \"said Bittu.\""],
-            correct:"\"I am hungry,\" said Bittu." },
+            choices:["\"I am hungry,\" said Goku.","I am hungry said Goku.","\"I am hungry said Goku.","I am hungry, \"said Goku.\""],
+            correct:"\"I am hungry,\" said Goku." },
           { id:"u4.b10.c4", type:"mcq",
             prompt:"What do quotation marks tell us?",
             choices:["A list","A question","Someone's exact words","The end of a story"],
@@ -1975,7 +1975,7 @@ const LADDER = [
         ]
       },
 
-      // ---- Block 18: ➕ Fractions II: thirds, eighths, equivalents ----
+      // ---- Block 18: � Fractions II: thirds, eighths, equivalents ----
       {
         id: "u4.b18", title: "Fractions II: thirds, eighths, equivalents", emoji: "🍕",
         cards: [
@@ -2006,7 +2006,7 @@ const LADDER = [
         ]
       },
 
-      // ---- Block 19: 🎮 Fun Arena ----
+      // ---- Block 19: �🎮 Fun Arena ----
       {
         id: "u4.fun", title: "Fun Arena 🎮", emoji: "🎮",
         cards: [
@@ -2100,10 +2100,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 5 — PIND DA AKHADA  (~Grade 2.8–3.0)
+  // UNIT 5 — GALACTIC TOURNAMENT  (~Grade 2.8–3.0)
   // ============================================================
   {
-    id: "u5", title: "Pind Da Akhada", emoji: "🏆",
+    id: "u5", title: "Galactic Tournament", emoji: "🏆",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 4) ----
@@ -2639,7 +2639,7 @@ const LADDER = [
             title:"Two-step thinking",
             body:"Some problems need <b>two steps</b>. Read carefully:<br>1. What is the question really asking?<br>2. Do the first step. <i>Write the answer.</i><br>3. Use that answer in the next step.<br>Example: <i>Sara had 8 stickers. She gave 3 away, then got 5 more.</i> → 8 − 3 = 5; 5 + 5 = <b>10</b>." },
           { id:"u5.b19.c2", type:"mcq",
-            prompt:"Bittu has 12 gulab jamuns. He eats 4, then Simran gives him 6 more. How many does he have now?",
+            prompt:"Goku has 12 senzu beans. He eats 4, then Krillin gives him 6 more. How many does he have now?",
             choices:["10","12","14","18"], correct:"14" },
           { id:"u5.b19.c3", type:"mcq",
             prompt:"There are 6 boxes with 4 cookies each. You eat 5 cookies. How many cookies are LEFT?",
@@ -2802,10 +2802,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 6 — SHER-DIL SAGA  (~Grade 3.0–3.5)
+  // UNIT 6 — SUPER SAIYAN SAGA  (~Grade 3.0–3.5)
   // ============================================================
   {
-    id: "u6", title: "Sher-Dil Saga", emoji: "🌟",
+    id: "u6", title: "Super Saiyan Saga", emoji: "🌟",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 5) ----
@@ -3180,10 +3180,10 @@ const LADDER = [
   },
 
   // ============================================================
-  // UNIT 7 — SHER-DIL DANGAL  (~Grade 3.5)
+  // UNIT 7 — TOURNAMENT OF POWER  (~Grade 3.5)
   // ============================================================
   {
-    id: "u7", title: "Sher-Dil Dangal", emoji: "🏆",
+    id: "u7", title: "Tournament of Power", emoji: "🏆",
     blocks: [
 
       // ---- Block 0: ☕ Chai Recap (from Unit 6) ----
@@ -3419,7 +3419,7 @@ const LADDER = [
 
       // ---- Block 14: Habitats & food chains ----
       {
-        id: "u7.b14", title: "Habitats & food chains", emoji: "🌿",
+        id: "u7.b14", title: "Habitats & food chains", emoji: "☕",
         cards: [
           { id:"u7.b14.c1", type:"intro",
             title:"Who eats what",
