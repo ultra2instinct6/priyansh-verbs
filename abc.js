@@ -170,7 +170,7 @@
       title: "Level 1: First Sounds",
       lesson: "Letters make sounds. Tap a letter to hear its sound.",
       objective: "I can hear and tap the first sound in a word.",
-      theme: "school", themeIcon: "í ¼í¿«",
+      theme: "school", themeIcon: "ðŸ«",
       letters: ["m", "s", "t", "p", "a"],
       words:   WORDS,
       sentences: SENTENCES
@@ -195,7 +195,7 @@
       id: "L3",
       title: "Level 3: Dot the Pup",
       objective: "I can read CVC words with d and o.",
-      theme: "pets", themeIcon: "í ½í°¶",
+      theme: "pets", themeIcon: "ðŸ¶",
       story: [
         "Mia has a pup. The pup is Dot.",
         "Dot did it! Dot tips a mop.",
@@ -217,7 +217,7 @@
       title: "Level 4: Add g, c",
       objective: "I can read words with c and g, like cat and dog.",
       story: ["A cat sat on a mat.", "The dog can dig a pit.", "Pat got a pig in a pen."],
-      theme: "farm", themeIcon: "í ½í°„",
+      theme: "farm", themeIcon: "ðŸ„",
       letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o", "g", "c"],
       words:   ["cat", "cap", "cot", "cog", "dog", "gap", "dig", "can", "got", "pig"],
       sentences: [
@@ -232,7 +232,7 @@
       id: "L5",
       title: "Level 5: Hat in the Fog",
       objective: "I can read words with h and f.",
-      theme: "weather", themeIcon: "í ¼í¼«ï¸",
+      theme: "weather", themeIcon: "ðŸŒ«ï¸",
       story: [
         "Kai has a tan hat.",
         "A big fog hid the cat. The hat is gone!",
@@ -253,7 +253,7 @@
       id: "L6",
       title: "Level 6: The Red Hen Race",
       objective: "I can read words with e and r.",
-      theme: "barnyard", themeIcon: "í ½í°”",
+      theme: "barnyard", themeIcon: "ðŸ”",
       story: [
         "Run! The red hen ran. The rat ran too.",
         "Ben set ten nets on the path.",
@@ -296,7 +296,7 @@
       title: "Level 8: Add u, w, j",
       objective: "I can read words with u, w, j.",
       story: ["The bug is on the cup.", "Sam can run in the sun.", "The jet is fast. We win!"],
-      theme: "playground", themeIcon: "í ¼í¾¡",
+      theme: "playground", themeIcon: "ðŸŽ¡",
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
       words:   ["cup", "bug", "sun", "run", "jug", "jet", "jog", "web", "wig", "win"],
       sentences: [
@@ -313,7 +313,7 @@
       lesson: "A blend is two letters that keep BOTH sounds: s-t \u2192 \u201cst\u201d.",
       objective: "I can read consonant blends like st, pl, fr.",
       story: ["The frog jumps to the spot.", "Sam has a plan to clip the flag.", "Stop! The crab is in the mud."],
-      theme: "pond", themeIcon: "í ½í°¸",
+      theme: "pond", themeIcon: "ðŸ¸",
       letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
       words:   ["stop", "step", "spot", "plan", "plot", "flag", "frog", "clip", "crab", "drum"],
       sentences: [
@@ -330,7 +330,7 @@
       lesson: "A digraph is two letters that make ONE new sound: s+h \u2192 /sh/.",
       objective: "I can read digraphs sh, ch, th.",
       story: ["The ship is at the shop.", "Chop a chip for the dish.", "This thin fish is for that chin."],
-      theme: "kitchen", themeIcon: "í ¼í½´",
+      theme: "kitchen", themeIcon: "ðŸ´",
       letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","f","d","h","c"],
       words:   ["ship", "shop", "fish", "dish", "chip", "chop", "chin", "this", "that", "thin"],
       sentences: [
@@ -347,7 +347,7 @@
       lesson: "Magic e at the end makes the vowel say its name: cap \u2192 cape.",
       objective: "I can read magic-e words like cake, bike, home.",
       story: ["I like to bake a cake.", "The bike rides home by the lake.", "It is time. The cute pup has a bone."],
-      theme: "bakery", themeIcon: "í ¼í¾‚",
+      theme: "bakery", themeIcon: "ðŸŽ‚",
       letters: ["a","e","i","o","u","m","k","t","p","n","l","d","r","b","c","h"],
       words:   ["make", "cake", "lake", "bike", "like", "time", "home", "bone", "cube", "cute"],
       sentences: [
@@ -363,14 +363,14 @@
       title: "Level 12: Lab Mash-Up",
       lesson: "Mix what you know: digraphs (sh/ch/th), magic-e, and blends â€” all in one round.",
       objective: "I can mix what I have learned to read longer words.",
-      theme: "lab", themeIcon: "í ¾í·ª",
+      theme: "lab", themeIcon: "ðŸ§ª",
       story: [
         "Zara works in a lab. She has a plate, a flame, and a shape.",
         "She mixes â€˜shâ€™ + a magic-e: a snake on a plate!",
         "She mixes â€˜châ€™ + a blend: chase the crane to the globe!",
         "Pop! A prize! Zara won the lab mash-up."
       ],
-      letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","z"],
+      letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","c","k","b","d","m","f","h","g","z"],
       words:   ["shape", "chase", "these", "trike", "plate", "snake", "flame", "globe", "prize", "crane"],
       sentences: [
         { text: "Zara has a flame in the lab.", q: "Who has the flame?", a: "Zara", choices: ["Zara","Mia","Ben"] },
@@ -386,7 +386,7 @@
       lesson: "Vowel teams ee and ea both say the long e sound: /\u0113/.",
       objective: "I can read vowel teams ee and ea.",
       story: ["I see a tree by the beach.", "Feed the team some meat.", "The leaf fell on the seat."],
-      theme: "beach", themeIcon: "í ¼í¿–ï¸",
+      theme: "beach", themeIcon: "ðŸ–ï¸",
       letters: ["a","e","i","o","u","ee","ea","s","t","p","n","r","l","f","b","d","m","h","ch"],
       words:   ["see", "feet", "tree", "feed", "leaf", "read", "team", "seat", "beach", "meat"],
       sentences: [
@@ -403,7 +403,7 @@
       lesson: "Vowel teams oa, ai, ay say long o (\u014D) and long a (\u0101).",
       objective: "I can read vowel teams oa, ai, ay.",
       story: ["The boat is on the road.", "It will rain on the train today.", "We may play in the day."],
-      theme: "travel", themeIcon: "í ½íº‚",
+      theme: "travel", themeIcon: "ðŸš‚",
       letters: ["a","e","i","o","u","oa","ai","ay","s","t","p","n","r","l","b","d","m","c"],
       words:   ["boat", "coat", "road", "soap", "rain", "train", "pain", "day", "play", "may"],
       sentences: [
@@ -420,7 +420,7 @@
       lesson: "Bossy R changes the vowel: ar, or, er, ir, ur.",
       objective: "I can read bossy-r words like car, bird, fork.",
       story: ["The car has a star.", "The bird can turn at the fork.", "The girl can stir the pot."],
-      theme: "garden", themeIcon: "í ¼í¼±",
+      theme: "garden", themeIcon: "ðŸŒ±",
       letters: ["a","e","i","o","u","ar","or","er","ir","ur","c","s","t","p","n","f","b","d","h","g","l","k"],
       words:   ["car", "star", "fork", "born", "fern", "bird", "stir", "hurt", "turn", "girl"],
       sentences: [
@@ -437,7 +437,7 @@
       lesson: "Diphthongs slide two sounds: ow/ou (cow) and oi/oy (boy).",
       objective: "I can read diphthongs ow, ou, oi, oy.",
       story: ["The cow is loud now.", "I found a coin out by the boat.", "The boy has joy. Do not shout!"],
-      theme: "outdoors", themeIcon: "í ½í°„",
+      theme: "outdoors", themeIcon: "ðŸ•ï¸",
       letters: ["a","e","i","o","u","ow","ou","oi","oy","c","t","n","l","b","d","f","j","s","p","h"],
       words:   ["cow", "now", "down", "out", "loud", "shout", "coin", "boil", "boy", "joy"],
       sentences: [
@@ -454,7 +454,7 @@
       lesson: "Add -ing to a verb to show it is happening now: jump \u2192 jumping.",
       objective: "I can read -ing verbs like jumping and running.",
       story: ["Sam is jumping in the sun.", "The dog is running and the bird is singing.", "Pat is helping Mom with the dish."],
-      theme: "park", themeIcon: "í ¼í¿“",
+      theme: "park", themeIcon: "ðŸ“",
       letters: ["a","e","i","o","u","ing","s","t","p","n","r","l","k","b","d","m","f","h","g","j","c","w","y"],
       words:   ["jumping", "running", "singing", "ringing", "helping", "hopping", "fishing", "talking", "playing", "yelling"],
       sentences: [
@@ -470,7 +470,7 @@
       title: "Level 18: Word Detective",
       lesson: "Detective time! Read the clue, then pick the missing sight word.",
       objective: "I can read tricky sight words by sight.",
-      theme: "detective", themeIcon: "í ½í´",
+      theme: "detective", themeIcon: "ðŸ”",
       story: [
         "Detective Nana lost her hat. Help her find clues!",
         "Each clue has a word missing. Pick the word.",
@@ -494,7 +494,7 @@
       lesson: "Big words split into syllables. Clap once for each beat: rab\u00b7bit.",
       objective: "I can clap and read two-syllable words.",
       story: ["The rabÂ·bit hid in a basÂ·ket.", "We had a picÂ·nic at sunÂ·set.", "The kitÂ·ten ate a mufÂ·fin."],
-      theme: "forest", themeIcon: "í ¼í¼²",
+      theme: "forest", themeIcon: "ðŸŒ²",
       letters: ["a","e","i","o","u","s","t","p","n","r","l","k","b","d","m","f","h","g","c"],
       words:   ["sunset", "picnic", "magnet", "rabbit", "basket", "kitten", "muffin", "napkin", "puppet", "tablet"],
       twoSyllable: {
@@ -1070,10 +1070,10 @@
     const uniquePhonemePool = phonicPool.filter(k => byPhoneme[LETTERS[k].phoneme][0] === k);
     for (let i = 0; i < soundN; i++) {
       const target = pickWeighted(uniquePhonemePool, "sounds") || pick(uniquePhonemePool);
-      // Distractors: only letters whose phoneme is different from target's,
-      // so all 3 buttons map to distinct sounds.
+      // Distractors: pull from uniquePhonemePool so no two buttons share a phoneme
+      // (e.g. avoid showing both 'c' and 'k' which both say /k/).
       const targetPh = LETTERS[target].phoneme;
-      const distractorPool = phonicPool.filter(k => LETTERS[k].phoneme !== targetPh);
+      const distractorPool = uniquePhonemePool.filter(k => LETTERS[k].phoneme !== targetPh);
       const choices = shuffle([target, ...pickN(distractorPool, 2, [target])]);
       const ex = LETTERS[target].example;
       const promptText = ex
@@ -1091,7 +1091,7 @@
     for (let i = 0; i < letterN; i++) {
       const target = pickWeighted(uniquePhonemePool, "sounds") || pick(uniquePhonemePool);
       const targetPh = LETTERS[target].phoneme;
-      const distractorPool = phonicPool.filter(k => LETTERS[k].phoneme !== targetPh);
+      const distractorPool = uniquePhonemePool.filter(k => LETTERS[k].phoneme !== targetPh);
       const choices = shuffle([target, ...pickN(distractorPool, 2, [target])]).map(k => LETTERS[k].phoneme);
       steps.push({
         type: "letter-to-sound",
@@ -1365,7 +1365,7 @@
     const hp = Math.max(0, 100 - Math.round((state.stepIdx / total) * 100));
     return `
       <div class="abc-boss-meter" aria-hidden="true">
-        <div class="abc-boss-label">í ½í°² BOSS HP</div>
+        <div class="abc-boss-label">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ BOSS HP</div>
         <div class="abc-boss-bar"><div class="abc-boss-fill" style="width:${hp}%"></div></div>
         <div class="abc-boss-hp">${hp}%</div>
       </div>`;
@@ -1399,8 +1399,8 @@
       try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.correct && GameAPI.SFX.correct(); } catch (_) {}
       // Show a streak pill when the kid hits 3+ in a row.
       if (state.streak >= 3) {
-        const pillTxt = state.streak >= 5 ? `í ½í´¥í ½í´¥ STREAK Ã—${state.streak}!`
-                      : state.streak >= 4 ? `í ½í´¥ Streak Ã—${state.streak}!`
+        const pillTxt = state.streak >= 5 ? `ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ STREAK Ã—${state.streak}!`
+                      : state.streak >= 4 ? `ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Streak Ã—${state.streak}!`
                       : `âœ¨ Streak Ã—3!`;
         const pill = document.createElement("div");
         pill.className = "abc-streak-pill";

@@ -2390,9 +2390,9 @@
       case "fill":  renderFill(card, wrap, isReview); break;
       case "read":  renderRead(card, wrap, isReview); break;
       case "boss":  renderBoss(card, wrap); break;
-      case "match": renderMatch(card, wrap); break;
-      case "tap":   renderTap(card, wrap); break;
-      case "speed": renderSpeed(card, wrap); break;
+      case "match": renderMatch(card, wrap, isReview); break;
+      case "tap":   renderTap(card, wrap, isReview); break;
+      case "speed": renderSpeed(card, wrap, isReview); break;
       default:      app.innerHTML = wrap(`<p>Unknown card type: ${card.type}</p>`);
     }
     // Attach 🔊 + 💡 help controls and start inactivity nudge timer.
@@ -2780,7 +2780,7 @@
   }
 
   // ===== Match =====
-  function renderMatch(card, wrap) {
+  function renderMatch(card, wrap, isReview) {
     if (!state.match || state.match.cardId !== card.id) {
       const tiles = [];
       card.pairs.forEach((p, i) => {
@@ -2853,7 +2853,15 @@
             renderHeader();
             persist();
             next.disabled = false;
-            next.onclick = () => advance();
+            next.onclick = () => {
+              if (isReview) {
+                if (m.mistakes === 0) clearReview(state.activeReviewId);
+                state.match = null;
+                finishReview();
+              } else {
+                advance();
+              }
+            };
           }
         } else {
           b.status = "wrong"; a.status = "wrong"; m.locked = true;
@@ -2878,7 +2886,7 @@
   }
 
   // ===== Tap =====
-  function renderTap(card, wrap) {
+  function renderTap(card, wrap, isReview) {
     if (!state.tap || state.tap.cardId !== card.id) {
       const items = card.items.map((it, i) => ({ ...it, idx: i, picked: false }));
       for (let i = items.length - 1; i > 0; i--) {
@@ -2943,7 +2951,15 @@
       persist();
       next.disabled = false;
       doneBtn.disabled = true;
-      next.onclick = () => advance();
+      next.onclick = () => {
+        if (isReview) {
+          if (ok) clearReview(state.activeReviewId);
+          state.tap = null;
+          finishReview();
+        } else {
+          advance();
+        }
+      };
     }
 
     document.querySelectorAll(".tap-chip").forEach(btn => {
@@ -2976,7 +2992,7 @@
   }
 
   // ===== Speed =====
-  function renderSpeed(card, wrap) {
+  function renderSpeed(card, wrap, isReview) {
     if (!state.speed || state.speed.cardId !== card.id) {
       state.speed = { cardId: card.id, qIdx: 0, score: 0, started: false, finished: false, answered: false };
     }
