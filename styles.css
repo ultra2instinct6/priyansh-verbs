@@ -3252,3 +3252,55 @@ main {
     padding: 8px 12px;
   }
 }
+
+/* ABC level-select grid */
+.abc-level-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 6px 0 14px;
+}
+.abc-level-card {
+  background: linear-gradient(180deg, rgba(0,80,160,.55), rgba(0,30,80,.7));
+  border: 2px solid #00e5ff;
+  border-radius: 14px;
+  padding: 10px 8px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  font-family: "Fredoka", sans-serif;
+  transition: transform .12s ease;
+}
+.abc-level-card:hover { transform: translateY(-2px); }
+.abc-level-card.locked {
+  background: linear-gradient(180deg, rgba(40,40,60,.55), rgba(20,20,40,.7));
+  border-color: #555;
+  color: #888;
+  cursor: not-allowed;
+}
+.abc-level-num {
+  font-family: "Bangers", sans-serif;
+  font-size: 1.6rem;
+  color: #ffd23f;
+  letter-spacing: 1px;
+}
+.abc-level-card.locked .abc-level-num { color: #888; }
+.abc-level-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 2px 0;
+}
+.abc-level-card-meta {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  letter-spacing: 1px;
+}
+.abc-level-card-best {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  color: #ffd54f;
+}
+.abc-level-card.locked .abc-level-card-best { color: #888; }
+@media (max-width: 480px) {
+  .abc-level-grid { grid-template-columns: 1fr 1fr; }
+}

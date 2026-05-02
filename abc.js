@@ -31,14 +31,21 @@
     blendSteps:         3   // steps 7..9, step 10 = sentence
   };
 
-  // Level 1 letter set with phoneme + speakable form for SpeechSynthesis.
-  // `speak` is what we send to the TTS engine to approximate the phoneme.
+  // Phoneme map for ALL letters used across levels (extend as you add levels).
   const LETTERS = {
-    m: { phoneme: "/m/", speak: "mmm" },
-    s: { phoneme: "/s/", speak: "sss" },
-    t: { phoneme: "/t/", speak: "tuh" },
-    p: { phoneme: "/p/", speak: "puh" },
-    a: { phoneme: "/\u0103/", speak: "ah" }   // short a as in apple
+    m: { phoneme: "/m/",  speak: "mmm" },
+    s: { phoneme: "/s/",  speak: "sss" },
+    t: { phoneme: "/t/",  speak: "tuh" },
+    p: { phoneme: "/p/",  speak: "puh" },
+    a: { phoneme: "/\u0103/", speak: "ah" },
+    n: { phoneme: "/n/",  speak: "nnn" },
+    i: { phoneme: "/\u012D/", speak: "ih" },
+    d: { phoneme: "/d/",  speak: "duh" },
+    o: { phoneme: "/\u014F/", speak: "ah" },
+    g: { phoneme: "/g/",  speak: "guh" },
+    c: { phoneme: "/k/",  speak: "kuh" },
+    h: { phoneme: "/h/",  speak: "huh" },
+    f: { phoneme: "/f/",  speak: "fff" }
   };
   const LETTER_KEYS = Object.keys(LETTERS);
 
@@ -52,15 +59,67 @@
     { text: "Sam sat at mat.", q: "Where did Sam sit?",  a: "mat", choices: ["mat", "tap", "Pat"] }
   ];
 
+  // 5 progressive levels. Each adds 1–2 new letters + new decodable words.
   const LEVELS = [
     {
       id: "L1",
       title: "Level 1: First Sounds",
       letters: ["m", "s", "t", "p", "a"],
-      words: WORDS,
+      words:   WORDS,
       sentences: SENTENCES
+    },
+    {
+      id: "L2",
+      title: "Level 2: Add n, i",
+      letters: ["m", "s", "t", "p", "a", "n", "i"],
+      words:   ["in", "it", "sit", "pin", "tin", "man", "pan", "nap", "sip", "tip"],
+      sentences: [
+        { text: "Sit, Sam.",       q: "Who must sit?",  a: "Sam", choices: ["Sam", "Pan", "Tin"] },
+        { text: "Pat is in.",      q: "Who is in?",     a: "Pat", choices: ["Pat", "Sam", "Tin"] },
+        { text: "Tip the pan.",    q: "Tip the what?",  a: "pan", choices: ["pan", "pin", "man"] },
+        { text: "A man sat.",      q: "Who sat?",       a: "man", choices: ["man", "Sam", "Pat"] },
+        { text: "Sam taps a tin.", q: "What does Sam tap?", a: "tin", choices: ["tin", "pin", "pan"] }
+      ]
+    },
+    {
+      id: "L3",
+      title: "Level 3: Add d, o",
+      letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o"],
+      words:   ["dot", "dad", "mad", "sad", "mop", "top", "pot", "pod", "dip", "did"],
+      sentences: [
+        { text: "Dad is mad.",     q: "Who is mad?",     a: "Dad", choices: ["Dad", "Sam", "Pat"] },
+        { text: "Sam dips a mop.", q: "What does Sam dip?", a: "mop", choices: ["mop", "pot", "top"] },
+        { text: "A pot sits on top.", q: "What is on top?", a: "pot", choices: ["pot", "pod", "dot"] },
+        { text: "Dad did it.",     q: "Who did it?",      a: "Dad", choices: ["Dad", "Sam", "Pat"] },
+        { text: "Pat is sad.",     q: "Who is sad?",      a: "Pat", choices: ["Pat", "Sam", "Dad"] }
+      ]
+    },
+    {
+      id: "L4",
+      title: "Level 4: Add g, c",
+      letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o", "g", "c"],
+      words:   ["cat", "cap", "cot", "cog", "dog", "gap", "dig", "can", "got", "pig"],
+      sentences: [
+        { text: "A cat sat.",      q: "Who sat?",         a: "cat", choices: ["cat", "dog", "pig"] },
+        { text: "The dog can dig.", q: "What can the dog do?", a: "dig", choices: ["dig", "nap", "sit"] },
+        { text: "Sam got a cap.",  q: "What did Sam get?", a: "cap", choices: ["cap", "cot", "cog"] },
+        { text: "A pig sat in mud.", q: "Who sat in mud?", a: "pig", choices: ["pig", "cat", "dog"] },
+        { text: "Pat can pat a dog.", q: "What can Pat pat?", a: "dog", choices: ["dog", "cat", "pig"] }
+      ]
+    },
+    {
+      id: "L5",
+      title: "Level 5: Add h, f",
+      letters: ["m", "s", "t", "p", "a", "n", "i", "d", "o", "g", "c", "h", "f"],
+      words:   ["hat", "ham", "hop", "hit", "fan", "fin", "fit", "fog", "hid", "hip"],
+      sentences: [
+        { text: "Sam has a hat.",  q: "Who has a hat?",   a: "Sam", choices: ["Sam", "Pat", "Dad"] },
+        { text: "The fan is on.",  q: "What is on?",      a: "fan", choices: ["fan", "fog", "hat"] },
+        { text: "Pat hid the ham.", q: "What did Pat hide?", a: "ham", choices: ["ham", "hat", "hip"] },
+        { text: "A fish has a fin.", q: "What does a fish have?", a: "fin", choices: ["fin", "fog", "fan"] },
+        { text: "The cap can fit.", q: "What can fit?",    a: "cap", choices: ["cap", "hat", "ham"] }
+      ]
     }
-    // To extend: add { id:"L2", letters:[...,"n","i"], words:[...], sentences:[...] }
   ];
 
   const PRAISE = [
@@ -98,6 +157,8 @@
     } catch (_) { /* ignore */ }
     return {
       plays: 0, best: 0, stars: 0,
+      unlockedLevel: 1,
+      bestPerLevel: {},
       lastSession: null,
       lifetime: { sounds: {}, words: {} }
     };
@@ -118,6 +179,16 @@
     p.best  = Math.max(p.best || 0, score);
     if (score === CONFIG.stepsPerRound) p.stars = (p.stars || 0) + 1;
     p.lastSession = state.sessionStats;
+    // Per-level best + unlock: 7/10 unlocks the next level.
+    const lvlIdx = LEVELS.findIndex(l => l === state.level);
+    if (lvlIdx >= 0) {
+      const id = LEVELS[lvlIdx].id;
+      p.bestPerLevel = p.bestPerLevel || {};
+      p.bestPerLevel[id] = Math.max(p.bestPerLevel[id] || 0, score);
+      if (score >= 7 && lvlIdx + 1 < LEVELS.length) {
+        p.unlockedLevel = Math.max(p.unlockedLevel || 1, lvlIdx + 2);
+      }
+    }
     for (const [k, v] of Object.entries(state.sessionStats.sounds)) {
       const t = p.lifetime.sounds[k] || { correct: 0, wrong: 0 };
       t.correct += v.correct; t.wrong += v.wrong;
@@ -603,21 +674,38 @@
   function renderReward(body, pIn, scoreIn) {
     const p = pIn || loadProgress();
     const score = scoreIn != null ? scoreIn : 0;
+    const lvlIdx = LEVELS.findIndex(l => l === state.level);
+    const hasNext = lvlIdx >= 0 && lvlIdx + 1 < LEVELS.length;
+    const unlockedNext = hasNext && (p.unlockedLevel || 1) >= lvlIdx + 2;
+    const passed = score >= 7;
+    const headline = passed
+      ? (hasNext
+          ? (unlockedNext ? `\u2B50 Level ${lvlIdx + 1} cleared! Level ${lvlIdx + 2} unlocked.`
+                          : `\u2B50 Level ${lvlIdx + 1} cleared!`)
+          : `\uD83C\uDFC6 You finished all ${LEVELS.length} levels!`)
+      : `Good try. Score 7+ to unlock the next level.`;
     body.innerHTML = `
       <section class="abc-reward-screen">
-        <h3 class="abc-h3">You completed today's ladder.</h3>
-        <div class="abc-reward-big">\u2B50 +1 Sound Star</div>
+        <h3 class="abc-h3">${escHtml(state.level.title)}</h3>
+        <div class="abc-reward-big">${escHtml(headline)}</div>
         <div class="abc-stats">
           <div>Score: <strong>${score}/${CONFIG.stepsPerRound}</strong></div>
-          <div>Total stars: <strong>${p.stars || 0}</strong></div>
+          <div>Level: <strong>${lvlIdx + 1}/${LEVELS.length}</strong></div>
+          <div>Stars: <strong>${p.stars || 0}</strong></div>
         </div>
         <div class="abc-level-actions">
-          <button class="abc-cta primary" id="abc-play-again">\u25B6 Play Again</button>
-          <button class="abc-cta" id="abc-home">\uD83C\uDFE0 Home</button>
+          ${unlockedNext ? `<button class="abc-cta primary" id="abc-next-level">\u25B6 Next Level (${lvlIdx + 2})</button>` : ""}
+          <button class="abc-cta ${unlockedNext ? "" : "primary"}" id="abc-play-again">\uD83D\uDD01 Play Again</button>
+          <button class="abc-cta" id="abc-home">\uD83C\uDFE0 Levels</button>
           <button class="abc-cta" id="abc-see-parent">\uD83D\uDC64 Parent Mode</button>
         </div>
       </section>
     `;
+    const nextBtn = body.querySelector("#abc-next-level");
+    if (nextBtn) nextBtn.addEventListener("click", () => {
+      state.level = LEVELS[lvlIdx + 1];
+      startRound();
+    });
     body.querySelector("#abc-play-again").addEventListener("click", () => startRound());
     body.querySelector("#abc-home").addEventListener("click", () => go("home"));
     body.querySelector("#abc-see-parent").addEventListener("click", () => go("parent"));
