@@ -1605,11 +1605,6 @@
         _bgmTabla("NA", 0.10, off);
       }
 
-      // ---------- HARMONIUM (Gurbani reed) — long Sa+Pa chord, 1 per bar ----------
-      if (step === 0) {
-        _bgmHarmonium(SCALE[0], BEAT * 4 * 1.05, 0.06, off);
-      }
-
       // ---------- TUMBI melody (folk lead, syncopated) ----------
       const phrase = PHRASES[_cycle % PHRASES.length];
       const noteIdx = phrase[step];
