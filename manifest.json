@@ -4,7 +4,7 @@
   "description": "A bilingual English–Punjabi verb adventure for kids.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#1a0033",
   "theme_color": "#ff5722",
   "lang": "en-PA",

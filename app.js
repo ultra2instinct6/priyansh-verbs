@@ -598,6 +598,7 @@
     daily:   `dl_daily_v2__${currentChildId}`,
     muted:   "dl_muted_v2",
     music:   "dl_music_v1",
+    orientLock: "dl_orient_lock_v1",
   };
   function loadJSON(k, fb) {
     try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; }
@@ -3578,6 +3579,73 @@
   if (mapBtn) mapBtn.onclick = () => { try { SFX.click(); } catch (_) {} renderMap(); };
   const boardBtn = document.getElementById("board-btn");
   if (boardBtn) boardBtn.onclick = () => { try { SFX.click(); } catch (_) {} renderBoard(); };
+
+  // 🔒 Landscape lock toggle — for dual-thumb landscape learning.
+  // Persists across sessions; re-engages on next load after first user gesture
+  // (browsers require a user gesture to enter fullscreen / lock orientation).
+  // Auto-clears if the user exits fullscreen via system gesture (Esc / swipe).
+  const orientBtn = document.getElementById("orient-btn");
+  let orientLocked = localStorage.getItem(KEY.orientLock) === "1";
+  function updateOrientBtnUI() {
+    if (!orientBtn) return;
+    orientBtn.textContent = orientLocked ? "🔒" : "🔓";
+    orientBtn.classList.toggle("locked", orientLocked);
+    orientBtn.setAttribute("aria-pressed", orientLocked ? "true" : "false");
+    orientBtn.title = orientLocked
+      ? "Landscape locked · ਲੈਂਡਸਕੇਪ ਲਾਕ ਚਾਲੂ"
+      : "Lock landscape · ਲੈਂਡਸਕੇਪ ਲਾਕ";
+  }
+  async function enterLandscape() {
+    let lockedOk = false;
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (_) {}
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock("landscape");
+        lockedOk = true;
+      }
+    } catch (_) {}
+    if (!lockedOk) {
+      // iOS Safari and other browsers without Orientation Lock API:
+      // CSS landscape rules still apply when user rotates manually.
+      try { toast({ en: "Rotate device sideways", pa: "ਫੋਨ ਨੂੰ ਪਾਸੇ ਘੁਮਾਓ" }); } catch (_) {}
+    }
+  }
+  async function exitLandscape() {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (_) {}
+    try { if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen(); } catch (_) {}
+  }
+  if (orientBtn) {
+    updateOrientBtnUI();
+    orientBtn.onclick = async () => {
+      try { SFX.click(); } catch (_) {}
+      orientLocked = !orientLocked;
+      localStorage.setItem(KEY.orientLock, orientLocked ? "1" : "0");
+      updateOrientBtnUI();
+      if (orientLocked) await enterLandscape();
+      else await exitLandscape();
+    };
+    // Auto-clear flag if user leaves fullscreen via system gesture.
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement && orientLocked) {
+        orientLocked = false;
+        localStorage.setItem(KEY.orientLock, "0");
+        try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (_) {}
+        updateOrientBtnUI();
+      }
+    });
+    // If persisted ON, re-engage on first user gesture (gesture required by browsers).
+    if (orientLocked) {
+      const reEngage = () => {
+        document.removeEventListener("pointerdown", reEngage, true);
+        enterLandscape();
+      };
+      document.addEventListener("pointerdown", reEngage, true);
+    }
+  }
 
   // ABC side game — opens the Sound Ladder overlay (abc.js).
   // If abc.js hasn't loaded (e.g. stale service-worker cache from before it

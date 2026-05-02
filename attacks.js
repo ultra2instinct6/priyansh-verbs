@@ -177,9 +177,27 @@
 
   // ---------- Render dispatcher ----------
   function runAttack(ctx) {
+    // Bail safely if upstream returned no enemy or no word — otherwise the
+    // attack screen would render blank and lock the game (Attacks._active=true
+    // with no way for the user to advance).
+    if (!ctx || !ctx.enemy || !ctx.word) {
+      console.warn("[Attacks] missing enemy/word, skipping attack", ctx);
+      finish(ctx || {}, false, "missing-data");
+      return;
+    }
     slamIntro(ctx.enemy, ctx.kind).then(() => {
-      if (ctx.kind === "spell") renderSpelling(ctx);
-      else renderDefinition(ctx);
+      try {
+        if (ctx.kind === "spell") renderSpelling(ctx);
+        else renderDefinition(ctx);
+      } catch (e) {
+        // Anything thrown inside the renderer would otherwise leave the screen
+        // empty with _active=true. Recover by ending the attack and re-rendering.
+        console.warn("[Attacks] render error, recovering", e);
+        finish(ctx, false, "render-error");
+      }
+    }).catch((e) => {
+      console.warn("[Attacks] slam error, recovering", e);
+      finish(ctx, false, "slam-error");
     });
   }
 
