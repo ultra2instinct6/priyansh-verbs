@@ -3673,3 +3673,26 @@ main {
   transition: transform 140ms var(--ease-pop), border-color 160ms ease, box-shadow 160ms ease;
 }
 .choice:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 229, 255, 0.25); }
+
+/* Splash credit footer */
+#splash {
+  justify-content: center;
+}
+.splash-credit {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Fredoka", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+.splash-credit .pa {
+  display: inline-block;
+  margin-left: 4px;
+  color: #ffeb3b;
+  font-size: 0.9em;
+}
