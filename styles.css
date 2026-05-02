@@ -4672,3 +4672,103 @@ footer .zeni   { color: var(--goku-blue-deep) !important; }
   footer { font-size: 0.68rem !important; padding: 3px 6px !important; }
   main { padding: 4px 8px calc(50px + env(safe-area-inset-bottom)) !important; }
 }
+
+/* ============================================================
+   📱 iPhone HUD CLEANUP (May 2026)
+   Final-cascade overrides to fix:
+   - Avatar overlapping flashcard "Again" button on mobile
+   - "Step X / Y" pill wrapping to 3 lines
+   - Money pill "₹ · 🟨 · 🥈" wrapping
+   - ABC button breaking to its own row
+   - Tall header pushing flashcard below the fold
+   ============================================================ */
+@media (max-width: 600px) {
+  /* --- Slim header --- */
+  header { padding: 6px 6px 2px; }
+  .site-logo { width: 48px; height: 48px; }
+  .player-chip { top: 4px; right: 4px; padding: 3px 8px; font-size: 0.78rem; }
+  .player-chip-name { max-width: 22vw; }
+  .power-bar { height: 18px; margin-top: 6px; max-width: 96%; }
+  .power-label {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.66rem;
+    padding: 0 8px;
+  }
+
+  /* --- HUD pills: one line each --- */
+  .hud-row { gap: 4px; row-gap: 6px; padding: 0 4px; }
+  .hud-row .hud-progress {
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.72rem;
+    padding: 4px 9px;
+    flex: 0 1 auto;
+  }
+  /* Hide Punjabi inline gloss inside the cramped HUD pills (kept in title=) */
+  #ladder-progress .pa-inline,
+  #money-pill .pa-inline { display: none; }
+
+  /* --- Action buttons: keep on a single row, ABC inline --- */
+  .hud-actions {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+  }
+  .hud-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+    padding: 0;
+    border-radius: 10px;
+  }
+  .hud-btn-abc {
+    margin-left: 0;
+    width: auto;
+    min-width: 36px;
+    padding: 0 7px;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- Slim lesson banner --- */
+  .block-banner {
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Avatar must NOT overlap the sticky "Again / I got it" controls.
+     Lift it above the controls row (≈48px) + footer (≈50px) on mobile,
+     and lower its z-index so any modal/control wins.
+     Also shrink so it doesn't crowd the flashcard. */
+  .fighter-portrait {
+    width: 52px;
+    height: 52px;
+    left: 4px;
+    bottom: calc(118px + env(safe-area-inset-bottom));
+    z-index: 4;
+    opacity: 0.85;
+  }
+  /* Tighter pill text on the smallest viewports */
+  .hud-row .hud-progress { font-size: 0.68rem; padding: 3px 8px; }
+  .hud-btn { width: 30px; height: 30px; font-size: 0.88rem; }
+  .hud-btn-abc { font-size: 0.72rem; min-width: 32px; padding: 0 6px; }
+  .site-logo { width: 42px; height: 42px; }
+  .player-chip-name { display: none; }
+  .player-chip { padding: 3px 7px; }
+}
+
+/* Landscape-lock mode: keep avatar tiny and out of the way */
+@media (max-height: 480px) and (orientation: landscape) {
+  .fighter-portrait { z-index: 4; bottom: calc(56px + env(safe-area-inset-bottom)); }
+}

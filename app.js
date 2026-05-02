@@ -1499,29 +1499,129 @@
     let _timer = null;
     let _nextNoteTime = 0;
     let _step = 0;            // 0..15 across one bar (16th notes)
-    let _cycle = 0;           // increments every full bar
+    let _cycle = 0;           // increments every full bar (monotonic, used by phrase rotation)
+    let _bar = 0;             // 0..15 — index into FORM_16 (resets every 16 bars)
     const BPM = 108;
     const BEAT = 60 / BPM;            // quarter-note duration
-    const STEP = BEAT / 2;            // 8th-note grid (16 per bar = 2 bars Kaherwa)
+    const STEP = BEAT / 2;            // 8th-note grid... actually 16th-notes (16 per bar)
     const STEPS_PER_BAR = 16;
     const LOOKAHEAD = 0.10;
     const TICK_MS = 25;
-    // Raag Mand × 2 octaves (kid-friendly major-pentatonic feel)
-    const SCALE = [523, 587, 659, 784, 880, 1046, 1175, 1318];
-    // 808 sub-bass roots — syncopated trap pattern (16 steps)
-    // Hits on: 0, 3, 6, 8, 11, 14 — classic trap groove
-    const BASS808 = [131, 0, 0, 131, 0, 0, 165, 0, 131, 0, 0, 196, 0, 0, 131, 0];
-    // Tumbi melody phrases (16 steps each) — syncopated, modern
-    const PHRASES = [
-      [0,0,2,0, 4,0,5,0, 4,0,2,0, 0,0,4,0],   // call
-      [4,5,7,5, 4,0,2,0, 0,0,2,4, 5,0,4,0],   // response
-      [7,0,5,0, 4,2,0,0, 2,4,5,7, 0,0,5,4],   // climb-fall
-      [5,4,2,4, 5,0,7,0, 5,4,2,0, 0,2,4,5],   // wave
+
+    // ---------- Raag Desh frequency table (S R G M P D n N, 2 octaves + S6) ----------
+    // Equal-tempered, Sa = C. Komal Ni (n) = Bb, shuddha Ni (N) = B.
+    const NOTE = {
+      S4: 261.63, R4: 293.66, G4: 329.63, M4: 349.23,
+      P4: 392.00, D4: 440.00, n4: 466.16, N4: 493.88,
+      S5: 523.25, R5: 587.33, G5: 659.25, M5: 698.46,
+      P5: 783.99, D5: 880.00, n5: 932.33, N5: 987.77,
+      S6: 1046.50,
+    };
+
+    // ---------- 16-bar macro form (Punjabi pop-trap arc) ----------
+    const FORM_16 = [
+      "INTRO_1", "INTRO_2",
+      "A", "A", "A_PLUS", "A_PLUS",
+      "A", "A", "A_PLUS", "A_PLUS",
+      "B", "B", "B_BUILD",
+      "PRE_DROP", "DROP", "OUTRO",
     ];
-    // Vocal chop phrases (Gurbani alaap glides)
-    const ALAAPS = [
-      [0, 2], [4, 5], [5, 4], [7, 4], [2, 0], [4, 7],
+
+    // Per-section voice gates. Values: true=play, false=mute, "minimal"/"sparse"/
+    // "main"/"answer"/"half"/"roll"/"light"/"active" = variant patterns.
+    const SECTIONS = {
+      INTRO_1:  { kick:false, sub:false,      snare:false, clap:false, closedHat:false,  openHat:false, dhol:false,   tablaNA:false,    tumbi:"sparse", tanpura:true, pad:true, alaap:false, vocalChop:false, reverseSwell:false, ghostSnare:false },
+      INTRO_2:  { kick:false, sub:"minimal",  snare:false, clap:false, closedHat:false,  openHat:false, dhol:true,    tablaNA:false,    tumbi:"sparse", tanpura:true, pad:true, alaap:true,  vocalChop:false, reverseSwell:true,  ghostSnare:false },
+      A:        { kick:true,  sub:true,       snare:true,  clap:true,  closedHat:true,   openHat:true,  dhol:true,    tablaNA:true,     tumbi:"main",   tanpura:true, pad:true, alaap:false, vocalChop:false, reverseSwell:false, ghostSnare:true  },
+      A_PLUS:   { kick:true,  sub:true,       snare:true,  clap:true,  closedHat:true,   openHat:true,  dhol:true,    tablaNA:true,     tumbi:"main",   tanpura:true, pad:true, alaap:true,  vocalChop:true,  reverseSwell:"alt", ghostSnare:true  },
+      B:        { kick:false, sub:"minimal",  snare:false, clap:false, closedHat:"half", openHat:false, dhol:"light", tablaNA:"active", tumbi:"answer", tanpura:true, pad:true, alaap:true,  vocalChop:false, reverseSwell:false, ghostSnare:false },
+      B_BUILD:  { kick:false, sub:"minimal",  snare:false, clap:false, closedHat:"half", openHat:false, dhol:"light", tablaNA:"active", tumbi:"answer", tanpura:true, pad:true, alaap:true,  vocalChop:true,  reverseSwell:true,  ghostSnare:false },
+      PRE_DROP: { kick:false, sub:false,      snare:false, clap:false, closedHat:"roll", openHat:false, dhol:false,   tablaNA:true,     tumbi:false,    tanpura:true, pad:true, alaap:false, vocalChop:true,  reverseSwell:true,  ghostSnare:false },
+      DROP:     { kick:true,  sub:true,       snare:true,  clap:true,  closedHat:true,   openHat:true,  dhol:true,    tablaNA:true,     tumbi:"main",   tanpura:true, pad:true, alaap:true,  vocalChop:true,  reverseSwell:false, ghostSnare:false },
+      OUTRO:    { kick:false, sub:"minimal",  snare:false, clap:false, closedHat:false,  openHat:false, dhol:true,    tablaNA:false,    tumbi:"sparse", tanpura:true, pad:true, alaap:false, vocalChop:false, reverseSwell:false, ghostSnare:false },
+    };
+
+    // ---------- Bar-level chord progression (I → bVII → IV → V Punjabi loop) ----------
+    const ROOT_DEGREES_16 = [
+      "I", "V",
+      "I", "bVII", "IV", "V",
+      "I", "bVII", "IV", "V",
+      "vi", "bVII", "IV",
+      "V", "I", "I",
     ];
+    const BASS_ROOT_HZ = {
+      I: 130.81, bVII: 116.54, IV: 174.61, V: 196.00, vi: 220.00,
+    };
+    // Per-step bass pattern (root/fifth/octave or rest)
+    const BASS_PATTERN_16 = [
+      "root", null,   null,    "root",
+      null,   null,   "fifth", null,
+      "root", null,   null,    "octave",
+      null,   null,   "fifth", null,
+    ];
+    const BASS_INTERVAL = { root: 1.0, fifth: Math.pow(2, 7/12), octave: 2.0 };
+    function _bassHz(barIdx, stepIdx) {
+      const tok = BASS_PATTERN_16[stepIdx]; if (!tok) return 0;
+      const root = BASS_ROOT_HZ[ROOT_DEGREES_16[barIdx]] || 130.81;
+      return root * BASS_INTERVAL[tok];
+    }
+
+    // ---------- Tumbi phrases — A: ascending Desh; B: descending with komal Ni ----------
+    const TUMBI_A_16 = [
+      "S5", null, "R5", null, "M5", "P5", null, "N5",
+      "S6", null, "N5", "P5", "M5", null, "R5", null,
+    ];
+    const TUMBI_B_16 = [
+      "S6", null, "n5", null, "D5", "P5", null, "M5",
+      "G5", null, "R5", "G5", "S5", null, null, null,
+    ];
+    const TUMBI_SPARSE_16 = [
+      "S5", null, null, null, null, null, null, null,
+      "P5", null, null, null, null, null, null, null,
+    ];
+
+    // Alaap glide pairs (Desh grammar): ascending uses N, descending uses n.
+    const ALAAP_PAIRS = [
+      ["R4","M4"], ["M4","P4"], ["P4","N4"], ["N4","S5"],   // ascending
+      ["S5","n4"], ["n4","D4"], ["D4","P4"], ["P4","M4"],   // descending
+    ];
+    // Vocal-chop pairs — short stabs, mostly descending komal-Ni color.
+    const CHOP_PAIRS = [
+      ["S5","R5"], ["P5","M5"], ["n5","D5"], ["D5","P5"], ["S6","n5"],
+    ];
+
+    // ---------- Closed/open hat humanized velocity arrays ----------
+    const CLOSED_HAT_GAIN_16 = [
+      0.085, 0.000, 0.055, 0.000, 0.072, 0.000, 0.052, 0.000,
+      0.082, 0.000, 0.057, 0.000, 0.070, 0.000, 0.050, 0.000,
+    ];
+    const OPEN_HAT_GAIN_16 = [
+      0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.105,
+      0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.090,
+    ];
+    const CLOSED_HAT_HALF_16 = [
+      0.000, 0.000, 0.055, 0.000, 0.000, 0.000, 0.052, 0.000,
+      0.000, 0.000, 0.057, 0.000, 0.000, 0.000, 0.050, 0.000,
+    ];
+    const GHOST_SNARE_GAIN_16 = [
+      0.000, 0.000, 0.000, 0.028, 0.000, 0.000, 0.000, 0.000,
+      0.000, 0.000, 0.022, 0.000, 0.000, 0.000, 0.000, 0.000,
+    ];
+    const DHOL_LIGHT_16 = [
+      0.135, 0.000, 0.045, 0.000, 0.000, 0.055, 0.000, 0.000,
+      0.110, 0.000, 0.040, 0.000, 0.000, 0.055, 0.000, 0.000,
+    ];
+    const TABLA_NA_ACTIVE_16 = [
+      0.000, 0.000, 0.000, 0.070, 0.000, 0.000, 0.000, 0.060,
+      0.000, 0.000, 0.000, 0.080, 0.000, 0.000, 0.000, 0.065,
+    ];
+
+    // Swing (54%) on odd 16ths — apply to hats / tumbi / tabla only.
+    const SWING_OFFSET = STEP * ((0.54 - 0.5) * 2); // +11 ms at 108 BPM
+    function _swing(off, step, swingable) {
+      return (swingable && (step % 2 === 1)) ? off + SWING_OFFSET : off;
+    }
+    function _hatJitter() { return (Math.random() * 2 - 1) * 0.004; }
 
     function _initGain() {
       if (_musicGain || !_ac) return;
@@ -1550,89 +1650,114 @@
     function _scheduleStep(step, when) {
       if (!_ac) return;
       const off = when - _ac.currentTime;
-      const downbeat = (step % 4) === 0;     // every quarter
-      const eighth = (step % 2) === 0;       // every eighth
+      const downbeat = (step % 4) === 0;
+      const eighth   = (step % 2) === 0;
+      const sec = SECTIONS[FORM_16[_bar]] || SECTIONS.A;
+      const barRoot = ROOT_DEGREES_16[_bar];
+      const rootHz = BASS_ROOT_HZ[barRoot] || 130.81;
 
-      // Drop: every 8 cycles, mute drums for the first 4 steps (1 beat) then return huge.
-      const inDrop = (_cycle % 8 === 7) && step < 4;
-
-      // ---------- Tanpura drone (every quarter, soft) ----------
-      if (downbeat) {
-        const tIdx = (step / 4) | 0;
-        const tan = [131, 196, 131, 131][tIdx];
-        _bgmTanpura(tan, BEAT * 1.4, 0.05, off);
+      // ---------- Tanpura drone (Sa-Pa-Sa-Sa per quarter, follows current root) ----------
+      if (sec.tanpura && downbeat) {
+        const ratio = [1, 1.5, 1, 1][(step / 4) | 0];
+        _bgmTanpura(rootHz * ratio, BEAT * 1.4, 0.05, off);
       }
 
       // ---------- 808 KICK (with sidechain pump) ----------
-      // Hits: 0, 6, 8, 14 — syncopated trap pattern
-      if (!inDrop && (step === 0 || step === 6 || step === 8 || step === 14)) {
+      if (sec.kick && (step === 0 || step === 6 || step === 8 || step === 14)) {
         _bgm808Kick(0.55, off);
         _pump(off);
       }
 
-      // ---------- 808 SUB BASS ----------
-      if (!inDrop && BASS808[step]) {
-        _bgm808Bass(BASS808[step], BEAT * 0.55, 0.40, off);
+      // ---------- 808 SUB BASS (bar-aware roots) ----------
+      if (sec.sub) {
+        let hz = 0;
+        if (sec.sub === "minimal") {
+          if (step === 0 || step === 8) hz = rootHz; // half-time pulse
+        } else {
+          hz = _bassHz(_bar, step);
+        }
+        if (hz) _bgm808Bass(hz, BEAT * 0.55, 0.40, off);
       }
 
-      // ---------- SNARE / CLAP backbeat (5 & 13 in 16-step) ----------
-      if (!inDrop && (step === 4 || step === 12)) {
+      // ---------- SNARE / CLAP backbeat ----------
+      if (sec.snare && (step === 4 || step === 12)) {
         _bgmSnare(0.35, off);
-        _bgmClap(0.18, off + 0.005);
+        if (sec.clap) _bgmClap(0.18, off + 0.005);
       }
 
-      // ---------- HI-HATS (every 8th, with rolls) ----------
-      if (!inDrop && eighth) {
-        const accent = (step % 4 === 2) ? 0.16 : 0.10;
-        _bgmHat(accent, off, false);
+      // ---------- GHOST SNARE (humanization) ----------
+      if (sec.ghostSnare && GHOST_SNARE_GAIN_16[step] > 0) {
+        _bgmGhostSnare(GHOST_SNARE_GAIN_16[step], off);
       }
-      // Open hat on the off-beat 7 + 15
-      if (!inDrop && (step === 7 || step === 15)) {
-        _bgmHat(0.10, off + STEP * 0.5, true);
+
+      // ---------- HI-HATS ----------
+      if (sec.closedHat) {
+        const tbl = (sec.closedHat === "half") ? CLOSED_HAT_HALF_16 : CLOSED_HAT_GAIN_16;
+        const v = tbl[step];
+        if (v > 0) _bgmHat(v, _swing(off, step, true) + _hatJitter(), false);
+        // Trap roll on PRE_DROP — 4× 32nd notes through the whole bar build
+        if (sec.closedHat === "roll") {
+          if (step === 12 || step === 14) {
+            for (let i = 1; i <= 4; i++) {
+              _bgmHat(0.07 + i * 0.012, off + (STEP / 4) * i, false);
+            }
+          }
+        }
       }
-      // Trap hat roll on last quarter every 4 cycles (build-up)
-      if (!inDrop && step === 14 && (_cycle % 4 === 3)) {
-        for (let i = 1; i <= 4; i++) {
-          _bgmHat(0.08 + i * 0.01, off + (STEP / 4) * i, false);
+      if (sec.openHat) {
+        const v = OPEN_HAT_GAIN_16[step];
+        if (v > 0) _bgmHat(v, _swing(off + STEP * 0.5, step, true) + _hatJitter(), true);
+      }
+
+      // ---------- DHOL ----------
+      if (sec.dhol === true && step === 0) {
+        _bgmDhol(0.22, off, 1.0);
+      } else if (sec.dhol === "light") {
+        const v = DHOL_LIGHT_16[step];
+        if (v > 0) _bgmDhol(v, off, 1.0);
+      }
+
+      // ---------- TABLA NA ----------
+      if (sec.tablaNA === true && step === 11) {
+        _bgmTabla("NA", 0.10, _swing(off, step, true));
+      } else if (sec.tablaNA === "active") {
+        const v = TABLA_NA_ACTIVE_16[step];
+        if (v > 0) _bgmTabla("NA", v, _swing(off, step, true));
+      }
+
+      // ---------- TUMBI melody ----------
+      if (sec.tumbi) {
+        const tbl = (sec.tumbi === "answer") ? TUMBI_B_16
+                  : (sec.tumbi === "sparse") ? TUMBI_SPARSE_16
+                  : TUMBI_A_16;
+        const noteName = tbl[step];
+        if (noteName) {
+          _bgmTumbi(NOTE[noteName], BEAT * 0.45, 0.10, _swing(off, step, true));
         }
       }
 
-      // ---------- DHOL accent on bar-1 sam (keeps Punjabi DNA) ----------
-      if (!inDrop && step === 0) {
-        _bgmDhol(0.22, off, 1.0);
-      }
-      // Tabla NA flam on the "and" of beat 3 (step 11) — bhangra spice
-      if (!inDrop && step === 11) {
-        _bgmTabla("NA", 0.10, off);
-      }
-
-      // ---------- TUMBI melody (folk lead, syncopated) ----------
-      const phrase = PHRASES[_cycle % PHRASES.length];
-      const noteIdx = phrase[step];
-      if (noteIdx) {
-        _bgmTumbi(SCALE[noteIdx], BEAT * 0.45, 0.10, off);
-      }
-
       // ---------- VOCAL CHOP (sliced alaap stab) ----------
-      // Short stab every 2 bars on step 6 — gives the modern chop feel.
-      if (step === 6 && (_cycle % 2 === 0)) {
-        const al = ALAAPS[(_cycle / 2) | 0 % ALAAPS.length];
-        _bgmVocalChop(SCALE[al[0]], SCALE[al[1]], BEAT * 0.6, 0.18, off);
-      }
-      // Full sustained alaap every 4 bars on step 0 — the prayer line.
-      if (step === 0 && (_cycle % 4 === 1)) {
-        const al = ALAAPS[(_cycle | 0) % ALAAPS.length];
-        _bgmAlaap(SCALE[al[0]], SCALE[al[1]], BEAT * 3, 0.10, off);
+      if (sec.vocalChop && step === 6) {
+        const cp = CHOP_PAIRS[_cycle % CHOP_PAIRS.length];
+        _bgmVocalChop(NOTE[cp[0]], NOTE[cp[1]], BEAT * 0.6, 0.18, off);
       }
 
-      // ---------- REVERSE SWELL build-up before every 4th bar ----------
-      if (step === 12 && (_cycle % 4 === 3)) {
-        _bgmReverseSwell(BEAT * 1.0, 0.16, off);
+      // ---------- ALAAP (sustained sung line) ----------
+      if (sec.alaap && step === 0) {
+        const ap = ALAAP_PAIRS[_cycle % ALAAP_PAIRS.length];
+        _bgmAlaap(NOTE[ap[0]], NOTE[ap[1]], BEAT * 3, 0.10, off);
       }
 
-      // ---------- LONG PAD (warm glue) ----------
-      if (step === 0 && (_cycle % 4 === 0)) {
-        _bgmPad(SCALE[0] / 2, BEAT * 16, 0.035, off);
+      // ---------- REVERSE SWELL build-up ----------
+      // "alt" = every other A_PLUS bar (bar 5 vs 6, 9 vs 10) → cleaner mix
+      let doSwell = false;
+      if (sec.reverseSwell === true && step === 12) doSwell = true;
+      else if (sec.reverseSwell === "alt" && step === 12 && (_bar === 5 || _bar === 9)) doSwell = true;
+      if (doSwell) _bgmReverseSwell(BEAT * 1.0, 0.16, off);
+
+      // ---------- LONG PAD (warm glue, every 4 bars) ----------
+      if (sec.pad && step === 0 && (_bar % 4 === 0)) {
+        _bgmPad(rootHz / 2, BEAT * 16, 0.035, off);
       }
     }
 
@@ -1716,6 +1841,30 @@
       ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
       n.connect(hp); hp.connect(ng); ng.connect(_musicGain);
       n.start(t); n.stop(t + 0.14);
+    }
+    // GHOST SNARE: very low-gain noise+body for human swing feel
+    function _bgmGhostSnare(vol, when) {
+      const a = _ac; if (!a) return;
+      const t = a.currentTime + when;
+      // Tiny tonal body
+      const o = a.createOscillator(); o.type = "triangle";
+      o.frequency.setValueAtTime(190, t);
+      o.frequency.exponentialRampToValueAtTime(145, t + 0.045);
+      const og = a.createGain();
+      og.gain.setValueAtTime(0.0001, t);
+      og.gain.exponentialRampToValueAtTime(vol * 0.4, t + 0.0015);
+      og.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      o.connect(og); og.connect(_musicGain);
+      o.start(t); o.stop(t + 0.06);
+      // Filtered noise
+      const n = a.createBufferSource(); n.buffer = _noiseBuf;
+      const hp = a.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1800;
+      const ng = a.createGain();
+      ng.gain.setValueAtTime(0.0001, t);
+      ng.gain.exponentialRampToValueAtTime(vol, t + 0.0015);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      n.connect(hp); hp.connect(ng); ng.connect(_musicGain);
+      n.start(t); n.stop(t + 0.07);
     }
     // VOCAL CHOP: short alaap stab — sliced sample feel
     function _bgmVocalChop(fromFreq, toFreq, dur, vol, when) {
@@ -1965,7 +2114,11 @@
         _scheduleStep(_step, _nextNoteTime);
         _nextNoteTime += STEP;
         _step++;
-        if (_step >= STEPS_PER_BAR) { _step = 0; _cycle++; }
+        if (_step >= STEPS_PER_BAR) {
+          _step = 0;
+          _cycle++;
+          _bar = (_bar + 1) % 16;
+        }
       }
     }
 
@@ -1977,7 +2130,7 @@
       if (_musicGain) _musicGain.gain.cancelScheduledValues(a.currentTime);
       if (_musicGain) _musicGain.gain.linearRampToValueAtTime(0.55, a.currentTime + 0.5);
       _running = true;
-      _step = 0; _cycle = 0;
+      _step = 0; _cycle = 0; _bar = 0;
       _nextNoteTime = a.currentTime + 0.10;
       _timer = setInterval(_scheduler, TICK_MS);
     }
@@ -2509,24 +2662,25 @@
   // Inactivity nudge: if no input/click for N seconds on the current card,
   // gently pulse the help buttons and surface a short reminder.
   let _idleTimer = null, _idleHardTimer = null;
+  let _idleStopHandler = null;
   function clearIdleNudge() {
     if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
     if (_idleHardTimer) { clearTimeout(_idleHardTimer); _idleHardTimer = null; }
+    if (_idleStopHandler) {
+      ["keydown", "pointerdown", "input"].forEach(ev =>
+        document.removeEventListener(ev, _idleStopHandler, true));
+      _idleStopHandler = null;
+    }
     document.querySelectorAll(".help-btn.nudging").forEach(b => b.classList.remove("nudging"));
   }
   function armIdleNudge(card) {
     clearIdleNudge();
     const reset = () => {
-      clearIdleNudge();
       armIdleNudge(card);
     };
-    const stopOnAction = () => {
-      ["keydown", "pointerdown", "input"].forEach(ev =>
-        document.removeEventListener(ev, stopOnAction, true));
-      reset();
-    };
+    _idleStopHandler = () => { reset(); };
     ["keydown", "pointerdown", "input"].forEach(ev =>
-      document.addEventListener(ev, stopOnAction, true));
+      document.addEventListener(ev, _idleStopHandler, true));
     _idleTimer = setTimeout(() => {
       const hintBtn = document.querySelector(".help-btn.help-hint");
       const speakBtn = document.querySelector(".help-btn.help-speak");
@@ -2662,7 +2816,13 @@
       if (state.answered) return;
       const raw = (input.value || "").trim();
       const v = raw.toLowerCase().replace(/[.!?,;:]+$/g, "").trim();
-      if (!v) return;
+      if (!v) {
+        // Don't silently no-op on empty Submit — that LOOKS like a freeze.
+        fb.innerHTML = `✏️ Type your answer in the box first!` +
+                       paLine(`✏️ ਪਹਿਲਾਂ ਡੱਬੇ ਵਿੱਚ ਜਵਾਬ ਲਿਖੋ!`);
+        try { input.focus(); } catch(_){}
+        return;
+      }
       const accepts = card.accept.map(s => String(s).toLowerCase().replace(/[.!?,;:]+$/g, "").trim());
       const ok = accepts.includes(v);
       if (ok) {
