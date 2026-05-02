@@ -2049,7 +2049,7 @@
             pa: `🏆 ਬੌਸ ਹਾਰਿਆ! +${GOLD_BARS_PER_BOSS} 🟨 ਸੋਨੇ ਦੀਆਂ ਇੱਟਾਂ · +${RUPEES_BOSS_CLEAR.toLocaleString()} ₹ · ਕੁਲ ਇੱਟਾਂ: ${bars}`
           }, "rank");
           SFX.bossWin(); SFX.ball();
-          confetti(60, ["🟨", "�", "⭐", "✨", "🏆", "🔥", "💫"]);
+          confetti(60, ["🟨", "🥈", "⭐", "✨", "🏆", "🔥", "💫"]);
         } else {
           toast({
             en: `✅ Block cleared: ${entry.blockTitle}`,
@@ -3277,7 +3277,7 @@
           <td class="pw">${(r.power|0).toLocaleString()} ⚡</td>
           <td class="rn">${esc(r.rank || rankFor(r.power|0).name)}</td>
           <td class="rp">₹${(r.rupees|0).toLocaleString()}</td>
-          <td class="gd">🟨 ${bars} · � ${coins}</td>
+          <td class="gd">🟨 ${bars} · 🥈 ${coins}</td>
           <td class="ts">${fmtTime(r.updatedAt)}</td>
           <td class="ax">${
             scope === "device"

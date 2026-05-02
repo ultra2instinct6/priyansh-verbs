@@ -2294,7 +2294,7 @@ input[type="text"]:focus {
   animation: xpPopUp 950ms var(--ease-out-quint) forwards;
   white-space: nowrap;
 }
-.xp-pop.zeni { color: #ffb26b; text-shadow: 0 2px 8px rgba(255, 122, 24, 0.6); }
+.xp-pop.rupees { color: #ffb26b; text-shadow: 0 2px 8px rgba(255, 122, 24, 0.6); }
 .xp-pop.dmg  { color: #ff8080; text-shadow: 0 2px 8px rgba(239, 68, 68, 0.7); }
 .xp-pop.heal { color: #5eefc0; text-shadow: 0 2px 8px rgba(20, 184, 122, 0.7); }
 @keyframes xpPopUp {
