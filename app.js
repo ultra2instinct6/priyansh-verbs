@@ -2488,15 +2488,43 @@
   const boardBtn = document.getElementById("board-btn");
   if (boardBtn) boardBtn.onclick = () => renderBoard();
 
-  // ABC side game (placeholder — implementation coming next)
+  // ABC side game — opens the Sound Ladder overlay (abc.js).
+  // If abc.js hasn't loaded (e.g. stale service-worker cache from before it
+  // existed), inject it on demand, then open. As a last resort, unregister
+  // any service worker and hard-reload so the user gets the fresh build.
   const abcBtn = document.getElementById("abc-btn");
   if (abcBtn) abcBtn.onclick = () => {
     if (typeof window.openAbcGame === "function") {
       window.openAbcGame();
-    } else {
-      alert("ABC Game · ABC ਖੇਡ\n\nComing soon!");
+      return;
+    }
+    // Try to dynamically load abc.js once.
+    if (!window.__abcLoading) {
+      window.__abcLoading = true;
+      const s = document.createElement("script");
+      s.src = "abc.js?v=" + Date.now();
+      s.onload = () => {
+        if (typeof window.openAbcGame === "function") window.openAbcGame();
+        else hardReloadForAbc();
+      };
+      s.onerror = hardReloadForAbc;
+      document.head.appendChild(s);
     }
   };
+  function hardReloadForAbc() {
+    try {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          Promise.all(regs.map((r) => r.unregister())).then(() => {
+            if ("caches" in window) {
+              caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+                .finally(() => location.reload(true));
+            } else { location.reload(true); }
+          });
+        });
+      } else { location.reload(true); }
+    } catch (_) { location.reload(true); }
+  }
 
   if (soundBtn) {
     const updateSoundIcon = () => { soundBtn.textContent = muted ? "🔇" : "🔊"; };

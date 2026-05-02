@@ -2419,22 +2419,29 @@ input[type="text"]:focus {
 }
 .atk-portrait-slam {
   position: relative;
-  width: 200px; height: 200px;
+  width: 240px; height: 240px;
   margin: 0 auto;
   display: grid; place-items: center;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,255,255,.22), rgba(255,255,255,0) 45%),
+    radial-gradient(circle at 50% 72%, rgba(255,157,0,.18), rgba(255,157,0,0) 58%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.12),
+    0 0 34px rgba(255,132,0,.24),
+    0 18px 34px rgba(0,0,0,.38);
 }
 .atk-portrait-slam .atk-portrait-emoji {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  font-size: 8rem; line-height: 1;
-  z-index: 1;
+  display: none;
 }
 .atk-portrait-slam .atk-portrait-img {
   position: relative;
-  width: 200px; height: 200px;
+  width: 216px; height: 216px;
   object-fit: contain;
   z-index: 2;
-  filter: drop-shadow(0 6px 14px rgba(0,0,0,.6));
+  transform: scale(1.06);
+  filter: drop-shadow(0 14px 24px rgba(0,0,0,.48)) drop-shadow(0 0 18px rgba(255,170,0,.22));
 }
 @keyframes atkSlamIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes atkSlamPop { 0% { transform: scale(.4); opacity: 0; }
@@ -2463,21 +2470,29 @@ input[type="text"]:focus {
 .atk-enemy { display: flex; align-items: center; gap: 10px; }
 .atk-portrait {
   position: relative;
-  width: 64px; height: 64px;
+  width: 88px; height: 88px;
   display: grid; place-items: center;
   flex-shrink: 0;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255,255,255,.22), rgba(255,255,255,0) 46%),
+    radial-gradient(circle at 50% 70%, rgba(255,157,0,.12), rgba(255,157,0,0) 62%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.10),
+    0 10px 18px rgba(0,0,0,.22),
+    0 0 22px rgba(255,157,0,.12);
 }
 .atk-portrait .atk-portrait-emoji {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  font-size: 2.6rem; z-index: 1;
+  display: none;
 }
 .atk-portrait .atk-portrait-img {
   position: relative;
-  width: 64px; height: 64px;
+  width: 76px; height: 76px;
   object-fit: contain;
   z-index: 2;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,.5));
+  transform: scale(1.05);
+  filter: drop-shadow(0 9px 14px rgba(0,0,0,.34)) drop-shadow(0 0 10px rgba(255,170,0,.14));
 }
 .atk-enemy-name {
   font-family: "Bangers", "Impact", sans-serif;
@@ -2677,10 +2692,10 @@ input[type="text"]:focus {
 
 /* Mobile tweaks for attack card */
 @media (max-width: 480px) {
-  .atk-portrait, .atk-portrait .atk-portrait-img { width: 52px; height: 52px; }
-  .atk-portrait .atk-portrait-emoji { font-size: 2rem; }
-  .atk-portrait-slam, .atk-portrait-slam .atk-portrait-img { width: 160px; height: 160px; }
-  .atk-portrait-slam .atk-portrait-emoji { font-size: 6rem; }
+  .atk-portrait { width: 72px; height: 72px; }
+  .atk-portrait .atk-portrait-img { width: 62px; height: 62px; }
+  .atk-portrait-slam { width: 190px; height: 190px; }
+  .atk-portrait-slam .atk-portrait-img { width: 172px; height: 172px; }
   .atk-word-big { font-size: 2rem; letter-spacing: 1px; }
   .atk-emoji-big { font-size: 2.6rem; }
   .atk-title { font-size: 1.3rem; }
