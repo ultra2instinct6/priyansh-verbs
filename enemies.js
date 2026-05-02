@@ -4,7 +4,7 @@
 // Image specs (all enemies):
 //   - 512×512 PNG, transparent background
 //   - subject fills ~80% of canvas, centered
-//   - file path: assets/enemies/<id>.png
+//   - file path: images/<id>.png  (drop PNGs into the /images/ folder)
 //
 // To swap art: drop a PNG at the path below. If file is missing, the emoji
 // fallback renders instead — so the game keeps working until art arrives.
@@ -18,7 +18,7 @@
       name_en: "Saibaman",
       name_pa: "ਸਾਈਬਾਮਨ",
       emoji: "👹",
-      png: "assets/enemies/saibaman.png",
+      png: "images/saibaman.png",
       tier: 1,
       taunt_en: "You! Spell or fall!",
       taunt_pa: "ਸਪੈੱਲ ਕਰੋ ਜਾਂ ਡਿੱਗੋ!",
@@ -28,7 +28,7 @@
       name_en: "Sneaky Imp",
       name_pa: "ਚਲਾਕ ਭੂਤ",
       emoji: "👺",
-      png: "assets/enemies/imp.png",
+      png: "images/imp.png",
       tier: 1,
       taunt_en: "I'll catch you off guard!",
       taunt_pa: "ਮੈਂ ਤੁਹਾਨੂੰ ਫੜਾਂਗਾ!",
@@ -40,7 +40,7 @@
       name_en: "Word Bandit",
       name_pa: "ਸ਼ਬਦ-ਚੋਰ",
       emoji: "🥷",
-      png: "assets/enemies/bandit.png",
+      png: "images/bandit.png",
       tier: 2,
       taunt_en: "Stealing your zeni!",
       taunt_pa: "ਤੁਹਾਡਾ ਜ਼ੇਨੀ ਚੁਰਾ ਲਵਾਂਗਾ!",
@@ -50,7 +50,7 @@
       name_en: "Letter Ghost",
       name_pa: "ਅੱਖਰ ਪਰੇਤ",
       emoji: "👻",
-      png: "assets/enemies/ghost.png",
+      png: "images/ghost.png",
       tier: 2,
       taunt_en: "Boo! Read me right!",
       taunt_pa: "ਬੂ! ਠੀਕ ਪੜ੍ਹੋ!",
@@ -62,7 +62,7 @@
       name_en: "Shadow Beast",
       name_pa: "ਪਰਛਾਵਾਂ ਜੀਵ",
       emoji: "🦇",
-      png: "assets/enemies/shadow.png",
+      png: "images/shadow.png",
       tier: 3,
       taunt_en: "Face me, brave one!",
       taunt_pa: "ਮੇਰੇ ਨਾਲ ਲੜੋ, ਬਹਾਦੁਰ!",
@@ -74,7 +74,7 @@
       name_en: "Sky Dragon",
       name_pa: "ਅਸਮਾਨੀ ਡ੍ਰੈਗਨ",
       emoji: "🐲",
-      png: "assets/enemies/dragon.png",
+      png: "images/dragon.png",
       tier: 4,
       taunt_en: "Prove your power!",
       taunt_pa: "ਆਪਣੀ ਤਾਕਤ ਦਿਖਾਓ!",

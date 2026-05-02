@@ -45,6 +45,9 @@
       spellingStreak: 0,    // consecutive spelling wins (gates Hard mode)
       totalShown: 0,
       totalRight: 0,
+      spellShown: 0, spellRight: 0,
+      defShown: 0,   defRight: 0,
+      missedVocab: {},      // { word: { miss, last } } — separate from LADDER review queue
       enabled: true,
     };
   }
@@ -69,14 +72,14 @@
     const pct = max > 0 ? hp / max : 1;
     if (pct <= 0.20) return false;
 
-    let p = 0.06;                                          // base chance
+    let p = 0.08;                                          // base chance
     p *= 1 + Math.min(state.streak || 0, 10) * 0.07;       // skill multiplier
     p *= Math.max(0.3, Math.min(1, pct));                  // health multiplier
     const dq = (state.reviewQueue && state.reviewQueue.length) || 0;
     p *= 1 / (1 + 0.15 * dq);                              // review-debt multiplier
-    // Cooldown ramp: linear 0..1 from card 4 -> 8 since last attack
+    // Cooldown ramp: floor 0.4 right after cooldown ends, ramps to 1.0 over 4 more cards
     const ramp = Math.max(0, Math.min(1, (since - 4) / 4));
-    p *= 0.25 + 0.75 * ramp;
+    p *= 0.4 + 0.6 * ramp;
     if (p > 0.5) p = 0.5;                                  // hard cap
 
     return Math.random() < p;
@@ -109,10 +112,27 @@
     const tier = (window.GameAPI && window.GameAPI.rankIndex)
       ? window.GameAPI.rankIndex(state.power || 0) : 0;
     const enemy = window.EnemyAPI.pick({ maxTier: Math.min(4, 1 + Math.floor(tier / 2)) });
-    const word  = window.VocabAPI.pick();
+    const word  = pickWordForAttack(meta);
 
     runAttack({ kind, enemy, word, state });
     return true;
+  }
+
+  // Word picker: 40% chance to revisit a previously-missed word so attacks have
+  // teaching memory across the run. Otherwise random from the full pool.
+  function pickWordForAttack(meta) {
+    const missedKeys = Object.keys(meta.missedVocab || {});
+    if (missedKeys.length && Math.random() < 0.4) {
+      // Weight by miss-count.
+      const ranked = missedKeys
+        .map(k => ({ k, miss: (meta.missedVocab[k] && meta.missedVocab[k].miss) || 1 }))
+        .sort((a, b) => b.miss - a.miss);
+      const top = ranked.slice(0, 5);
+      const pick = top[Math.floor(Math.random() * top.length)];
+      const w = window.VocabAPI.find(pick.k);
+      if (w) return w;
+    }
+    return window.VocabAPI.pick();
   }
 
   // ---------- Slam intro ----------
@@ -131,8 +151,9 @@
         </div>`;
       document.body.appendChild(o);
       try { window.GameAPI && GameAPI.screenShake && GameAPI.screenShake(280); } catch (_) {}
+      try { window.GameAPI && GameAPI.kiBurst   && GameAPI.kiBurst();        } catch (_) {}
       try { window.GameAPI && GameAPI.SFX && GameAPI.SFX.bossHit && GameAPI.SFX.bossHit(); } catch (_) {}
-      setTimeout(() => { o.remove(); resolve(); }, 1100);
+      setTimeout(() => { try { o.remove(); } catch(_) {} resolve(); }, 1100);
     });
   }
 
@@ -167,7 +188,8 @@
             `<button class="atk-choice" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`
       : `<div class="atk-input-row">
             <input class="atk-input fill-input" id="atk-input" autocomplete="off" autocapitalize="off"
-                   spellcheck="false" maxlength="20" placeholder="type the word"/>
+                   spellcheck="false" maxlength="20" inputmode="text" type="text"
+                   placeholder="type the word"/>
             <button class="atk-submit" id="atk-submit">Spell ⚡</button>
          </div>`;
 
@@ -228,9 +250,19 @@
     const given = String(answer || "").trim().toLowerCase();
     const ok = !timedOut && given === correct;
     const meta = loadMeta();
-    meta.totalShown += 1;
-    if (ok) meta.totalRight += 1;
+    meta.totalShown += 1; meta.spellShown += 1;
+    if (ok) { meta.totalRight += 1; meta.spellRight += 1; }
     meta.spellingStreak = ok ? meta.spellingStreak + 1 : 0;
+    if (ok && meta.missedVocab[correct]) {
+      // Successful retry: decay miss count so it leaves the priority pool.
+      meta.missedVocab[correct].miss = Math.max(0, meta.missedVocab[correct].miss - 1);
+      if (meta.missedVocab[correct].miss === 0) delete meta.missedVocab[correct];
+    }
+    if (!ok) {
+      const v = meta.missedVocab[correct] || { miss: 0, last: 0 };
+      v.miss += 1; v.last = Date.now();
+      meta.missedVocab[correct] = v;
+    }
     saveMeta(meta);
 
     const fbEn = ok
@@ -315,8 +347,17 @@
   function resolveDef(ctx, word, answer, timedOut, correctVal) {
     const ok = !timedOut && String(answer || "").trim().toLowerCase() === String(correctVal || "").trim().toLowerCase();
     const meta = loadMeta();
-    meta.totalShown += 1;
-    if (ok) meta.totalRight += 1;
+    meta.totalShown += 1; meta.defShown += 1;
+    if (ok) { meta.totalRight += 1; meta.defRight += 1; }
+    if (ok && meta.missedVocab[word.word]) {
+      meta.missedVocab[word.word].miss = Math.max(0, meta.missedVocab[word.word].miss - 1);
+      if (meta.missedVocab[word.word].miss === 0) delete meta.missedVocab[word.word];
+    }
+    if (!ok) {
+      const v = meta.missedVocab[word.word] || { miss: 0, last: 0 };
+      v.miss += 1; v.last = Date.now();
+      meta.missedVocab[word.word] = v;
+    }
     saveMeta(meta);
 
     const fbEn = ok
@@ -358,11 +399,13 @@
       ${exampleHTML}
       <button class="atk-continue">Continue<span class="pa pa-inline" lang="pa">· ਜਾਰੀ</span></button>`;
     card.appendChild(fbBox);
-    // Disable choices/inputs.
+    // Disable choices/inputs and freeze the timer bar.
     card.querySelectorAll(".atk-choice, .atk-submit, .atk-input").forEach(el => {
       el.setAttribute("disabled", "true");
       el.classList.add("disabled");
     });
+    const timerBar = card.querySelector(".atk-timer-bar");
+    if (timerBar) timerBar.classList.add("atk-timer-done");
     try {
       if (fb.ok) GameAPI.SFX.correct(); else GameAPI.SFX.wrong();
     } catch (_) {}
@@ -370,30 +413,50 @@
   }
 
   // ---------- Outcome + resume ----------
+  // Tier-scaled rewards/penalties keep attacks meaningful as the player ranks up,
+  // and elite enemies feel like a real event. Aligns with existing XP table
+  // (mcq=80, fill=120, boss=150) so attacks are quick "snack" XP, not grindable.
+  const TIER_REWARD = {
+    1: { spellPower: 15, spellZeni: 10, defPower: 12, defZeni:  8, dmg: 4 },
+    2: { spellPower: 25, spellZeni: 18, defPower: 20, defZeni: 14, dmg: 6 },
+    3: { spellPower: 50, spellZeni: 35, defPower: 40, defZeni: 28, dmg: 8 },
+    4: { spellPower:100, spellZeni: 75, defPower: 80, defZeni: 60, dmg:12 },
+  };
   function applyOutcomeAndContinue(ctx, kind, ok, timedOut, word) {
+    const tier = (ctx.enemy && ctx.enemy.tier) || 1;
+    const r = TIER_REWARD[tier] || TIER_REWARD[1];
     try {
       if (ok) {
         if (kind === "spell") {
-          GameAPI.addPower(20); GameAPI.addZeni(15);
+          GameAPI.addPower(r.spellPower); GameAPI.addZeni(r.spellZeni);
         } else {
-          GameAPI.addPower(15); GameAPI.addZeni(10);
+          GameAPI.addPower(r.defPower); GameAPI.addZeni(r.defZeni);
         }
         try { GameAPI.kiBurst && GameAPI.kiBurst(); } catch (_) {}
-        try { GameAPI.confetti && GameAPI.confetti(18, ["✨", "⚡", "💥", "⭐"]); } catch (_) {}
+        try { GameAPI.confetti && GameAPI.confetti(tier >= 3 ? 32 : 18, ["✨", "⚡", "💥", "⭐"]); } catch (_) {}
+        if (tier >= 3) {
+          try { GameAPI.toast && GameAPI.toast({
+            en: tier === 4 ? "🐉 ELITE DEFEATED!" : "⭐ RARE FOE DOWN!",
+            pa: tier === 4 ? "🐉 ਲਾਜਵਾਬ ਹਾਰਿਆ!" : "⭐ ਦੁਰਲੱਭ ਦੁਸ਼ਮਣ ਹਾਰਿਆ!"
+          }, "rank"); } catch (_) {}
+        }
       } else {
-        const dmg = timedOut ? 0 : (kind === "spell" ? 6 : 5);
+        const dmg = timedOut ? 0 : r.dmg;
         if (dmg > 0) GameAPI.dealDamage(dmg);
-        // Flag the word for review using a synthetic id (won't collide with LADDER ids).
-        try { GameAPI.queueReview && GameAPI.queueReview("vocab:" + word.word); } catch (_) {}
+        // Note: missed vocab is tracked inside attacks meta (missedVocab),
+        // intentionally NOT pushed into LADDER's review queue — that queue is
+        // keyed by LADDER card ids and would be silently cleared on miss.
       }
       GameAPI.persist && GameAPI.persist();
-    } catch (e) { /* swallow — never break the loop */ }
+    } catch (e) { console.warn("[Attacks] outcome:", e); }
     finish(ctx, ok, "done");
   }
 
   function finish(ctx, ok, reason) {
     Attacks._active = false;
-    // Resume normal game flow at the same card.
+    // If the wrong-answer damage caused a KO, the engine already handled it via
+    // dealDamage → (eventually) knockout. Calling render() here is still safe
+    // because knockout() resets state and renders KO screen synchronously.
     try {
       if (window.GameAPI && typeof GameAPI.render === "function") GameAPI.render();
     } catch (_) {}
@@ -454,7 +517,7 @@
       const tier = (window.GameAPI && window.GameAPI.rankIndex)
         ? window.GameAPI.rankIndex(state.power || 0) : 0;
       const enemy = window.EnemyAPI.pick({ maxTier: Math.min(4, 1 + Math.floor(tier / 2)) });
-      const word  = window.VocabAPI.pick();
+      const word  = pickWordForAttack(meta);
       runAttack({ kind: (kind === "def" ? "def" : "spell"), enemy, word, state });
       return true;
     },

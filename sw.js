@@ -17,8 +17,8 @@ const CORE_ASSETS = [
   "/ladder.js",
   "/online.js",
   "/manifest.json",
-  "/logo.png",
-  "/og-image.png",
+  "/images/logo.png",
+  "/images/og-image.png",
   "/404.html",
 ];
 

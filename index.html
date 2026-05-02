@@ -16,12 +16,12 @@
 <meta property="og:url"         content="https://punjabiji.web.app/" />
 <meta property="og:title"       content="Punjabi Ji: Path to Power ⚡ | ਪੰਜਾਬੀ ਜੀ" />
 <meta property="og:description" content="A bilingual English–Punjabi verb adventure for kids. Climb the ladder, beat the bosses, earn XP! ਸਿੱਖੋ ਅਤੇ ਜਿੱਤੋ!" />
-<meta property="og:image"       content="https://punjabiji.web.app/og-image.png" />
+<meta property="og:image"       content="https://punjabiji.web.app/images/og-image.png" />
 <!-- Twitter / X Card -->
 <meta name="twitter:card"        content="summary_large_image" />
 <meta name="twitter:title"       content="Punjabi Ji: Path to Power ⚡" />
 <meta name="twitter:description" content="A bilingual English–Punjabi verb adventure for kids. Climb the ladder, beat the bosses, earn XP!" />
-<meta name="twitter:image"       content="https://punjabiji.web.app/og-image.png" />
+<meta name="twitter:image"       content="https://punjabiji.web.app/images/og-image.png" />
 <title>Punjabi Ji: Path to Power ⚡ | ਪੰਜਾਬੀ ਜੀ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,7 +38,7 @@
       <span class="player-chip-caret">▾</span>
     </button>
     <div class="logo-wrap">
-      <img src="logo.png" alt="Punjabi Ji: Path to Power" class="site-logo" />
+      <img src="images/logo.png" alt="Punjabi Ji: Path to Power" class="site-logo" />
     </div>
     <div class="power-bar">
       <div class="power-fill" id="power-fill"></div>
@@ -63,6 +63,7 @@
       <button class="hud-btn" id="attacks-btn" title="Random attacks · ਹਮਲੇ" aria-label="Toggle random attacks">⚔️</button>
       <button class="hud-btn" id="export-btn" title="Export stats · ਅੰਕੜੇ ਸੇਵ ਕਰੋ">📤</button>
       <button class="hud-btn danger" id="reset-btn" title="Reset progress · ਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਓ">♻️</button>
+      <button class="hud-btn hud-btn-abc" id="abc-btn" title="ABC Game · ABC ਖੇਡ" aria-label="ABC side game">ABC</button>
     </div>
   </div>
 
@@ -72,7 +73,7 @@
   <div class="fighter-portrait" id="fighter-portrait" aria-hidden="true">
     <div class="fp-aura"></div>
     <div class="fp-frame">
-      <img class="fp-img" id="fp-img" src="boystart.png" alt="" />
+      <img class="fp-img" id="fp-img" src="images/boystart.png" alt="" />
     </div>
     <div class="fp-burst" id="fp-burst"></div>
   </div>
@@ -85,6 +86,7 @@
   <script src="vocab.js"></script>
   <script src="enemies.js"></script>
   <script src="attacks.js"></script>
+  <script src="abc.js"></script>
   <script src="app.js"></script>
   <script type="module" src="online.js"></script>
   <script>

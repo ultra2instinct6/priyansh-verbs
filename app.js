@@ -215,7 +215,7 @@
     return "";
   }
   function setAvatar(childId, av) { if (childId && av) localStorage.setItem(`${AVATAR_KEY}__${childId}`, av); }
-  function avatarSrc(av) { return av === "girl" ? "girlstart.png" : "boystart.png"; }
+  function avatarSrc(av) { return av === "girl" ? "images/girlstart.png" : "images/boystart.png"; }
 
   // HTML-escape user-controlled strings before string-template injection.
   function escHTML(s) {
@@ -255,11 +255,11 @@
           <p class="welcome-label">Choose your fighter <span class="pa pa-inline" lang="pa">· ਯੋਧਾ ਚੁਣੋ</span></p>
           <div class="avatar-row">
             <button type="button" class="avatar-pick" data-av="boy">
-              <img src="boystart.png" alt="Boy fighter" />
+              <img src="images/boystart.png" alt="Boy fighter" />
               <span>Boy <span class="pa pa-inline" lang="pa">· ਮੁੰਡਾ</span></span>
             </button>
             <button type="button" class="avatar-pick" data-av="girl">
-              <img src="girlstart.png" alt="Girl fighter" />
+              <img src="images/girlstart.png" alt="Girl fighter" />
               <span>Girl <span class="pa pa-inline" lang="pa">· ਕੁੜੀ</span></span>
             </button>
           </div>
@@ -488,7 +488,7 @@
       fpImg.src = avatarSrc(av);
       fpImg.alt = av;
     } else {
-      fpImg.src = "boystart.png";
+      fpImg.src = "images/boystart.png";
       fpImg.alt = "fighter";
     }
     fpEl.style.display = "block";
@@ -2488,6 +2488,16 @@
   const boardBtn = document.getElementById("board-btn");
   if (boardBtn) boardBtn.onclick = () => renderBoard();
 
+  // ABC side game (placeholder — implementation coming next)
+  const abcBtn = document.getElementById("abc-btn");
+  if (abcBtn) abcBtn.onclick = () => {
+    if (typeof window.openAbcGame === "function") {
+      window.openAbcGame();
+    } else {
+      alert("ABC Game · ABC ਖੇਡ\n\nComing soon!");
+    }
+  };
+
   if (soundBtn) {
     const updateSoundIcon = () => { soundBtn.textContent = muted ? "🔇" : "🔊"; };
     updateSoundIcon();
@@ -2529,7 +2539,8 @@
     [KEY.pos, KEY.hp, KEY.power, KEY.zeni, KEY.balls, KEY.review, KEY.cleared, KEY.history,
      KEY.daily,
      `dl_seen_v2__${currentChildId}`,
-     `${AVATAR_KEY}__${currentChildId}`]
+     `${AVATAR_KEY}__${currentChildId}`,
+     `dl_atk_v1__${currentChildId}`]
       .forEach(k => localStorage.removeItem(k));
     const lb = rdJSON(LOCAL_LB_KEY, {});
     delete lb[`${currentChildId}__${deviceId}`];
