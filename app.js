@@ -612,7 +612,7 @@
   const legacyRupees = Number(
     localStorage.getItem(KEY.legacyZeni) ?? localStorage.getItem("vtk_zeni") ?? 0
   );
-  // Old `balls` was capped at 7 dragonballs. Convert each ball to one full
+  // Legacy `balls` field (capped at 7). Convert each ball to one full
   // gold bar (10 coins) so returners feel rewarded by the new system.
   const legacyBallsRaw = Number(
     localStorage.getItem(KEY.legacyBalls) ?? localStorage.getItem("vtk_balls") ?? 0
@@ -3809,31 +3809,29 @@
     }
   }
 
-  // ABC side game — opens the Sound Ladder overlay (abc.js).
-  // If abc.js hasn't loaded (e.g. stale service-worker cache from before it
-  // existed), inject it on demand, then open. As a last resort, unregister
-  // any service worker and hard-reload so the user gets the fresh build.
-  const abcBtn = document.getElementById("abc-btn");
-  if (abcBtn) abcBtn.onclick = () => {
+  // 🎮 Fun Games hub — opens the standalone mini-games overlay (games.js).
+  // Supports legacy id ("abc-btn") and new id ("games-btn") so cached HTML
+  // still works after a deploy.
+  const gamesBtn = document.getElementById("games-btn") || document.getElementById("abc-btn");
+  if (gamesBtn) gamesBtn.onclick = () => {
     try { SFX.click(); } catch (_) {}
-    if (typeof window.openAbcGame === "function") {
-      window.openAbcGame();
+    if (typeof window.openGamesHub === "function") {
+      window.openGamesHub();
       return;
     }
-    // Try to dynamically load abc.js once.
-    if (!window.__abcLoading) {
-      window.__abcLoading = true;
+    if (!window.__gamesLoading) {
+      window.__gamesLoading = true;
       const s = document.createElement("script");
-      s.src = "abc.js?v=" + Date.now();
+      s.src = "games.js?v=" + Date.now();
       s.onload = () => {
-        if (typeof window.openAbcGame === "function") window.openAbcGame();
-        else hardReloadForAbc();
+        if (typeof window.openGamesHub === "function") window.openGamesHub();
+        else hardReloadForGames();
       };
-      s.onerror = hardReloadForAbc;
+      s.onerror = hardReloadForGames;
       document.head.appendChild(s);
     }
   };
-  function hardReloadForAbc() {
+  function hardReloadForGames() {
     try {
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((regs) => {

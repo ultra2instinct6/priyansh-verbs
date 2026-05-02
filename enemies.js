@@ -14,11 +14,11 @@
   const ENEMIES = [
     // ---- Tier 1: Common (40% of spawns) ----
     {
-      id: "saibaman",
+      id: "pind-goblin",
       name_en: "Pind Goblin",
       name_pa: "ਪਿੰਡ ਗੋਬਲਿਨ",
       emoji: "👹",
-      png: "images/saibaman.png",
+      png: "images/pind-goblin.png",
       tier: 1,
       taunt_en: "You! Spell or fall!",
       taunt_pa: "ਸਪੈੱਲ ਕਰੋ ਜਾਂ ਡਿੱਗੋ!",

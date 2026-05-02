@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r30-splashfix";
+const CACHE_VERSION = "punjabiji-v20260502-r31-gameshub";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -16,7 +16,7 @@ const CORE_ASSETS = [
   "/app.js",
   "/ladder.js",
   "/online.js",
-  "/abc.js",
+  "/games.js",
   "/attacks.js",
   "/vocab.js",
   "/manifest.json",
@@ -28,7 +28,7 @@ const CORE_ASSETS = [
   "/images/dragon.png",
   "/images/ghost.png",
   "/images/imp.png",
-  "/images/saibaman.png",
+  "/images/pind-goblin.png",
   "/images/shadow.png",
   "/404.html",
 ];

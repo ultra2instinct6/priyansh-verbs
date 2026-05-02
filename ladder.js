@@ -1975,7 +1975,7 @@ const LADDER = [
         ]
       },
 
-      // ---- Block 18: � Fractions II: thirds, eighths, equivalents ----
+      // ---- Block 18: 🍕 Fractions II: thirds, eighths, equivalents ----
       {
         id: "u4.b18", title: "Fractions II: thirds, eighths, equivalents", emoji: "🍕",
         cards: [
@@ -2006,7 +2006,7 @@ const LADDER = [
         ]
       },
 
-      // ---- Block 19: �🎮 Fun Arena ----
+      // ---- Block 19: 🎮 Fun Arena ----
       {
         id: "u4.fun", title: "Fun Arena 🎮", emoji: "🎮",
         cards: [
