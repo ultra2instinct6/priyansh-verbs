@@ -45,7 +45,19 @@
     g: { phoneme: "/g/",  speak: "guh" },
     c: { phoneme: "/k/",  speak: "kuh" },
     h: { phoneme: "/h/",  speak: "huh" },
-    f: { phoneme: "/f/",  speak: "fff" }
+    f: { phoneme: "/f/",  speak: "fff" },
+    e: { phoneme: "/e/",   speak: "eh" },
+    r: { phoneme: "/r/",   speak: "rrr" },
+    b: { phoneme: "/b/",   speak: "buh" },
+    k: { phoneme: "/k/",   speak: "kuh" },
+    l: { phoneme: "/l/",   speak: "lll" },
+    u: { phoneme: "/u/",   speak: "uh" },
+    w: { phoneme: "/w/",   speak: "wuh" },
+    j: { phoneme: "/j/",   speak: "juh" },
+    sh:{ phoneme: "/sh/",  speak: "shh" },
+    ch:{ phoneme: "/ch/",  speak: "chuh" },
+    th:{ phoneme: "/th/",  speak: "thh" },
+    z: { phoneme: "/z/",   speak: "zzz" }
   };
   const LETTER_KEYS = Object.keys(LETTERS);
 
@@ -118,6 +130,97 @@
         { text: "Pat hid the ham.", q: "What did Pat hide?", a: "ham", choices: ["ham", "hat", "hip"] },
         { text: "A fish has a fin.", q: "What does a fish have?", a: "fin", choices: ["fin", "fog", "fan"] },
         { text: "The cap can fit.", q: "What can fit?",    a: "cap", choices: ["cap", "hat", "ham"] }
+      ]
+    },
+    {
+      id: "L6",
+      title: "Level 6: Add e, r",
+      letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r"],
+      words:   ["red", "hen", "pen", "net", "ten", "ran", "rip", "rat", "rod", "her"],
+      sentences: [
+        { text: "The hen ran.",       q: "Who ran?",          a: "hen", choices: ["hen","rat","pen"] },
+        { text: "Sam has a red pen.", q: "What color is the pen?", a: "red", choices: ["red","hot","big"] },
+        { text: "Pat got ten nets.",  q: "How many nets?",     a: "ten", choices: ["ten","two","red"] },
+        { text: "The rat hid.",       q: "Who hid?",           a: "rat", choices: ["rat","hen","man"] },
+        { text: "Her cap is red.",    q: "What is red?",       a: "cap", choices: ["cap","hat","pen"] }
+      ]
+    },
+    {
+      id: "L7",
+      title: "Level 7: Add b, k, l",
+      letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l"],
+      words:   ["bat", "bed", "big", "bag", "kid", "kit", "lap", "leg", "log", "lid"],
+      sentences: [
+        { text: "The kid has a bat.", q: "What does the kid have?", a: "bat", choices: ["bat","bag","bed"] },
+        { text: "A big log fell.",    q: "What fell?",         a: "log", choices: ["log","leg","lap"] },
+        { text: "Pat sat on the bed.", q: "Where did Pat sit?", a: "bed", choices: ["bed","bag","bat"] },
+        { text: "Lift the lid.",      q: "Lift the what?",     a: "lid", choices: ["lid","leg","log"] },
+        { text: "The kit is in the bag.", q: "Where is the kit?", a: "bag", choices: ["bag","bed","lap"] }
+      ]
+    },
+    {
+      id: "L8",
+      title: "Level 8: Add u, w, j",
+      letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
+      words:   ["cup", "bug", "sun", "run", "jug", "jet", "jog", "web", "wig", "win"],
+      sentences: [
+        { text: "The bug is on the cup.", q: "Where is the bug?", a: "cup", choices: ["cup","jug","bed"] },
+        { text: "Sam can run in the sun.", q: "Where does Sam run?", a: "sun", choices: ["sun","web","log"] },
+        { text: "The jet is fast.",   q: "What is fast?",      a: "jet", choices: ["jet","jug","jog"] },
+        { text: "Pat got a wig.",     q: "What did Pat get?",  a: "wig", choices: ["wig","web","win"] },
+        { text: "We win the cup.",    q: "What did we win?",   a: "cup", choices: ["cup","jug","jet"] }
+      ]
+    },
+    {
+      id: "L9",
+      title: "Level 9: Blends (st, sp, pl, fl, fr, cl, cr, dr)",
+      letters: ["m","s","t","p","a","n","i","d","o","g","c","h","f","e","r","b","k","l","u","w","j"],
+      words:   ["stop", "step", "spot", "plan", "plot", "flag", "frog", "clip", "crab", "drum"],
+      sentences: [
+        { text: "The frog can jump.",  q: "What can jump?",   a: "frog", choices: ["frog","crab","flag"] },
+        { text: "Stop at the spot.",   q: "Stop at the what?", a: "spot", choices: ["spot","step","stop"] },
+        { text: "The flag is red.",    q: "What is red?",     a: "flag", choices: ["flag","frog","plan"] },
+        { text: "Sam has a plan.",     q: "What does Sam have?", a: "plan", choices: ["plan","plot","clip"] },
+        { text: "The crab hid in mud.", q: "Who hid?",         a: "crab", choices: ["crab","frog","drum"] }
+      ]
+    },
+    {
+      id: "L10",
+      title: "Level 10: Digraphs sh, ch, th",
+      letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","f","d","h","c"],
+      words:   ["ship", "shop", "fish", "dish", "chip", "chop", "chin", "this", "that", "thin"],
+      sentences: [
+        { text: "The ship is in the shop.", q: "Where is the ship?", a: "shop", choices: ["shop","chip","dish"] },
+        { text: "That fish is thin.",   q: "What is thin?",      a: "fish", choices: ["fish","ship","chin"] },
+        { text: "Chop the chip.",       q: "Chop the what?",     a: "chip", choices: ["chip","chin","chop"] },
+        { text: "This dish is hot.",    q: "What is hot?",       a: "dish", choices: ["dish","fish","ship"] },
+        { text: "Pat has a thin chin.", q: "What is thin?",      a: "chin", choices: ["chin","ship","shop"] }
+      ]
+    },
+    {
+      id: "L11",
+      title: "Level 11: Magic e (CVCe)",
+      letters: ["a","e","i","o","u","m","k","t","p","n","l","d","r","b","c","h"],
+      words:   ["make", "cake", "lake", "bike", "like", "time", "home", "bone", "cube", "cute"],
+      sentences: [
+        { text: "I like the cake.",     q: "What do I like?",   a: "cake", choices: ["cake","bike","home"] },
+        { text: "The lake is cold.",    q: "What is cold?",     a: "lake", choices: ["lake","home","bone"] },
+        { text: "I ride the bike home.", q: "What do I ride?",  a: "bike", choices: ["bike","cake","cube"] },
+        { text: "It is time to make a cake.", q: "What do I make?", a: "cake", choices: ["cake","bone","home"] },
+        { text: "The cute dog has a bone.", q: "What does the dog have?", a: "bone", choices: ["bone","cube","cake"] }
+      ]
+    },
+    {
+      id: "L12",
+      title: "Level 12: Reader's Mix",
+      letters: ["a","e","i","o","u","sh","ch","th","s","t","p","n","r","l","k","b","d","m","f","h","g","z"],
+      words:   ["shape", "chase", "these", "trike", "plate", "snake", "flame", "globe", "prize", "crane"],
+      sentences: [
+        { text: "The snake is on the plate.", q: "Where is the snake?", a: "plate", choices: ["plate","globe","crane"] },
+        { text: "I won the prize.",      q: "What did I win?",   a: "prize", choices: ["prize","trike","flame"] },
+        { text: "The crane has a long neck.", q: "What has a long neck?", a: "crane", choices: ["crane","snake","globe"] },
+        { text: "Chase the trike home.", q: "Chase the what?",  a: "trike", choices: ["trike","plate","shape"] },
+        { text: "These shapes are blue.", q: "What is blue?",   a: "shape", choices: ["shape","globe","flame"] }
       ]
     }
   ];
