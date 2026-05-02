@@ -387,7 +387,7 @@ footer .credit {
 .hud-btn:hover { background: rgba(255,210,63,.2); }
 .hud-btn.danger { border-color: #ff5078; color: #ffb3c2; }
 .hud-btn-abc {
-  margin-left: 10px;
+  margin-left: auto;
   font-family: "Bangers", "Fredoka", sans-serif;
   font-size: 0.95rem;
   letter-spacing: 1.5px;
@@ -2817,4 +2817,423 @@ body.abc-locked { overflow: hidden; }
   .abc-title  { font-size: 1.35rem; }
   .abc-body   { padding: 18px 14px; }
   .abc-cta    { font-size: 1.05rem; padding: 9px 18px; }
+}
+
+/* ---------------------------------------------------------------------
+ * Sound Ladder — game screens (home, level, game, ladder, parent)
+ * --------------------------------------------------------------------- */
+.abc-h3 {
+  margin: 0 0 10px;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 1.5px;
+  color: #ffd23f;
+  text-align: center;
+  text-shadow: 2px 2px 0 #1a0033;
+}
+.abc-h4 {
+  margin: 14px 0 6px;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  color: #00e5ff;
+  text-align: center;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+.abc-sub {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  color: #cfd8ff;
+  text-align: center;
+}
+
+/* ---- Home / menu grid ---- */
+.abc-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+.abc-cta.primary {
+  background: linear-gradient(180deg, #00e5ff, #0078ff);
+  border-color: #ffd23f;
+}
+
+/* ---- Letter tiles (review + level intro) ---- */
+.abc-letter-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+.abc-letter-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 2px solid #00e5ff;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  cursor: pointer;
+  font-family: "Fredoka", sans-serif;
+  transition: transform 120ms ease, background 120ms ease;
+}
+.abc-letter-tile:hover  { background: rgba(0, 229, 255, 0.18); transform: translateY(-2px); }
+.abc-letter-tile:active { transform: translateY(1px) scale(.96); }
+.abc-letter-big {
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 2rem;
+  color: #ffd23f;
+  text-shadow: 2px 2px 0 #1a0033;
+  line-height: 1;
+}
+.abc-letter-phn {
+  font-size: 0.85rem;
+  color: #cfd8ff;
+  letter-spacing: 0.5px;
+}
+
+.abc-level-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ---- Rewards grid ---- */
+.abc-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+.abc-reward-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ffd23f;
+  border-radius: 14px;
+  padding: 12px 6px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #cfd8ff;
+}
+.abc-reward-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.4rem;
+  color: #fff;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  letter-spacing: 1px;
+}
+.abc-reward-icon { font-size: 1.8rem; }
+
+/* ---- Game screen layout ---- */
+.abc-game-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  color: #ffd54f;
+  margin-bottom: 10px;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+.abc-progress {
+  background: rgba(0, 0, 0, 0.45);
+  border: 2px solid #00e5ff;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.9rem;
+}
+
+/* ---- Ladder visualization ---- */
+.abc-ladder {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0 14px;
+}
+.abc-ladder-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 14px;
+  border-left: 4px solid #ffd23f;
+  border-right: 4px solid #ffd23f;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.abc-rung {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 120px;
+  padding: 4px 10px;
+  border-top: 3px solid #8a6a18;
+  color: #6c7a99;
+  font-size: 0.85rem;
+  font-family: "Bangers", sans-serif;
+  letter-spacing: 1px;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+.abc-rung:last-child { border-bottom: 3px solid #8a6a18; }
+.abc-rung.reached {
+  color: #ffd23f;
+  border-top-color: #ffd23f;
+}
+.abc-rung.here {
+  color: #00e5ff;
+  border-top-color: #00e5ff;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.6);
+}
+.abc-rung-n { font-size: 0.85rem; opacity: 0.85; }
+.abc-climber {
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 6px rgba(255, 210, 63, 0.65));
+  animation: abcBob 800ms ease-in-out infinite alternate;
+}
+@keyframes abcBob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-3px); }
+}
+
+/* ---- Challenge / prompt / choices ---- */
+.abc-challenge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.abc-prompt {
+  font-size: 1.15rem;
+  color: #fff;
+  text-align: center;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+.abc-prompt.small { font-size: 0.95rem; color: #cfd8ff; }
+.abc-letter-huge {
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 5rem;
+  line-height: 1;
+  color: #ffd23f;
+  text-shadow: 4px 4px 0 #1a0033, 0 0 18px rgba(255, 210, 63, 0.5);
+  margin: 4px 0 4px;
+}
+.abc-blend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.abc-blend-tile {
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 2.4rem;
+  width: 60px; height: 60px;
+  border-radius: 14px;
+  border: 2px solid #00e5ff;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffd23f;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #1a0033;
+  transition: transform 120ms ease, background 120ms ease;
+}
+.abc-blend-tile:hover  { background: rgba(0, 229, 255, 0.2); transform: translateY(-2px); }
+.abc-blend-tile:active { transform: translateY(1px) scale(.95); }
+.abc-blend-sep {
+  font-size: 1.4rem;
+  color: #ffd54f;
+  opacity: 0.7;
+}
+.abc-sentence {
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 1.5px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px dashed #ffd23f;
+  border-radius: 14px;
+  padding: 14px 18px;
+  text-shadow: 2px 2px 0 #1a0033;
+  text-align: center;
+}
+
+/* ---- Choice buttons ---- */
+.abc-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+.abc-choice {
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  border: 2px solid #ffd23f;
+  background: linear-gradient(180deg, rgba(0, 80, 160, 0.55), rgba(0, 30, 80, 0.55));
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 #1a0033;
+  box-shadow: 0 3px 0 #1a0033;
+  transition: transform 120ms ease, background 120ms ease, border-color 200ms ease;
+}
+.abc-choice:hover  { transform: translateY(-2px); background: linear-gradient(180deg, rgba(0, 120, 200, 0.7), rgba(0, 40, 100, 0.7)); }
+.abc-choice:active { transform: translateY(2px); box-shadow: 0 1px 0 #1a0033; }
+.abc-choice.correct {
+  background: linear-gradient(180deg, #00c853, #009624);
+  border-color: #b9f6ca;
+  animation: abcPulse 400ms ease;
+}
+.abc-choice.wrong {
+  background: linear-gradient(180deg, #b71c1c, #7f0000);
+  border-color: #ff8a80;
+  opacity: 0.7;
+}
+.abc-choice.hint {
+  border-color: #00e5ff;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.6), 0 3px 0 #1a0033;
+  animation: abcPulse 700ms ease infinite;
+}
+@keyframes abcPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* ---- Mini action buttons (replay / hint) ---- */
+.abc-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.abc-mini {
+  font-family: "Fredoka", sans-serif;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #ffd23f;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffd54f;
+  cursor: pointer;
+}
+.abc-mini:hover { background: rgba(255, 210, 63, 0.2); }
+
+/* ---- Feedback line ---- */
+.abc-feedback {
+  min-height: 1.4em;
+  font-size: 1rem;
+  text-align: center;
+  color: #cfd8ff;
+  text-shadow: 1px 1px 0 #1a0033;
+}
+.abc-feedback.ok    { color: #b9f6ca; }
+.abc-feedback.retry { color: #ffd54f; }
+.abc-feedback.teach { color: #00e5ff; }
+.abc-feedback.hint  { color: #ffeb3b; }
+
+/* ---- Reward screen ---- */
+.abc-reward-big {
+  text-align: center;
+  font-family: "Bangers", "Fredoka", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 2px;
+  color: #ffd23f;
+  text-shadow: 3px 3px 0 #1a0033, 0 0 14px rgba(255, 210, 63, 0.6);
+  margin: 14px 0;
+}
+
+/* ---- Parent report ---- */
+.abc-report {
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid #00e5ff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: #fff;
+  margin-bottom: 14px;
+}
+.abc-report b { color: #ffd54f; }
+
+/* ---- Mobile tweaks ---- */
+@media (max-width: 480px) {
+  .abc-letter-huge { font-size: 4rem; }
+  .abc-sentence    { font-size: 1.4rem; padding: 12px 14px; }
+  .abc-choice      { font-size: 1.25rem; padding: 12px 8px; }
+  .abc-blend-tile  { width: 52px; height: 52px; font-size: 2rem; }
+  .abc-rung        { min-width: 100px; }
+  .abc-reward-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* ============================================================
+   STICKY CONTROLS — card content scrolls, buttons stay pinned
+   ============================================================ */
+
+/* 1. Body fills viewport exactly; main is the one scroll container */
+html { height: 100%; }
+body {
+  height: 100dvh;
+  min-height: unset;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+header   { flex-shrink: 0; }
+.hud-row { flex-shrink: 0; }
+main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: block;
+}
+
+/* 2. Card must NOT be a scroll container — use clip so ::before
+      decorative bleeds are still trimmed but sticky can pierce through */
+.card { overflow: clip; }
+
+/* 3. Controls stick to bottom of the scrolling main viewport */
+.controls {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-top: 1px solid var(--border, #d8e6ff);
+  margin: 8px -22px -22px;
+  padding: 12px 22px;
+  border-radius: 0 0 var(--radius-lg, 20px) var(--radius-lg, 20px);
+}
+
+/* Boss card has dark navy background — match controls bar */
+.boss-card .controls {
+  background: rgba(10, 46, 115, 0.97);
+  border-top: 1px solid rgba(110, 200, 255, 0.2);
+}
+
+/* Narrower card padding on mobile (22px → ~14px) */
+@media (max-width: 600px) {
+  .controls {
+    margin: 6px -14px -14px;
+    padding: 10px 14px;
+    border-radius: 0 0 16px 16px;
+  }
+}
+@media (max-width: 360px) {
+  .controls {
+    margin: 4px -12px -12px;
+    padding: 8px 12px;
+  }
 }

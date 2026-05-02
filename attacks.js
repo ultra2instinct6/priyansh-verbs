@@ -481,9 +481,7 @@
 
   function enemyPortraitHTML(enemy, ctx) {
     const cls = ctx === "slam" ? "atk-portrait-slam" : "atk-portrait";
-    // Use both <img> (preferred) and emoji fallback layered behind.
     return `<div class="${cls}">
-      <span class="atk-portrait-emoji">${esc(enemy.emoji || "👹")}</span>
       <img class="atk-portrait-img" src="${esc(enemy.png)}" alt=""
            onerror="this.style.display='none'"/>
     </div>`;
