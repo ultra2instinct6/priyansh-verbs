@@ -29,9 +29,44 @@
 <link rel="preload" as="image" href="images/logo.png" />
 <link rel="stylesheet" href="styles.css" />
 <style>
-  /* Inline critical splash styles so it shows instantly, before styles.css loads. */
-  #splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0a2e73;}
-  #splash .splash-logo{max-width:min(70vw,420px);max-height:55vh;}
+  /* Inline critical splash styles — self-contained, do NOT depend on styles.css. */
+  #splash{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:22px;padding:32px 20px max(64px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 18% 20%, rgba(255,122,24,.22), transparent 48%),
+      radial-gradient(circle at 82% 16%, rgba(110,200,255,.22), transparent 50%),
+      linear-gradient(165deg,#0a2e73 0%, #0f5fd7 100%);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:opacity .45s ease;
+    opacity:1;
+  }
+  #splash.hide{opacity:0;pointer-events:none;}
+  #splash.gone{display:none !important;}
+  #splash .splash-logo{
+    max-width:min(70vw,420px);max-height:55vh;width:auto;height:auto;
+    filter:drop-shadow(0 12px 28px rgba(0,0,0,.35));
+  }
+  #splash .splash-cta{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:14px 28px;border-radius:999px;
+    background:linear-gradient(180deg,#ff7a18 0%,#ff5722 100%);
+    color:#fff;font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;
+    font-size:1.2rem;letter-spacing:.5px;
+    box-shadow:0 8px 24px rgba(255,87,34,.45),inset 0 -3px 0 rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.25);
+    animation:splashPulse 1.6s ease-in-out infinite;
+    pointer-events:none; /* clicks pass through to #splash */
+  }
+  #splash .splash-cta .splash-cta-pa{font-size:.85em;font-weight:600;opacity:.95;font-family:"Noto Sans Gurmukhi",sans-serif;}
+  #splash .splash-credit{
+    position:absolute;bottom:max(16px, env(safe-area-inset-bottom));left:0;right:0;
+    text-align:center;color:#ffd54f;font-size:.95rem;font-family:"Fredoka",sans-serif;
+    text-shadow:1px 1px 0 rgba(0,0,0,.35);
+    pointer-events:none;
+  }
+  @keyframes splashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 </style>
 </head>
 <body>
@@ -113,38 +148,48 @@
     (function () {
       var splash = document.getElementById("splash");
       if (!splash) return;
-      var FADE_MS = 700;
+      var FADE_MS = 500;
       var dismissed = false;
       function dismiss() {
         if (dismissed) return;
         dismissed = true;
         // iOS Safari: AudioContext must be created inside a user gesture.
-        // Pre-warm the SoundKit and play the bhangra welcome sting.
         try {
           if (window.GameAPI && window.GameAPI.SFX) {
             window.GameAPI.SFX.unlock && window.GameAPI.SFX.unlock();
             window.GameAPI.SFX.welcome && window.GameAPI.SFX.welcome();
           }
-          // Kick off the bhangra-chiptune background loop after the welcome sting.
           if (window.GameAPI && window.GameAPI.BGM) {
             setTimeout(function () { window.GameAPI.BGM.start(); }, 900);
           }
         } catch (_) {}
+        // Belt-and-suspenders: class + inline style, then guaranteed removal.
         splash.classList.add("hide");
-        var done = false;
+        splash.style.opacity = "0";
+        splash.style.pointerEvents = "none";
         function gone() {
-          if (done) return;
-          done = true;
           splash.classList.add("gone");
+          splash.style.display = "none";
           splash.setAttribute("aria-hidden", "true");
         }
-        splash.addEventListener("transitionend", gone, { once: true });
         setTimeout(gone, FADE_MS);
       }
+      // pointerdown fires earliest on both touch and mouse; click/touchstart/keydown as fallbacks.
+      splash.addEventListener("pointerdown", dismiss);
       splash.addEventListener("click", dismiss);
       splash.addEventListener("touchstart", dismiss, { passive: true });
       splash.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dismiss(); }
+      });
+      // Window-level safety net: if anything overlays #splash, taps still dismiss.
+      window.addEventListener("keydown", function (e) {
+        if (!dismissed && (e.key === "Enter" || e.key === " ")) dismiss();
+      });
+      // Ensure splash doesn't get stuck if focus/visibility flips during load.
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && splash.classList.contains("hide") && !splash.classList.contains("gone")) {
+          splash.classList.add("gone"); splash.style.display = "none";
+        }
       });
     })();
   </script>
