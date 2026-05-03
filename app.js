@@ -425,6 +425,23 @@
         if (switchBtn) {
           switchBtn.addEventListener("click", () => { expanded = true; render(); });
         }
+        const removeBtn = overlay.querySelector("#profile-remove");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const cid = removeBtn.dataset.cid;
+            // deletePlayer() handles its own confirm + (if active) reload.
+            deletePlayer(cid);
+            // If we're still here (deleted a non-active child somehow, or user
+            // cancelled the confirm), refresh the view.
+            if (!getChildren().length) {
+              cleanup();
+              resolve({ action: "empty" });
+              return;
+            }
+            render();
+          });
+        }
         const backBtn = overlay.querySelector("#profile-back");
         if (backBtn) {
           backBtn.addEventListener("click", () => { expanded = false; render(); });
