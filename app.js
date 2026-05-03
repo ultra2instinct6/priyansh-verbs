@@ -419,6 +419,9 @@
             </button>
             <button type="button" class="profile-switch-link" id="profile-switch">
               👥 Switch or add fighter <span class="pa pa-inline" lang="pa">· ਬਦਲੋ ਜਾਂ ਨਵਾਂ</span>
+            </button>
+            <button type="button" class="profile-remove-link" id="profile-remove" data-cid="${escHTML(def.id)}">
+              🗑 Remove ${escHTML(def.name)}
             </button>`;
         } else {
           const tiles = kids.map(c => {
@@ -670,8 +673,9 @@
   });
 
   if (!getAvatar(currentChildId, currentPlayer)) {
-    const result = await openWelcomeModal({ mode: "avatar", suggestedName: currentPlayer, cancellable: false });
-    setAvatar(currentChildId, (result && result.avatar) || "boy");
+    // Silent default — never pop an avatar picker before the profile picker.
+    // Kids can change their avatar later via the player chip.
+    setAvatar(currentChildId, "boy");
   }
 
   // Keep legacy keys in sync for compatibility with older builds.
@@ -700,6 +704,9 @@
     if (!child) return;
     const name = child.name;
     if (!confirm(`Delete fighter "${name}" and all their progress?\n\nਯੋਧਾ "${name}" ਅਤੇ ਉਹਨਾਂ ਦੀ ਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਉਣੀ ਹੈ?`)) return;
+    // Add to blocklist FIRST so any subsequent purge/snapshot recognizes the
+    // deleted fighter and tombstones cross-device / legacy orphan rows.
+    addToBlocklist(name, child.id);
     ["dl_pos_v2","dl_hp_v2","dl_power_v2","dl_zeni_v2","dl_balls_v2",
      "dl_rupees_v2","dl_gold_v2",
      "dl_review_v2","dl_cleared_v2","dl_history_v2","dl_seen_v2","dl_daily_v2"]
@@ -744,9 +751,6 @@
     const next = getChildren().filter(c => c.id !== child.id);
     setChildren(next);
     wrJSON(PLAYERS_KEY, next.map(c => c.name));
-    // Remember we deleted this fighter so the row never reappears on this
-    // device, even if a stale Firestore doc or another device re-publishes.
-    addToBlocklist(name, child.id);
     if (child.id === currentChildId) {
       localStorage.removeItem(ACTIVE_CHILD_KEY);
       localStorage.removeItem(PLAYER_KEY);
@@ -897,6 +901,7 @@
     muted:   "dl_muted_v2",
     music:   "dl_music_v1",
     orientLock: "dl_orient_lock_v1",
+    pomo:    "dl_pomo_v1",
   };
   function loadJSON(k, fb) {
     try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; }
@@ -4110,6 +4115,171 @@
       document.addEventListener("pointerdown", reEngage, true);
     }
   }
+
+  // ===== ⏱️ Pomodoro timer =====
+  // Lightweight focus timer with 15 / 30 / 60 min presets. State persists in
+  // localStorage so reloads / orientation flips don't lose the countdown.
+  // Completion: bilingual toast + chime + short vibration.
+  (function setupPomodoro() {
+    const btn      = document.getElementById("pomo-btn");
+    const pop      = document.getElementById("pomo-pop");
+    const presets  = document.getElementById("pomo-presets");
+    const controls = document.getElementById("pomo-controls");
+    const pauseBtn = document.getElementById("pomo-pause");
+    const stopBtn  = document.getElementById("pomo-stop");
+    if (!btn || !pop) return;
+
+    let tickId = 0;
+    const ICON = "⏱️";
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(KEY.pomo) || "null"); }
+      catch (_) { return null; }
+    }
+    function saveState(s) {
+      if (!s) localStorage.removeItem(KEY.pomo);
+      else localStorage.setItem(KEY.pomo, JSON.stringify(s));
+    }
+    function fmt(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    }
+    function remaining(s) {
+      if (!s) return 0;
+      if (s.paused) return Math.max(0, s.remainingMs | 0);
+      return Math.max(0, (s.endsAt | 0) - Date.now());
+    }
+    function setRunningUI(running, paused) {
+      btn.classList.toggle("running", !!running);
+      btn.classList.toggle("pomo-paused", !!paused);
+      if (!running) {
+        btn.textContent = ICON;
+        btn.title = "Pomodoro · ਪੋਮੋਡੋਰੋ";
+      }
+    }
+    function updateLabel() {
+      const s = loadState();
+      if (!s) { setRunningUI(false); return; }
+      const ms = remaining(s);
+      btn.textContent = fmt(ms);
+      btn.title = (s.paused ? "Paused · ਰੁਕਿਆ " : "Running · ਚੱਲ ਰਿਹਾ ") + fmt(ms);
+      setRunningUI(true, !!s.paused);
+    }
+    function syncPopoverMode() {
+      const s = loadState();
+      const running = !!s;
+      presets.hidden = running;
+      controls.hidden = !running;
+      if (running) {
+        pauseBtn.textContent = s.paused ? "▶ Resume" : "⏸ Pause";
+      }
+    }
+    function startTick() {
+      stopTick();
+      updateLabel();
+      tickId = setInterval(() => {
+        const s = loadState();
+        if (!s) { stopTick(); setRunningUI(false); return; }
+        if (s.paused) { updateLabel(); return; }
+        if (remaining(s) <= 0) { complete(); return; }
+        updateLabel();
+      }, 1000);
+    }
+    function stopTick() {
+      if (tickId) { clearInterval(tickId); tickId = 0; }
+    }
+    function complete() {
+      stopTick();
+      saveState(null);
+      setRunningUI(false);
+      syncPopoverMode();
+      try { SFX.bossWin && SFX.bossWin(); } catch (_) {
+        try { SFX.correct && SFX.correct(); } catch (_) {}
+      }
+      try { navigator.vibrate && navigator.vibrate([200, 80, 200]); } catch (_) {}
+      try { toast({ en: "Pomodoro complete! 🎉", pa: "ਪੋਮੋਡੋਰੋ ਪੂਰਾ! 🎉" }, "ok"); } catch (_) {}
+    }
+    function start(min) {
+      const durationMs = min * 60 * 1000;
+      saveState({ endsAt: Date.now() + durationMs, durationMs, paused: false, remainingMs: durationMs });
+      startTick();
+      syncPopoverMode();
+      closePop();
+      try { toast({ en: `${min}-min focus started`, pa: `${min} ਮਿੰਟ ਫੋਕਸ ਸ਼ੁਰੂ` }); } catch (_) {}
+    }
+    function pause() {
+      const s = loadState();
+      if (!s || s.paused) return;
+      saveState({ ...s, paused: true, remainingMs: remaining(s) });
+      updateLabel();
+      syncPopoverMode();
+    }
+    function resume() {
+      const s = loadState();
+      if (!s || !s.paused) return;
+      saveState({ ...s, paused: false, endsAt: Date.now() + (s.remainingMs | 0) });
+      startTick();
+      syncPopoverMode();
+    }
+    function stop() {
+      stopTick();
+      saveState(null);
+      setRunningUI(false);
+      syncPopoverMode();
+      closePop();
+    }
+    function openPop() {
+      syncPopoverMode();
+      pop.setAttribute("aria-hidden", "false");
+      btn.setAttribute("aria-expanded", "true");
+      setTimeout(() => {
+        document.addEventListener("pointerdown", outsideClick, true);
+        document.addEventListener("keydown", escClose, true);
+      }, 0);
+    }
+    function closePop() {
+      pop.setAttribute("aria-hidden", "true");
+      btn.setAttribute("aria-expanded", "false");
+      document.removeEventListener("pointerdown", outsideClick, true);
+      document.removeEventListener("keydown", escClose, true);
+    }
+    function outsideClick(e) {
+      if (!pop.contains(e.target) && e.target !== btn) closePop();
+    }
+    function escClose(e) { if (e.key === "Escape") closePop(); }
+
+    btn.addEventListener("click", () => {
+      try { SFX.click && SFX.click(); } catch (_) {}
+      if (pop.getAttribute("aria-hidden") === "false") closePop();
+      else openPop();
+    });
+    presets.addEventListener("click", (e) => {
+      const el = e.target.closest(".pomo-chip");
+      if (!el) return;
+      const min = parseInt(el.dataset.min, 10);
+      if (min > 0) { try { SFX.click && SFX.click(); } catch (_) {} start(min); }
+    });
+    pauseBtn.addEventListener("click", () => {
+      try { SFX.click && SFX.click(); } catch (_) {}
+      const s = loadState();
+      if (!s) return;
+      if (s.paused) resume(); else pause();
+    });
+    stopBtn.addEventListener("click", () => {
+      try { SFX.click && SFX.click(); } catch (_) {}
+      stop();
+    });
+
+    // Restore on load: if elapsed while away, fire completion immediately.
+    const initial = loadState();
+    if (initial) {
+      if (!initial.paused && remaining(initial) <= 0) complete();
+      else if (initial.paused) updateLabel();
+      else startTick();
+    }
+  })();
 
   // 🎮 Fun Games hub — opens the standalone mini-games overlay (games.js).
   // Supports legacy id ("abc-btn") and new id ("games-btn") so cached HTML

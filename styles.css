@@ -2222,3 +2222,84 @@ footer .credit { font-size: 0.75rem; }
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(255, 87, 34, 0.4);
 }
+
+/* ===== ⏱️ Pomodoro timer (HUD button + popover) ===== */
+.pomo-wrap { position: relative; display: inline-flex; }
+#pomo-btn.running {
+  background: linear-gradient(180deg, #ff7a18, #ff5722);
+  color: #fff;
+  box-shadow:
+    0 4px 12px rgba(255, 87, 34, 0.45),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  min-width: 64px;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+#pomo-btn.running.pomo-paused {
+  background: linear-gradient(180deg, #888, #555);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.pomo-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  min-width: 200px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(26, 0, 51, 0.96);
+  color: #fff;
+  border: 2px solid #ffd54f;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  display: none;
+}
+.pomo-pop[aria-hidden="false"] { display: block; }
+.pomo-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+  color: #ffd54f;
+  letter-spacing: 0.4px;
+}
+.pomo-presets,
+.pomo-controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.pomo-chip {
+  flex: 1 1 auto;
+  min-width: 56px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 213, 79, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.pomo-chip:hover,
+.pomo-chip:focus-visible {
+  background: rgba(255, 213, 79, 0.25);
+  outline: none;
+}
+.pomo-chip:active { transform: scale(0.96); }
+.pomo-chip.danger {
+  border-color: #ff5252;
+  color: #ffb4b4;
+}
+.pomo-chip.danger:hover { background: rgba(255, 82, 82, 0.25); }
+
+/* Keep popover on-screen on narrow viewports */
+@media (max-width: 480px) {
+  .pomo-pop { right: auto; left: 50%; transform: translateX(-50%); }
+}
+/* In focus-mode, the HUD-actions row is hidden — popover would never show.
+   No special override needed; pomo button rides with the rest of the row. */

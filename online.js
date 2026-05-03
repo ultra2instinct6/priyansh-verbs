@@ -77,27 +77,32 @@ if (!isConfigured(FIREBASE_CONFIG)) {
         listeners.forEach(fn => { try { fn(rows); } catch (_) {} });
       }
 
+      // Helper: drop any cached row that the local block-list rejects, AND
+      // delete its Firestore doc so it doesn't keep lingering on other tabs.
+      function purgeBlocked() {
+        try {
+          const isBlocked = window.__lbIsBlocked;
+          if (typeof isBlocked !== "function") return;
+          let purged = 0;
+          for (const [id, row] of Array.from(cache.entries())) {
+            if (isBlocked(row)) {
+              cache.delete(id);
+              purged++;
+              deleteDoc(doc(db, COLLECTION, id))
+                .catch(err => console.warn("[OnlineLB] tombstone delete failed:", err.message));
+            }
+          }
+          if (purged) notify();
+        } catch (_) {}
+      }
+
       // Live mirror of the whole board (free tier handles small kid-sized lists easily).
       onSnapshot(col, (snap) => {
         snap.docChanges().forEach((ch) => {
           if (ch.type === "removed") cache.delete(ch.doc.id);
           else                       cache.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
         });
-        // If app.js told us a name/childId is blocked locally (the user
-        // deleted that fighter), proactively delete any matching docs from
-        // Firestore so cross-device rows / legacy orphans actually disappear.
-        try {
-          const isBlocked = window.__lbIsBlocked;
-          if (typeof isBlocked === "function") {
-            for (const [id, row] of Array.from(cache.entries())) {
-              if (isBlocked(row)) {
-                cache.delete(id);
-                deleteDoc(doc(db, COLLECTION, id))
-                  .catch(err => console.warn("[OnlineLB] tombstone delete failed:", err.message));
-              }
-            }
-          }
-        } catch (_) {}
+        purgeBlocked();
         notify();
       }, (err) => {
         console.warn("[OnlineLB] snapshot error:", err.message);
@@ -135,6 +140,9 @@ if (!isConfigured(FIREBASE_CONFIG)) {
           notify();
           deleteDoc(doc(db, COLLECTION, id))
             .catch(err => console.warn("[OnlineLB] delete failed:", err.message));
+          // Re-scan the whole cache against the (now-updated) blocklist so any
+          // cross-device / orphan rows for the same fighter get nuked too.
+          purgeBlocked();
         },
         getAll() { return Array.from(cache.values()); },
         onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }

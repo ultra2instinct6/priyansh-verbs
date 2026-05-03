@@ -114,6 +114,21 @@
       <button class="hud-btn" id="map-btn" title="Map · ਨਕਸ਼ਾ" aria-label="Open learning map">🗺️</button>
       <button class="hud-btn" id="board-btn" title="Leaderboard · ਲੀਡਰਬੋਰਡ" aria-label="Leaderboard">🏆</button>
       <button class="hud-btn" id="orient-btn" title="Lock landscape · ਲੈਂਡਸਕੇਪ ਲਾਕ" aria-label="Toggle landscape lock" aria-pressed="false">🔓</button>
+      <div class="pomo-wrap">
+        <button class="hud-btn" id="pomo-btn" title="Pomodoro · ਪੋਮੋਡੋਰੋ" aria-label="Pomodoro timer" aria-haspopup="true" aria-expanded="false">⏱️</button>
+        <div class="pomo-pop" id="pomo-pop" role="dialog" aria-hidden="true" aria-label="Pomodoro timer">
+          <div class="pomo-title">Pomodoro <span class="pa pa-inline" lang="pa">· ਪੋਮੋਡੋਰੋ</span></div>
+          <div class="pomo-presets" id="pomo-presets">
+            <button class="pomo-chip" data-min="15" type="button">15 min</button>
+            <button class="pomo-chip" data-min="30" type="button">30 min</button>
+            <button class="pomo-chip" data-min="60" type="button">60 min</button>
+          </div>
+          <div class="pomo-controls" id="pomo-controls" hidden>
+            <button class="pomo-chip" id="pomo-pause" type="button">⏸ Pause</button>
+            <button class="pomo-chip danger" id="pomo-stop" type="button">⏹ Stop</button>
+          </div>
+        </div>
+      </div>
       <button class="hud-btn" id="export-btn" title="Export stats · ਅੰਕੜੇ ਸੇਵ ਕਰੋ" aria-label="Export player stats">📤</button>
       <button class="hud-btn danger" id="reset-btn" title="Reset progress · ਸਾਰੀ ਤਰੱਕੀ ਮਿਟਾਓ" aria-label="Reset all progress">♻️</button>
     </div>
