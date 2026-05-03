@@ -1890,6 +1890,8 @@ footer .credit { font-size: 0.75rem; }
   right: 4px;
   width: 28px;
   height: 28px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
   background: #d32f2f;
   color: #fff;
@@ -1901,10 +1903,14 @@ footer .credit { font-size: 0.75rem; }
   opacity: 1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.12s ease, background 0.15s ease;
-  z-index: 2;
+  z-index: 5;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .profile-tile-x:hover,
 .profile-tile-x:focus-visible { background: #b71c1c; transform: scale(1.1); outline: none; }
+.profile-tile-x:active { transform: scale(0.92); }
 .profile-tile-add {
   border-style: dashed;
   border-width: 2px;

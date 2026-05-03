@@ -427,11 +427,11 @@
           const tiles = kids.map(c => {
             const av = getAvatar(c.id, c.name) || "boy";
             return `
-              <button type="button" class="avatar-pick profile-tile" data-cid="${escHTML(c.id)}">
-                <span class="profile-tile-x" data-del="${escHTML(c.id)}" aria-label="Delete ${escHTML(c.name)}">✕</span>
+              <div class="avatar-pick profile-tile" data-cid="${escHTML(c.id)}" role="button" tabindex="0">
+                <button type="button" class="profile-tile-x" data-del="${escHTML(c.id)}" aria-label="Delete ${escHTML(c.name)}">✕</button>
                 <img src="${avatarSrc(av)}" alt="${escHTML(av)}" />
                 <span class="profile-tile-name">${escHTML(c.name)}</span>
-              </button>`;
+              </div>`;
           }).join("");
           const addTile = canAdd ? `
             <button type="button" class="avatar-pick profile-tile-add" data-add="1">
@@ -751,12 +751,22 @@
     const next = getChildren().filter(c => c.id !== child.id);
     setChildren(next);
     wrJSON(PLAYERS_KEY, next.map(c => c.name));
-    if (child.id === currentChildId) {
+    // If the stored active pointer was the deleted child, clear it so the
+    // picker's default falls through to a different remaining child.
+    if (localStorage.getItem(ACTIVE_CHILD_KEY) === child.id) {
       localStorage.removeItem(ACTIVE_CHILD_KEY);
-      localStorage.removeItem(PLAYER_KEY);
-      location.reload();
     }
-    else if (typeof renderBoard === "function") renderBoard();
+    if (localStorage.getItem(PLAYER_KEY) === name) {
+      localStorage.removeItem(PLAYER_KEY);
+    }
+    // Always reload after a delete from the picker (currentChildId may not
+    // be set yet during boot). This guarantees a clean state with no stale
+    // avatar / chip / progress lingering anywhere.
+    if (child.id === currentChildId || !currentChildId) {
+      location.reload();
+      return;
+    }
+    if (typeof renderBoard === "function") renderBoard();
   }
 
   function canAddChild() {
