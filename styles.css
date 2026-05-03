@@ -1717,3 +1717,138 @@ body.games-open { overflow: hidden; }
   .flash-text,
   .intro-body { padding-right: 80px; }
 }
+
+/* =====================================================================
+ * FINAL UI POLISH PASS (r39)
+ * Adds: focus-visible a11y, 360px overlap fixes, hover-only on hover devices,
+ * improved contrast on .choice.wrong, hud wrap @ 480px, splash safe-area,
+ * card overlay scaling, prefers-reduced-motion, GPU hints.
+ * ===================================================================== */
+
+/* --- 1) Keyboard focus rings (WCAG) --- */
+.choice:focus-visible,
+.mode-btn:focus-visible,
+.hud-btn:focus-visible,
+.controls button:focus-visible,
+.help-btn:focus-visible,
+.welcome-go:focus-visible,
+.avatar-pick:focus-visible,
+.games-btn-primary:focus-visible,
+.games-btn-ghost:focus-visible,
+.games-card:focus-visible,
+.games-chip:focus-visible,
+.games-choice:focus-visible,
+.games-tile:focus-visible,
+.player-chip:focus-visible,
+.filter-btn:focus-visible,
+.jump-btn:focus-visible,
+.games-close:focus-visible,
+.games-back:focus-visible,
+.splash-cta:focus-visible {
+  outline: 3px solid #ff7a18;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(255, 122, 24, 0.25);
+}
+
+/* --- 2) Help-bar / prompt padding @ 360px --- */
+@media (max-width: 360px) {
+  .help-btn { width: 28px; height: 28px; font-size: 0.9rem; }
+  .help-bar { top: 4px; right: 4px; gap: 2px; }
+  .quiz-question,
+  .passage,
+  .flash-text,
+  .intro-body { padding-right: 70px; min-height: 48px; }
+}
+
+/* --- 3) Min text sizes on small screens --- */
+@media (max-width: 480px) {
+  .quiz-question { font-size: 1.1rem; }
+  .choice { font-size: 1.05rem; }
+  .tense p { font-size: 1.05rem; }
+  .feedback { font-size: 1rem; }
+}
+@media (max-width: 360px) {
+  .quiz-question { font-size: 1.05rem; }
+  .choice { font-size: 1.05rem; }
+  .tense p { font-size: 1rem; }
+}
+
+/* --- 5) Better contrast on wrong choice --- */
+.choice.wrong { color: #5a1515; }
+
+/* --- 6) HUD button wrap on small portrait --- */
+@media (max-width: 480px) and (orientation: portrait) {
+  .hud-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .hud-btn {
+    flex: 0 1 auto;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 0.95rem;
+    padding: 6px 10px;
+  }
+}
+
+/* --- 7) Splash cap on tall phones + safe area --- */
+#splash .splash-logo {
+  max-height: min(55vh, 320px);
+}
+#splash .splash-cta {
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+}
+
+/* --- 8) Card overlay scales down --- */
+@media (max-width: 480px) {
+  .card::before {
+    inset: -20% -20% auto auto;
+    width: 140px;
+    height: 140px;
+    opacity: 0.7;
+  }
+}
+
+/* --- 9) Hover only on real hover devices (kills sticky tap state) --- */
+@media (hover: none) {
+  .choice:hover,
+  .mode-btn:hover,
+  .hud-btn:hover,
+  .help-btn:hover,
+  .games-card:hover,
+  .games-tile:hover { transform: none !important; background: inherit; }
+}
+
+/* --- 10) Footer credit readable --- */
+footer .credit { font-size: 0.75rem; }
+@media (max-width: 480px) {
+  footer .credit { font-size: 0.8rem; }
+}
+
+/* --- 11) Player chip name truncation tightened --- */
+@media (max-width: 480px) {
+  .player-chip-name { max-width: 90px; }
+}
+@media (max-width: 360px) {
+  .player-chip-name { max-width: 70px; }
+}
+
+/* --- 12) GPU hints (sparingly) --- */
+.kame { will-change: transform; }
+.fighter-portrait.aura-streak,
+.fighter-portrait.aura-super { will-change: transform, filter; }
+
+/* --- 13) Respect reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
