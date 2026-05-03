@@ -46,6 +46,21 @@ A single-track **Learning Ladder** for ages 7–8 (~Grade 1.5 → 3.0). Climb **
 - `styles.css` — theming, animations, confetti / combo CSS
 - `ladder.js` — curriculum spine (`LADDER`, `LADDER_FLAT`, `LADDER_VERSION`)
 - `app.js` — engine: rendering, scoring, hearts/KO, sound, juice
+- `attacks.js` — random battle mini-games (Spelling Strike, Definition Duel, Sound Strike)
+- `enemies.js` — enemy roster + portrait picker for attacks
+- `vocab.js` — vocabulary pool used by attacks
+- `games.js` — bonus mini-games (Whack-a-Mole etc.)
+- `online.js` — Firestore leaderboard sync (optional)
+- `sw.js` — service worker (offline cache)
+
+## Battle attacks (always on)
+Between regular cards a random ⚔️ attack can fire. Three flavors:
+- **Spelling Strike** — spell the word from 4 choices (or type it on Hard).
+- **Definition Duel** — match word ↔ meaning.
+- **Sound Strike** — listen (Web Speech) and pick the spoken word.
+
+Trigger rate scales with player skill, HP, and review-debt; mercy-disabled
+below 20% HP. Tier-4 elite wins drop a silver coin (🥈).
 
 No build step. No internet needed. State is in `localStorage` under the
 `dl_*_v2` keys; bumping `LADDER_VERSION` resets the ladder position only.
