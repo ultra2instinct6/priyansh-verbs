@@ -40,6 +40,7 @@ window.OnlineLB = window.OnlineLB || {
   ready: false,
   status: "not-configured",
   push: () => {},
+  remove: () => {},
   getAll: () => [],
   onChange: () => {}
 };
@@ -62,7 +63,7 @@ if (!isConfigured(FIREBASE_CONFIG)) {
         import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
         import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
       ]);
-      const { getFirestore, doc, setDoc, collection, onSnapshot, serverTimestamp } = fs;
+      const { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, serverTimestamp } = fs;
 
       const app = initializeApp(FIREBASE_CONFIG);
       const db  = getFirestore(app);
@@ -110,6 +111,15 @@ if (!isConfigured(FIREBASE_CONFIG)) {
           if (!row.childId || !String(row.childId).trim()) return;
           pending = { id: row.id, data: row };
           if (!timer) timer = setTimeout(flush, 1500);
+        },
+        remove(id) {
+          if (!id) return;
+          // Drop from local cache immediately so UI updates without waiting
+          // for the snapshot round-trip.
+          cache.delete(id);
+          notify();
+          deleteDoc(doc(db, COLLECTION, id))
+            .catch(err => console.warn("[OnlineLB] delete failed:", err.message));
         },
         getAll() { return Array.from(cache.values()); },
         onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }

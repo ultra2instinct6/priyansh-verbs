@@ -607,6 +607,11 @@
       if (row.childId === child.id || row.player === name || row.id === `${child.id}__${deviceId}`) delete lb[k];
     }
     wrJSON(LOCAL_LB_KEY, lb);
+    // Purge from the global online board so the row doesn't reappear on
+    // the 🌐 Global tab (or on other devices) after the next snapshot.
+    if (window.OnlineLB && typeof window.OnlineLB.remove === "function") {
+      try { window.OnlineLB.remove(`${child.id}__${deviceId}`); } catch (_) {}
+    }
     const next = getChildren().filter(c => c.id !== child.id);
     setChildren(next);
     wrJSON(PLAYERS_KEY, next.map(c => c.name));

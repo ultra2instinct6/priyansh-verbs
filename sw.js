@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r41-noatktoggle";
+const CACHE_VERSION = "punjabiji-v20260502-r42-deletesync";
 const CORE_ASSETS = [
   "/",
   "/index.html",

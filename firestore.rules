@@ -42,8 +42,9 @@ service cloud.firestore {
         && request.resource.data.stepTotal >= 1
         && request.resource.data.stepTotal < 1000000;
 
-      // No client-side deletes — leaderboard is append-only.
-      allow delete: if false;
+      // Client deletes allowed: when a parent removes a fighter from the
+      // device, that profile row is purged from the global board too.
+      allow delete: if true;
     }
 
     // Everything else is locked down.
