@@ -205,7 +205,15 @@
   </script>
   <script>
     // Register service worker for offline play + faster repeat loads.
+    // Auto-reload once when a new SW takes control so users immediately get
+    // the new CSS/JS instead of running an old cached shell.
     if ("serviceWorker" in navigator) {
+      let _swReloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (_swReloaded) return;
+        _swReloaded = true;
+        window.location.reload();
+      });
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").catch((e) =>
           console.warn("[SW] register failed:", e.message)
