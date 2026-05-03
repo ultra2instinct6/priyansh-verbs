@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r51-pomofix";
+const CACHE_VERSION = "punjabiji-v20260502-r52-pomoint32";
 const CORE_ASSETS = [
   "/",
   "/index.html",

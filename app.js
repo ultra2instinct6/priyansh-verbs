@@ -4165,8 +4165,8 @@
     }
     function remaining() {
       if (!state) return 0;
-      if (state.paused) return Math.max(0, state.remainingMs | 0);
-      return Math.max(0, (state.endsAt | 0) - Date.now());
+      if (state.paused) return Math.max(0, Number(state.remainingMs) || 0);
+      return Math.max(0, Number(state.endsAt) - Date.now());
     }
     function paint() {
       if (!state) {
@@ -4228,7 +4228,7 @@
     }
     function resume() {
       if (!state || !state.paused) return;
-      state.endsAt = Date.now() + (state.remainingMs | 0);
+      state.endsAt = Date.now() + (Number(state.remainingMs) || 0);
       state.paused = false;
       persist();
       startTick();
