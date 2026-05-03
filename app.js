@@ -3788,7 +3788,7 @@
           <td class="rk">${medal(i)}</td>
           <td class="nm">${esc(r.player || "?")}${r._mine ? ' <span class="me-tag">YOU · <span class="pa" lang="pa">ਤੁਸੀਂ</span></span>' : ""}</td>
           <td class="pw">${(r.power|0).toLocaleString()} ⚡</td>
-          <td class="rn">${esc(r.rank || rankFor(r.power|0).name)}</td>
+          <td class="rn">${esc(rankFor(r.power|0).name)}</td>
           <td class="rp">₹${(r.rupees|0).toLocaleString()}</td>
           <td class="gd">🟨 ${bars} · 🥈 ${coins}</td>
           <td class="ts">${fmtTime(r.updatedAt)}</td>
