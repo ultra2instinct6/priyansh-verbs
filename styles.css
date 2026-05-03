@@ -1953,3 +1953,83 @@ footer .credit { font-size: 0.75rem; }
     0 0 42px var(--g, #fff),
     inset 0 -4px 0 rgba(0, 0, 0, 0.25);
 }
+
+/* ===== Profile picker — single "Continue as <name>" primary tile ===== */
+.profile-continue-tile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 122, 24, 0.55);
+  background: linear-gradient(180deg, #fff8ef 0%, #fff 100%);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(255, 122, 24, 0.18);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.profile-continue-tile:hover,
+.profile-continue-tile:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 87, 34, 0.85);
+  box-shadow: 0 14px 28px rgba(255, 122, 24, 0.28);
+  outline: none;
+}
+.profile-continue-tile img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(15, 95, 215, 0.2));
+  flex: 0 0 auto;
+}
+.profile-continue-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.profile-continue-kicker {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.profile-continue-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ff5722;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-continue-arrow {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(255, 87, 34, 0.7);
+  flex: 0 0 auto;
+}
+.profile-switch-link {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(15, 95, 215, 0.25);
+  background: #fff;
+  border-radius: 12px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.profile-switch-link:hover,
+.profile-switch-link:focus-visible {
+  background: #f4f8ff;
+  border-color: rgba(15, 95, 215, 0.55);
+  outline: none;
+}

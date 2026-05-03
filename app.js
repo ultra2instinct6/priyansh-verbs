@@ -337,48 +337,100 @@
   // add a new fighter (up to MAX_CHILDREN_PER_ACCOUNT), or delete one.
   // Resolves with { action: "select", childId } once a tile is chosen.
   // When { cancellable: true } and the backdrop is tapped, resolves with null.
+  //
+  // Default view = ONE big "Continue as <last player>" tile so a returning
+  // child taps once to enter and never accidentally creates a new fighter.
+  // Tapping "Switch / Add" expands the full grid (other children + ➕).
   function openProfilePicker({ cancellable = false } = {}) {
     return new Promise((resolve) => {
       const overlay = document.createElement("div");
       overlay.className = "welcome-overlay profile-picker-overlay";
+      let expanded = false;
+
+      function getDefaultChild() {
+        const kids = getChildren();
+        if (!kids.length) return null;
+        const activeId = localStorage.getItem(ACTIVE_CHILD_KEY) || "";
+        return kids.find(c => c.id === activeId) || kids[0];
+      }
 
       function render() {
         const kids = getChildren();
         const canAdd = kids.length < MAX_CHILDREN_PER_ACCOUNT;
-        const tiles = kids.map(c => {
-          const av = getAvatar(c.id, c.name) || "boy";
-          return `
-            <button type="button" class="avatar-pick profile-tile" data-cid="${escHTML(c.id)}">
-              <span class="profile-tile-x" data-del="${escHTML(c.id)}" aria-label="Delete ${escHTML(c.name)}">✕</span>
+        const def = getDefaultChild();
+        // Force expanded view if there's no remembered active child (e.g. first
+        // pick after migration) so the user sees every option.
+        const showExpanded = expanded || !def;
+
+        let body;
+        if (!showExpanded && def) {
+          const av = getAvatar(def.id, def.name) || "boy";
+          body = `
+            <button type="button" class="profile-continue-tile" data-cid="${escHTML(def.id)}">
               <img src="${avatarSrc(av)}" alt="${escHTML(av)}" />
-              <span class="profile-tile-name">${escHTML(c.name)}</span>
+              <span class="profile-continue-text">
+                <span class="profile-continue-kicker">Continue as <span class="pa pa-inline" lang="pa">· ਜਾਰੀ ਰੱਖੋ</span></span>
+                <span class="profile-continue-name">${escHTML(def.name)}</span>
+              </span>
+              <span class="profile-continue-arrow" aria-hidden="true">›</span>
+            </button>
+            <button type="button" class="profile-switch-link" id="profile-switch">
+              👥 Switch or add fighter <span class="pa pa-inline" lang="pa">· ਬਦਲੋ ਜਾਂ ਨਵਾਂ</span>
             </button>`;
-        }).join("");
-        const addTile = canAdd ? `
-          <button type="button" class="avatar-pick profile-tile-add" data-add="1">
-            <span class="profile-tile-plus" aria-hidden="true">＋</span>
-            <span class="profile-tile-name">Add fighter <span class="pa pa-inline" lang="pa">· ਨਵਾਂ</span></span>
-          </button>` : "";
+        } else {
+          const tiles = kids.map(c => {
+            const av = getAvatar(c.id, c.name) || "boy";
+            return `
+              <button type="button" class="avatar-pick profile-tile" data-cid="${escHTML(c.id)}">
+                <span class="profile-tile-x" data-del="${escHTML(c.id)}" aria-label="Delete ${escHTML(c.name)}">✕</span>
+                <img src="${avatarSrc(av)}" alt="${escHTML(av)}" />
+                <span class="profile-tile-name">${escHTML(c.name)}</span>
+              </button>`;
+          }).join("");
+          const addTile = canAdd ? `
+            <button type="button" class="avatar-pick profile-tile-add" data-add="1">
+              <span class="profile-tile-plus" aria-hidden="true">＋</span>
+              <span class="profile-tile-name">Add fighter <span class="pa pa-inline" lang="pa">· ਨਵਾਂ</span></span>
+            </button>` : "";
+          body = `
+            <div class="avatar-row profile-grid">
+              ${tiles}
+              ${addTile}
+            </div>
+            ${def ? '<button type="button" class="profile-switch-link" id="profile-back">← Back <span class="pa pa-inline" lang="pa">· ਵਾਪਸ</span></button>' : ''}`;
+        }
+
         overlay.innerHTML = `
           <div class="welcome-card profile-picker-card" role="dialog" aria-modal="true">
             ${cancellable ? '<button type="button" class="welcome-cancel" id="profile-cancel" aria-label="Close">✕</button>' : ''}
             <p class="welcome-kicker">Punjabi Ji</p>
             <h2 class="welcome-title">Who is playing?</h2>
             <p class="welcome-subtitle pa" lang="pa">ਕੌਣ ਖੇਡ ਰਿਹਾ ਹੈ?</p>
-            <p class="welcome-hint">Tap your fighter to begin. Long press the ✕ to remove a profile.</p>
-            <p class="welcome-pa pa" lang="pa">ਆਪਣਾ ਯੋਧਾ ਚੁਣੋ। ਮਿਟਾਉਣ ਲਈ ✕ ਦਬਾਓ।</p>
-            <div class="avatar-row profile-grid">
-              ${tiles}
-              ${addTile}
-            </div>
+            ${body}
           </div>`;
         bind();
       }
 
       function bind() {
+        const cont = overlay.querySelector(".profile-continue-tile");
+        if (cont) {
+          cont.addEventListener("click", () => {
+            const cid = cont.dataset.cid;
+            try { SFX.select(); } catch (_) {}
+            cleanup();
+            resolve({ action: "select", childId: cid });
+          });
+        }
+        const switchBtn = overlay.querySelector("#profile-switch");
+        if (switchBtn) {
+          switchBtn.addEventListener("click", () => { expanded = true; render(); });
+        }
+        const backBtn = overlay.querySelector("#profile-back");
+        if (backBtn) {
+          backBtn.addEventListener("click", () => { expanded = false; render(); });
+        }
         overlay.querySelectorAll(".profile-tile").forEach(tile => {
           tile.addEventListener("click", (e) => {
-            // Ignore clicks that landed on the delete badge.
             if (e.target.closest(".profile-tile-x")) return;
             const cid = tile.dataset.cid;
             try { SFX.select(); } catch (_) {}
@@ -392,16 +444,12 @@
             const cid = x.dataset.del;
             const child = findChildById(cid);
             if (!child) return;
-            // deletePlayer() shows its own confirm and does the cleanup.
             deletePlayer(cid);
-            // After delete, if no profiles remain, treat like cancel/first-run.
             if (!getChildren().length) {
               cleanup();
               resolve({ action: "empty" });
               return;
             }
-            // If the active child was just deleted, clear the pointer so boot
-            // doesn't try to reload into a missing profile.
             if (localStorage.getItem(ACTIVE_CHILD_KEY) === cid) {
               localStorage.removeItem(ACTIVE_CHILD_KEY);
             }
