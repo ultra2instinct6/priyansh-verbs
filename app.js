@@ -4189,6 +4189,7 @@
     maxHpFor, rankIndex,
     persist,
     render,
+    speak,
   };
 
   // ⚔️ Random attacks are always ON (toggle removed).

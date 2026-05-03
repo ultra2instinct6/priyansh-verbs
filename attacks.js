@@ -84,14 +84,22 @@
     return Math.random() < p;
   }
 
-  // 60% Spelling, 40% Definition baseline; tweak by power tier.
+  // Three attack flavors: Spelling Strike, Definition Duel, Sound Strike.
+  // Distribution leans by tier (low tiers = more sound/def, high tiers = more spell).
+  // Sound Strike is skipped if the device has no Web Speech support.
   function pickAttackKind(state) {
     const tier = (window.GameAPI && window.GameAPI.rankIndex)
       ? window.GameAPI.rankIndex(state.power || 0) : 0;
-    let pSpell = 0.60;
-    if (tier <= 1) pSpell = 0.40;
-    else if (tier >= 5) pSpell = 0.70;
-    return Math.random() < pSpell ? "spell" : "def";
+    const canSound = !!(typeof window !== "undefined" && "speechSynthesis" in window);
+    // Base weights: spell, def, sound
+    let wSpell = 0.50, wDef = 0.30, wSound = 0.20;
+    if (tier <= 1)      { wSpell = 0.30; wDef = 0.35; wSound = 0.35; }
+    else if (tier >= 5) { wSpell = 0.60; wDef = 0.25; wSound = 0.15; }
+    if (!canSound) { wSpell += wSound * 0.6; wDef += wSound * 0.4; wSound = 0; }
+    const r = Math.random() * (wSpell + wDef + wSound);
+    if (r < wSpell) return "spell";
+    if (r < wSpell + wDef) return "def";
+    return "sound";
   }
 
   // ---------- Public entry ----------
@@ -138,10 +146,15 @@
   function slamIntro(enemy, kind) {
     return new Promise((resolve) => {
       const o = document.createElement("div");
-      o.className = "attack-slam " + (kind === "spell" ? "atk-spell" : "atk-def");
+      const kindCls = kind === "spell" ? "atk-spell" : kind === "sound" ? "atk-sound" : "atk-def";
+      o.className = "attack-slam " + kindCls;
       const portrait = enemyPortraitHTML(enemy, "slam");
-      const labelEn = kind === "spell" ? "INCOMING! Spell it!" : "INCOMING! What does it mean?";
-      const labelPa = kind === "spell" ? "ਸਪੈੱਲ ਕਰੋ!"        : "ਮਤਲਬ ਦੱਸੋ!";
+      const labelEn = kind === "spell" ? "INCOMING! Spell it!"
+                    : kind === "sound" ? "INCOMING! Hear & pick!"
+                    : "INCOMING! What does it mean?";
+      const labelPa = kind === "spell" ? "ਸਪੈੱਲ ਕਰੋ!"
+                    : kind === "sound" ? "ਸੁਣੋ ਤੇ ਚੁਣੋ!"
+                    : "ਮਤਲਬ ਦੱਸੋ!";
       o.innerHTML = `
         <div class="attack-slam-inner">
           ${portrait}
@@ -187,6 +200,7 @@
     slamIntro(ctx.enemy, ctx.kind).then(() => {
       try {
         if (ctx.kind === "spell") renderSpelling(ctx);
+        else if (ctx.kind === "sound") renderSound(ctx);
         else renderDefinition(ctx);
       } catch (e) {
         // Anything thrown inside the renderer would otherwise leave the screen
@@ -413,6 +427,104 @@
     }, () => applyOutcomeAndContinue(ctx, "def", ok, timedOut, word));
   }
 
+  // ---------- Sound Strike ----------
+  // Speak the target word, show 4 word choices, learner taps the matching one.
+  // Uses GameAPI.speak (Web Speech API). Includes a "🔊 Hear it again" button.
+  function renderSound(ctx) {
+    const word = ctx.word;
+    const app = (window.GameAPI && window.GameAPI.app) || document.getElementById("app");
+    if (!app) { finish(ctx, false, "no-app"); return; }
+
+    // 4-choice format: 1 correct + 3 distractor words (same tag where possible).
+    const distractors = window.VocabAPI.distractors(word, 3, "word");
+    const arr = [word.word, ...distractors];
+    const order = arr.map((v, i) => i).sort(() => Math.random() - 0.5);
+    const choices = order.map(i => arr[i]);
+    const correctVal = word.word;
+
+    app.innerHTML = `
+      <div class="ladder-frame">
+        <div class="card attack-card atk-sound">
+          <div class="atk-header">
+            <div class="atk-enemy">${enemyPortraitHTML(ctx.enemy, "card")}
+              <div class="atk-enemy-name">${esc(ctx.enemy.name_en)}
+                <div class="pa pa-inline" lang="pa">${esc(ctx.enemy.name_pa)}</div></div>
+            </div>
+            <div class="atk-timer-bar"><div class="atk-timer-fill"></div></div>
+          </div>
+          <h2 class="atk-title">Sound Strike!<div class="pa-block" lang="pa">ਆਵਾਜ਼ ਹਮਲਾ!</div></h2>
+          <div class="atk-emoji-big">${esc(word.emoji || "🔊")}</div>
+          <div class="atk-prompt-en">Listen, then tap the word<span class="pa pa-inline" lang="pa">· ਸੁਣੋ ਤੇ ਚੁਣੋ</span></div>
+          <button class="atk-hear" id="atk-hear" type="button">🔊 Hear it again<span class="pa pa-inline" lang="pa">· ਫਿਰ ਸੁਣੋ</span></button>
+          <div class="atk-choices atk-choices-col">
+            ${choices.map(c => `<button class="atk-choice" data-c="${esc(c)}">${esc(c)}</button>`).join("")}
+          </div>
+        </div>
+      </div>`;
+
+    // Speak once after the slam clears, then on every "Hear it again" tap.
+    const sayIt = () => {
+      try {
+        if (window.GameAPI && typeof GameAPI.speak === "function") {
+          GameAPI.speak(word.word, "en-US");
+        } else if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(word.word);
+          u.lang = "en-US"; u.rate = 0.9; u.pitch = 1.05;
+          window.speechSynthesis.speak(u);
+        }
+      } catch (_) {}
+    };
+    setTimeout(sayIt, 200);
+    const hearBtn = app.querySelector("#atk-hear");
+    if (hearBtn) hearBtn.addEventListener("click", sayIt);
+
+    const TIMER_MS = 10000;
+    const timer = startTimer(TIMER_MS, () => resolveSound(ctx, word, null, true, correctVal));
+    app.querySelectorAll(".atk-choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        stopTimer(timer);
+        try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+        resolveSound(ctx, word, btn.dataset.c, false, correctVal);
+      });
+    });
+  }
+
+  function resolveSound(ctx, word, answer, timedOut, correctVal) {
+    const ok = !timedOut && String(answer || "").trim().toLowerCase() === String(correctVal || "").trim().toLowerCase();
+    const meta = loadMeta();
+    meta.totalShown += 1;
+    meta.soundShown = (meta.soundShown || 0) + 1;
+    if (ok) { meta.totalRight += 1; meta.soundRight = (meta.soundRight || 0) + 1; }
+    if (ok && meta.missedVocab[word.word]) {
+      meta.missedVocab[word.word].miss = Math.max(0, meta.missedVocab[word.word].miss - 1);
+      if (meta.missedVocab[word.word].miss === 0) delete meta.missedVocab[word.word];
+    }
+    if (!ok) {
+      const v = meta.missedVocab[word.word] || { miss: 0, last: 0 };
+      v.miss += 1; v.last = Date.now();
+      meta.missedVocab[word.word] = v;
+    }
+    saveMeta(meta);
+
+    const fbEn = ok
+      ? `Sharp ears! That was <b>${esc(word.word)}</b>.`
+      : (timedOut
+          ? `Time! That was <b>${esc(word.word)}</b>.`
+          : `Not quite. That was <b>${esc(word.word)}</b>.`);
+    const fbPa = ok
+      ? `ਤੇਜ਼ ਕੰਨ! ਇਹ ਸੀ <b>${esc(word.word)}</b>।`
+      : (timedOut
+          ? `ਸਮਾਂ ਖ਼ਤਮ! ਇਹ ਸੀ <b>${esc(word.word)}</b>।`
+          : `ਠੀਕ ਨਹੀਂ। ਇਹ ਸੀ <b>${esc(word.word)}</b>।`);
+
+    showFeedback({
+      ok, en: fbEn, pa: fbPa,
+      meaning: { en: word.meaning_en, pa: word.meaning_pa },
+      example: { en: word.example_en, pa: word.example_pa },
+    }, () => applyOutcomeAndContinue(ctx, "sound", ok, timedOut, word));
+  }
+
   // ---------- Feedback panel ----------
   function showFeedback(fb, onContinue) {
     const app = (window.GameAPI && window.GameAPI.app) || document.getElementById("app");
@@ -452,10 +564,10 @@
   // and elite enemies feel like a real event. Aligns with existing XP table
   // (mcq=80, fill=120, boss=150) so attacks are quick "snack" XP, not grindable.
   const TIER_REWARD = {
-    1: { spellPower: 15, spellRupees: 10, defPower: 12, defRupees:  8, dmg: 4 },
-    2: { spellPower: 25, spellRupees: 18, defPower: 20, defRupees: 14, dmg: 6 },
-    3: { spellPower: 50, spellRupees: 35, defPower: 40, defRupees: 28, dmg: 8 },
-    4: { spellPower:100, spellRupees: 75, defPower: 80, defRupees: 60, dmg:12 },
+    1: { spellPower: 15, spellRupees: 10, defPower: 12, defRupees:  8, soundPower: 12, soundRupees:  8, dmg: 4 },
+    2: { spellPower: 25, spellRupees: 18, defPower: 20, defRupees: 14, soundPower: 20, soundRupees: 14, dmg: 6 },
+    3: { spellPower: 50, spellRupees: 35, defPower: 40, defRupees: 28, soundPower: 40, soundRupees: 28, dmg: 8 },
+    4: { spellPower:100, spellRupees: 75, defPower: 80, defRupees: 60, soundPower: 80, soundRupees: 60, dmg:12 },
   };
   function applyOutcomeAndContinue(ctx, kind, ok, timedOut, word) {
     const tier = (ctx.enemy && ctx.enemy.tier) || 1;
@@ -464,6 +576,8 @@
       if (ok) {
         if (kind === "spell") {
           GameAPI.addPower(r.spellPower); GameAPI.addRupees && GameAPI.addRupees(r.spellRupees);
+        } else if (kind === "sound") {
+          GameAPI.addPower(r.soundPower); GameAPI.addRupees && GameAPI.addRupees(r.soundRupees);
         } else {
           GameAPI.addPower(r.defPower); GameAPI.addRupees && GameAPI.addRupees(r.defRupees);
         }
@@ -566,7 +680,7 @@
         ? window.GameAPI.rankIndex(state.power || 0) : 0;
       const enemy = window.EnemyAPI.pick({ maxTier: Math.min(4, 1 + Math.floor(tier / 2)) });
       const word  = pickWordForAttack(meta);
-      runAttack({ kind: (kind === "def" ? "def" : "spell"), enemy, word, state });
+      runAttack({ kind: (kind === "def" ? "def" : kind === "sound" ? "sound" : "spell"), enemy, word, state });
       return true;
     },
     stats() { return loadMeta(); },
