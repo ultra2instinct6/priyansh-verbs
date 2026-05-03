@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r32-swschemeguard";
+const CACHE_VERSION = "punjabiji-v20260502-r33-logosize";
 const CORE_ASSETS = [
   "/",
   "/index.html",
