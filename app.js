@@ -332,6 +332,112 @@
     });
   }
 
+  // Profile picker: shown after the splash on every re-open when at least
+  // one child profile already exists. Lets the user pick "who is playing",
+  // add a new fighter (up to MAX_CHILDREN_PER_ACCOUNT), or delete one.
+  // Resolves with { action: "select", childId } once a tile is chosen.
+  // When { cancellable: true } and the backdrop is tapped, resolves with null.
+  function openProfilePicker({ cancellable = false } = {}) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement("div");
+      overlay.className = "welcome-overlay profile-picker-overlay";
+
+      function render() {
+        const kids = getChildren();
+        const canAdd = kids.length < MAX_CHILDREN_PER_ACCOUNT;
+        const tiles = kids.map(c => {
+          const av = getAvatar(c.id, c.name) || "boy";
+          return `
+            <button type="button" class="avatar-pick profile-tile" data-cid="${escHTML(c.id)}">
+              <span class="profile-tile-x" data-del="${escHTML(c.id)}" aria-label="Delete ${escHTML(c.name)}">✕</span>
+              <img src="${avatarSrc(av)}" alt="${escHTML(av)}" />
+              <span class="profile-tile-name">${escHTML(c.name)}</span>
+            </button>`;
+        }).join("");
+        const addTile = canAdd ? `
+          <button type="button" class="avatar-pick profile-tile-add" data-add="1">
+            <span class="profile-tile-plus" aria-hidden="true">＋</span>
+            <span class="profile-tile-name">Add fighter <span class="pa pa-inline" lang="pa">· ਨਵਾਂ</span></span>
+          </button>` : "";
+        overlay.innerHTML = `
+          <div class="welcome-card profile-picker-card" role="dialog" aria-modal="true">
+            ${cancellable ? '<button type="button" class="welcome-cancel" id="profile-cancel" aria-label="Close">✕</button>' : ''}
+            <p class="welcome-kicker">Punjabi Ji</p>
+            <h2 class="welcome-title">Who is playing?</h2>
+            <p class="welcome-subtitle pa" lang="pa">ਕੌਣ ਖੇਡ ਰਿਹਾ ਹੈ?</p>
+            <p class="welcome-hint">Tap your fighter to begin. Long press the ✕ to remove a profile.</p>
+            <p class="welcome-pa pa" lang="pa">ਆਪਣਾ ਯੋਧਾ ਚੁਣੋ। ਮਿਟਾਉਣ ਲਈ ✕ ਦਬਾਓ।</p>
+            <div class="avatar-row profile-grid">
+              ${tiles}
+              ${addTile}
+            </div>
+          </div>`;
+        bind();
+      }
+
+      function bind() {
+        overlay.querySelectorAll(".profile-tile").forEach(tile => {
+          tile.addEventListener("click", (e) => {
+            // Ignore clicks that landed on the delete badge.
+            if (e.target.closest(".profile-tile-x")) return;
+            const cid = tile.dataset.cid;
+            try { SFX.select(); } catch (_) {}
+            cleanup();
+            resolve({ action: "select", childId: cid });
+          });
+        });
+        overlay.querySelectorAll(".profile-tile-x").forEach(x => {
+          x.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const cid = x.dataset.del;
+            const child = findChildById(cid);
+            if (!child) return;
+            // deletePlayer() shows its own confirm and does the cleanup.
+            deletePlayer(cid);
+            // After delete, if no profiles remain, treat like cancel/first-run.
+            if (!getChildren().length) {
+              cleanup();
+              resolve({ action: "empty" });
+              return;
+            }
+            // If the active child was just deleted, clear the pointer so boot
+            // doesn't try to reload into a missing profile.
+            if (localStorage.getItem(ACTIVE_CHILD_KEY) === cid) {
+              localStorage.removeItem(ACTIVE_CHILD_KEY);
+            }
+            render();
+          });
+        });
+        const addBtn = overlay.querySelector(".profile-tile-add");
+        if (addBtn) {
+          addBtn.addEventListener("click", () => {
+            try { SFX.select(); } catch (_) {}
+            cleanup();
+            resolve({ action: "add" });
+          });
+        }
+        if (cancellable) {
+          const cancelBtn = overlay.querySelector("#profile-cancel");
+          if (cancelBtn) cancelBtn.addEventListener("click", close);
+          overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+        }
+      }
+
+      function close() { cleanup(); resolve(null); }
+      function cleanup() {
+        document.removeEventListener("keydown", onKey, true);
+        overlay.remove();
+      }
+      function onKey(e) {
+        if (cancellable && e.key === "Escape") { e.preventDefault(); close(); }
+      }
+
+      document.body.appendChild(overlay);
+      render();
+      document.addEventListener("keydown", onKey, true);
+    });
+  }
+
   function migrateLegacyPlayersIntoChildren() {
     if (getChildren().length) return;
     const legacyPlayers = rdJSON(PLAYERS_KEY, []);
@@ -363,6 +469,58 @@
   let children = getChildren();
   let currentChildId = localStorage.getItem(ACTIVE_CHILD_KEY) || "";
   let currentChild = findChildById(currentChildId);
+
+  // Post-splash flow: if at least one profile already exists, always show the
+  // "Who is playing?" picker so the right child is selected on every open.
+  // First run (no profiles) falls through to the original welcome modal below.
+  if (getChildren().length) {
+    let picked = null;
+    while (!picked) {
+      const res = await openProfilePicker({ cancellable: false });
+      if (res && res.action === "select") {
+        const c = findChildById(res.childId);
+        if (c) { picked = c; break; }
+      } else if (res && res.action === "add") {
+        // Chain into the existing name + avatar modal, cancellable so the
+        // user can back out to the picker.
+        let name = "";
+        let avatar = "boy";
+        const wm = await openWelcomeModal({ mode: "full", cancellable: true });
+        if (wm) {
+          name = sanitizeName(wm.name);
+          avatar = wm.avatar || "boy";
+        }
+        if (name) {
+          if (!canAddChild()) {
+            try { toast(`This account can have up to ${MAX_CHILDREN_PER_ACCOUNT} fighters.`); } catch (_) {}
+            continue;
+          }
+          let child = findChildByName(name);
+          if (!child) {
+            child = { id: uid("child"), name };
+            const list = getChildren();
+            list.push(child);
+            setChildren(list);
+          }
+          setAvatar(child.id, avatar);
+          picked = child;
+        }
+        // If user cancelled the add modal, loop back to the picker.
+      } else if (res && res.action === "empty") {
+        // All profiles were deleted from the picker; fall through to first-run.
+        break;
+      }
+      // Any other case: re-render picker.
+    }
+    if (picked) {
+      currentChild = picked;
+      currentChildId = picked.id;
+      localStorage.setItem(ACTIVE_CHILD_KEY, picked.id);
+    } else {
+      currentChild = null;
+      currentChildId = "";
+    }
+  }
 
   if (!currentChild) {
     // First run or repaired state: force one child profile.
@@ -3963,27 +4121,10 @@
     render,
   };
 
-  // ⚔️ HUD toggle for random attacks (default ON).
-  (function wireAttackToggle() {
-    const btn = document.getElementById("attacks-btn");
-    if (!btn) return;
-    function paint() {
-      const on = window.Attacks ? Attacks.isEnabled() : true;
-      btn.classList.toggle("atk-off", !on);
-      btn.title = on
-        ? "Random attacks: ON · ਹਮਲੇ ਚਾਲੂ"
-        : "Random attacks: OFF · ਹਮਲੇ ਬੰਦ";
-    }
-    btn.addEventListener("click", () => {
-      if (!window.Attacks) return;
-      Attacks.setEnabled(!Attacks.isEnabled());
-      paint();
-      toast(Attacks.isEnabled()
-        ? { en: "⚔️ Attacks ON",  pa: "⚔️ ਹਮਲੇ ਚਾਲੂ" }
-        : { en: "🛡️ Attacks OFF", pa: "🛡️ ਹਮਲੇ ਬੰਦ" });
-    });
-    paint();
-  })();
+  // ⚔️ Random attacks are always ON (toggle removed).
+  if (window.Attacks && typeof Attacks.setEnabled === "function") {
+    try { Attacks.setEnabled(true); } catch (_) {}
+  }
 
   persist();
   render();

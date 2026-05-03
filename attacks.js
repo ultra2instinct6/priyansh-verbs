@@ -59,7 +59,6 @@
   // Only callable when state is not in a special mode (caller guards this too).
   function shouldTrigger(state) {
     const meta = loadMeta();
-    if (!meta.enabled) return false;
     // Warm-up: no attacks before this many cards seen.
     if ((state.cardsSeen || 0) < 8) return false;
     // Cooldown: at least 4 cards since last attack.
@@ -555,10 +554,10 @@
     _active: false,
     maybeRun,
     isActive() { return !!Attacks._active; },
-    setEnabled(v) {
-      const m = loadMeta(); m.enabled = !!v; saveMeta(m);
+    setEnabled(_v) {
+      const m = loadMeta(); m.enabled = true; saveMeta(m);
     },
-    isEnabled() { return loadMeta().enabled !== false; },
+    isEnabled() { return true; },
     forceTrigger(state, kind) {
       if (Attacks._active) return false;
       Attacks._active = true;

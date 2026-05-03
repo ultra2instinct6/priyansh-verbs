@@ -696,7 +696,6 @@ body.focus-mode #money-pill,
 body.focus-mode .player-chip,
 body.focus-mode #reset-btn,
 body.focus-mode #export-btn,
-body.focus-mode #attacks-btn,
 body.focus-mode #abc-btn,
 body.focus-mode #games-btn,
 body.focus-mode .fighter-portrait,
@@ -962,6 +961,7 @@ body.focus-mode #map-btn {
   gap: 8px;
   color: var(--ink);
   box-shadow: 0 6px 14px rgba(10, 46, 115, 0.1);
+  position: relative;
 }
 
 .avatar-pick img {
@@ -1851,4 +1851,65 @@ footer .credit { font-size: 0.75rem; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== Profile picker (post-splash "Who is playing?") ===== */
+.profile-picker-card { max-width: 480px; }
+.avatar-row.profile-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 420px) {
+  .avatar-row.profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.profile-tile { padding: 12px 8px 10px; }
+.profile-tile .profile-tile-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-tile-x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(20, 20, 30, 0.55);
+  color: #fff;
+  font-size: 13px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  z-index: 2;
+}
+.profile-tile:hover .profile-tile-x,
+.profile-tile:focus-within .profile-tile-x { opacity: 1; }
+.profile-tile-x:hover { background: #d32f2f; }
+@media (hover: none) {
+  .profile-tile-x { opacity: 0.85; }
+}
+.profile-tile-add {
+  border-style: dashed;
+  border-width: 2px;
+  border-color: rgba(15, 95, 215, 0.45);
+  background: linear-gradient(180deg, #f4f8ff, #fff);
+  justify-content: center;
+  min-height: 132px;
+}
+.profile-tile-plus {
+  font-size: 38px;
+  line-height: 1;
+  color: rgba(15, 95, 215, 0.7);
+  font-weight: 700;
+}
+.profile-tile-add:hover {
+  border-color: rgba(255, 122, 24, 0.7);
+  background: linear-gradient(180deg, #fff6ee, #fff);
 }
