@@ -83,6 +83,21 @@ if (!isConfigured(FIREBASE_CONFIG)) {
           if (ch.type === "removed") cache.delete(ch.doc.id);
           else                       cache.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
         });
+        // If app.js told us a name/childId is blocked locally (the user
+        // deleted that fighter), proactively delete any matching docs from
+        // Firestore so cross-device rows / legacy orphans actually disappear.
+        try {
+          const isBlocked = window.__lbIsBlocked;
+          if (typeof isBlocked === "function") {
+            for (const [id, row] of Array.from(cache.entries())) {
+              if (isBlocked(row)) {
+                cache.delete(id);
+                deleteDoc(doc(db, COLLECTION, id))
+                  .catch(err => console.warn("[OnlineLB] tombstone delete failed:", err.message));
+              }
+            }
+          }
+        } catch (_) {}
         notify();
       }, (err) => {
         console.warn("[OnlineLB] snapshot error:", err.message);

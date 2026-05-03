@@ -186,6 +186,7 @@
   const ACTIVE_CHILD_KEY = "dl_active_child_v1";
   const DEVICE_KEY     = "dl_device_v1";
   const LOCAL_LB_KEY   = "dl_lb_v1";
+  const LB_BLOCKLIST_KEY = "dl_lb_blocklist_v1"; // names/childIds the user has deleted; never show on this device
   const MAX_CHILDREN_PER_ACCOUNT = 3;
 
   function rdJSON(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? fb : v; } catch (_) { return fb; } }
@@ -196,6 +197,48 @@
     if (crypto.randomUUID) return `${prefix}_${crypto.randomUUID()}`;
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
+
+  // Leaderboard block-list helpers. When a fighter is deleted, their name
+  // (lower-cased) and childId go in here. The 🏆 board filters out matching
+  // rows from BOTH the local cache and the live Firestore snapshot, so even
+  // if another device re-pushes or a legacy orphan row exists, the deleted
+  // fighter no longer "lingers" on this device.
+  function getBlocklist() {
+    const v = rdJSON(LB_BLOCKLIST_KEY, { names: [], ids: [] });
+    return {
+      names: new Set((v.names || []).map(s => String(s).toLowerCase())),
+      ids:   new Set(v.ids || [])
+    };
+  }
+  function addToBlocklist(name, childId) {
+    const v = rdJSON(LB_BLOCKLIST_KEY, { names: [], ids: [] });
+    const lcName = String(name || "").toLowerCase();
+    if (lcName && !(v.names || []).map(s => String(s).toLowerCase()).includes(lcName)) {
+      v.names = [...(v.names || []), lcName];
+    }
+    if (childId && !(v.ids || []).includes(childId)) {
+      v.ids = [...(v.ids || []), childId];
+    }
+    wrJSON(LB_BLOCKLIST_KEY, v);
+  }
+  function removeFromBlocklist(name, childId) {
+    const v = rdJSON(LB_BLOCKLIST_KEY, { names: [], ids: [] });
+    const lcName = String(name || "").toLowerCase();
+    v.names = (v.names || []).filter(s => String(s).toLowerCase() !== lcName);
+    if (childId) v.ids = (v.ids || []).filter(id => id !== childId);
+    wrJSON(LB_BLOCKLIST_KEY, v);
+  }
+  function isBlocked(row) {
+    if (!row) return false;
+    const bl = getBlocklist();
+    if (row.childId && bl.ids.has(row.childId)) return true;
+    const nm = String(row.player || "").toLowerCase();
+    if (nm && bl.names.has(nm)) return true;
+    return false;
+  }
+  // Expose for the snapshot listener in online.js so we can also tombstone
+  // orphan/cross-device rows server-side.
+  window.__lbIsBlocked = isBlocked;
 
   function getAccount() {
     const a = rdJSON(ACCOUNT_KEY, null);
@@ -701,6 +744,9 @@
     const next = getChildren().filter(c => c.id !== child.id);
     setChildren(next);
     wrJSON(PLAYERS_KEY, next.map(c => c.name));
+    // Remember we deleted this fighter so the row never reappears on this
+    // device, even if a stale Firestore doc or another device re-publishes.
+    addToBlocklist(name, child.id);
     if (child.id === currentChildId) {
       localStorage.removeItem(ACTIVE_CHILD_KEY);
       localStorage.removeItem(PLAYER_KEY);
@@ -728,6 +774,9 @@
     setChildren(kids);
     wrJSON(PLAYERS_KEY, kids.map(c => c.name));
     if (avatar) setAvatar(child.id, avatar);
+    // If the parent re-adds a previously-deleted name, lift the block so the
+    // new fighter actually shows up on the leaderboard again.
+    removeFromBlocklist(name, child.id);
     return child;
   }
 
@@ -3838,12 +3887,16 @@
 
     function deviceRows() {
       const lb = rdJSON(LOCAL_LB_KEY, {});
-      return Object.values(lb).map(r => ({ ...r, _mine: (r.childId && r.childId === currentChildId) || r.player === currentPlayer }));
+      return Object.values(lb)
+        .filter(r => !isBlocked(r))
+        .map(r => ({ ...r, _mine: (r.childId && r.childId === currentChildId) || r.player === currentPlayer }));
     }
     function globalRows() {
       const remote = (window.OnlineLB && window.OnlineLB.getAll) ? window.OnlineLB.getAll() : [];
       const myId = `${currentChildId}__${deviceId}`;
-      return remote.map(r => ({ ...r, _mine: r.id === myId }));
+      return remote
+        .filter(r => !isBlocked(r))
+        .map(r => ({ ...r, _mine: r.id === myId }));
     }
 
     function renderRows(rows) {
