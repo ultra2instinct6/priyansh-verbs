@@ -1503,3 +1503,72 @@ body.games-open { overflow: hidden; }
 @media (max-width: 600px) {
   .site-logo { max-height: 72px; max-width: 70vw; }
 }
+
+/* === Floating fighter portrait (was rendering 1254x1254 PNG at full size) === */
+.fighter-portrait {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: 88px;
+  height: 88px;
+  z-index: 40;
+  pointer-events: none;
+  display: none; /* JS sets display:block once player is loaded */
+}
+.fighter-portrait .fp-aura {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 64, 0.55), rgba(255, 87, 34, 0) 65%);
+  filter: blur(4px);
+  opacity: 0.85;
+  transition: opacity 0.3s ease, background 0.3s ease;
+}
+.fighter-portrait .fp-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1a0033, #0f5fd7);
+  border: 3px solid #ffd54f;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+.fighter-portrait .fp-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.fighter-portrait .fp-burst {
+  position: absolute;
+  inset: -16px;
+  pointer-events: none;
+  border-radius: 50%;
+}
+/* Aura state colours */
+.fighter-portrait.aura-low .fp-aura {
+  background: radial-gradient(circle, rgba(244, 67, 54, 0.7), rgba(244, 67, 54, 0) 65%);
+}
+.fighter-portrait.aura-super .fp-aura {
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.75), rgba(76, 175, 80, 0) 65%);
+}
+.fighter-portrait.aura-streak .fp-aura {
+  background: radial-gradient(circle, rgba(255, 215, 64, 0.85), rgba(255, 152, 0, 0) 65%);
+  animation: fpPulse 1.4s ease-in-out infinite;
+}
+.fighter-portrait.just-streak {
+  animation: fpPop 0.7s ease-out;
+}
+@keyframes fpPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+@keyframes fpPop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@media (max-width: 600px) {
+  .fighter-portrait { width: 64px; height: 64px; }
+}
