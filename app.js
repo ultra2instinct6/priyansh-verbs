@@ -4127,9 +4127,9 @@
   }
 
   // ===== ⏱️ Pomodoro timer =====
-  // Lightweight focus timer with 15 / 30 / 60 min presets. State persists in
-  // localStorage so reloads / orientation flips don't lose the countdown.
-  // Completion: bilingual toast + chime + short vibration.
+  // Lightweight focus timer with 15 / 30 / 60 min presets. State lives in a
+  // module-scoped object (not round-tripped through localStorage every tick)
+  // and is mirrored to localStorage so reloads survive.
   (function setupPomodoro() {
     const btn      = document.getElementById("pomo-btn");
     const pop      = document.getElementById("pomo-pop");
@@ -4137,18 +4137,25 @@
     const controls = document.getElementById("pomo-controls");
     const pauseBtn = document.getElementById("pomo-pause");
     const stopBtn  = document.getElementById("pomo-stop");
-    if (!btn || !pop) return;
+    if (!btn || !pop || !presets || !controls || !pauseBtn || !stopBtn) {
+      console.warn("[pomo] missing DOM nodes; aborting setup");
+      return;
+    }
 
-    let tickId = 0;
     const ICON = "⏱️";
+    // In-memory state: null when idle, otherwise { endsAt, durationMs, paused, remainingMs }
+    let state = null;
+    let tickId = 0;
 
-    function loadState() {
+    function persist() {
+      try {
+        if (state) localStorage.setItem(KEY.pomo, JSON.stringify(state));
+        else localStorage.removeItem(KEY.pomo);
+      } catch (_) {}
+    }
+    function loadPersisted() {
       try { return JSON.parse(localStorage.getItem(KEY.pomo) || "null"); }
       catch (_) { return null; }
-    }
-    function saveState(s) {
-      if (!s) localStorage.removeItem(KEY.pomo);
-      else localStorage.setItem(KEY.pomo, JSON.stringify(s));
     }
     function fmt(ms) {
       const total = Math.max(0, Math.ceil(ms / 1000));
@@ -4156,94 +4163,91 @@
       const s = total % 60;
       return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
     }
-    function remaining(s) {
-      if (!s) return 0;
-      if (s.paused) return Math.max(0, s.remainingMs | 0);
-      return Math.max(0, (s.endsAt | 0) - Date.now());
+    function remaining() {
+      if (!state) return 0;
+      if (state.paused) return Math.max(0, state.remainingMs | 0);
+      return Math.max(0, (state.endsAt | 0) - Date.now());
     }
-    function setRunningUI(running, paused) {
-      btn.classList.toggle("running", !!running);
-      btn.classList.toggle("pomo-paused", !!paused);
-      if (!running) {
+    function paint() {
+      if (!state) {
         btn.textContent = ICON;
         btn.title = "Pomodoro · ਪੋਮੋਡੋਰੋ";
+        btn.classList.remove("running", "pomo-paused");
+        return;
       }
-    }
-    function updateLabel() {
-      const s = loadState();
-      if (!s) { setRunningUI(false); return; }
-      const ms = remaining(s);
-      btn.textContent = fmt(ms);
-      btn.title = (s.paused ? "Paused · ਰੁਕਿਆ " : "Running · ਚੱਲ ਰਿਹਾ ") + fmt(ms);
-      setRunningUI(true, !!s.paused);
+      btn.textContent = fmt(remaining());
+      btn.title = (state.paused ? "Paused · ਰੁਕਿਆ " : "Running · ਚੱਲ ਰਿਹਾ ") + btn.textContent;
+      btn.classList.add("running");
+      btn.classList.toggle("pomo-paused", !!state.paused);
     }
     function syncPopoverMode() {
-      const s = loadState();
-      const running = !!s;
+      const running = !!state;
       presets.hidden = running;
       controls.hidden = !running;
-      if (running) {
-        pauseBtn.textContent = s.paused ? "▶ Resume" : "⏸ Pause";
-      }
+      if (running) pauseBtn.textContent = state.paused ? "▶ Resume" : "⏸ Pause";
     }
-    function startTick() {
-      stopTick();
-      updateLabel();
-      tickId = setInterval(() => {
-        const s = loadState();
-        if (!s) { stopTick(); setRunningUI(false); return; }
-        if (s.paused) { updateLabel(); return; }
-        if (remaining(s) <= 0) { complete(); return; }
-        updateLabel();
-      }, 1000);
-    }
-    function stopTick() {
+    function clearTick() {
       if (tickId) { clearInterval(tickId); tickId = 0; }
     }
+    function startTick() {
+      clearTick();
+      paint();
+      tickId = setInterval(() => {
+        if (!state) { clearTick(); paint(); return; }
+        if (state.paused) return;
+        if (remaining() <= 0) { complete(); return; }
+        paint();
+      }, 1000);
+    }
     function complete() {
-      stopTick();
-      saveState(null);
-      setRunningUI(false);
+      clearTick();
+      state = null;
+      persist();
+      paint();
       syncPopoverMode();
-      try { SFX.bossWin && SFX.bossWin(); } catch (_) {
-        try { SFX.correct && SFX.correct(); } catch (_) {}
-      }
+      try { (SFX.bossWin || SFX.correct || SFX.click).call(SFX); } catch (_) {}
       try { navigator.vibrate && navigator.vibrate([200, 80, 200]); } catch (_) {}
       try { toast({ en: "Pomodoro complete! 🎉", pa: "ਪੋਮੋਡੋਰੋ ਪੂਰਾ! 🎉" }, "ok"); } catch (_) {}
     }
     function start(min) {
       const durationMs = min * 60 * 1000;
-      saveState({ endsAt: Date.now() + durationMs, durationMs, paused: false, remainingMs: durationMs });
+      state = { endsAt: Date.now() + durationMs, durationMs, paused: false, remainingMs: durationMs };
+      persist();
       startTick();
       syncPopoverMode();
       closePop();
       try { toast({ en: `${min}-min focus started`, pa: `${min} ਮਿੰਟ ਫੋਕਸ ਸ਼ੁਰੂ` }); } catch (_) {}
     }
     function pause() {
-      const s = loadState();
-      if (!s || s.paused) return;
-      saveState({ ...s, paused: true, remainingMs: remaining(s) });
-      updateLabel();
+      if (!state || state.paused) return;
+      state.remainingMs = remaining();
+      state.paused = true;
+      persist();
+      paint();
       syncPopoverMode();
     }
     function resume() {
-      const s = loadState();
-      if (!s || !s.paused) return;
-      saveState({ ...s, paused: false, endsAt: Date.now() + (s.remainingMs | 0) });
+      if (!state || !state.paused) return;
+      state.endsAt = Date.now() + (state.remainingMs | 0);
+      state.paused = false;
+      persist();
       startTick();
       syncPopoverMode();
     }
     function stop() {
-      stopTick();
-      saveState(null);
-      setRunningUI(false);
+      clearTick();
+      state = null;
+      persist();
+      paint();
       syncPopoverMode();
       closePop();
     }
+    function isOpen() { return pop.getAttribute("aria-hidden") === "false"; }
     function openPop() {
       syncPopoverMode();
       pop.setAttribute("aria-hidden", "false");
       btn.setAttribute("aria-expanded", "true");
+      // Defer outside-click registration so the opening tap doesn't immediately close it.
       setTimeout(() => {
         document.addEventListener("pointerdown", outsideClick, true);
         document.addEventListener("keydown", escClose, true);
@@ -4256,38 +4260,51 @@
       document.removeEventListener("keydown", escClose, true);
     }
     function outsideClick(e) {
-      if (!pop.contains(e.target) && e.target !== btn) closePop();
+      if (pop.contains(e.target) || e.target === btn) return;
+      closePop();
     }
     function escClose(e) { if (e.key === "Escape") closePop(); }
 
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       try { SFX.click && SFX.click(); } catch (_) {}
-      if (pop.getAttribute("aria-hidden") === "false") closePop();
-      else openPop();
+      if (isOpen()) closePop(); else openPop();
     });
     presets.addEventListener("click", (e) => {
       const el = e.target.closest(".pomo-chip");
       if (!el) return;
+      e.stopPropagation();
       const min = parseInt(el.dataset.min, 10);
       if (min > 0) { try { SFX.click && SFX.click(); } catch (_) {} start(min); }
     });
-    pauseBtn.addEventListener("click", () => {
+    pauseBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       try { SFX.click && SFX.click(); } catch (_) {}
-      const s = loadState();
-      if (!s) return;
-      if (s.paused) resume(); else pause();
+      if (!state) return;
+      if (state.paused) resume(); else pause();
     });
-    stopBtn.addEventListener("click", () => {
+    stopBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
       try { SFX.click && SFX.click(); } catch (_) {}
       stop();
     });
 
-    // Restore on load: if elapsed while away, fire completion immediately.
-    const initial = loadState();
-    if (initial) {
-      if (!initial.paused && remaining(initial) <= 0) complete();
-      else if (initial.paused) updateLabel();
-      else startTick();
+    // Restore on load: silently discard expired/invalid state (don't fire chime).
+    const saved = loadPersisted();
+    if (saved && typeof saved.endsAt === "number" && typeof saved.durationMs === "number") {
+      if (saved.paused) {
+        state = saved;
+        paint();
+      } else if (saved.endsAt - Date.now() > 0) {
+        state = saved;
+        startTick();
+      } else {
+        // Expired silently while away — no chime spam on every reload.
+        try { localStorage.removeItem(KEY.pomo); } catch (_) {}
+        paint();
+      }
+    } else {
+      paint();
     }
   })();
 
