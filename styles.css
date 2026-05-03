@@ -1261,6 +1261,22 @@ body.games-open { overflow: hidden; }
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.15s;
 }
+/* Face-down memory tile: hides label until selected/matched. */
+.games-tile.face-down {
+  background: linear-gradient(165deg, #1a0033, #6a00ff);
+  color: transparent;
+  text-shadow: none;
+  position: relative;
+}
+.games-tile.face-down::after {
+  content: "?";
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #ffd54f;
+  font-family: "Bangers", sans-serif;
+  font-size: 1.6rem;
+  text-shadow: 0 0 8px rgba(255, 213, 79, 0.7);
+}
 .games-tile.selected {
   background: linear-gradient(165deg, #ffeb3b, #ff7a18);
   color: #1a0033;
@@ -1341,10 +1357,8 @@ body.games-open { overflow: hidden; }
   text-shadow: 0 0 6px rgba(0, 200, 255, 0.5);
   transition: background 0.15s;
 }
-.games-rain-word.is-target {
-  background: linear-gradient(165deg, rgba(255, 77, 210, 0.4), rgba(106, 0, 255, 0.4));
-  box-shadow: 0 0 10px rgba(255, 77, 210, 0.5);
-}
+/* .is-target intentionally has no visual styling — anti-cheat. */
+.games-rain-word.is-target { /* no-op */ }
 .games-rain-word.good {
   background: linear-gradient(180deg, #14b87a, #0a8f5c);
   box-shadow: 0 0 18px rgba(20, 184, 122, 0.85);
@@ -1402,10 +1416,8 @@ body.games-open { overflow: hidden; }
   white-space: nowrap;
   transition: background 0.15s;
 }
-.games-asteroid.is-match {
-  background: radial-gradient(circle at 35% 30%, #ffd54f, #ff5722 80%);
-  box-shadow: 0 0 16px rgba(255, 122, 24, 0.7);
-}
+/* .is-match intentionally has no visual styling — anti-cheat. */
+.games-asteroid.is-match { /* no-op */ }
 .games-asteroid.boom {
   background: radial-gradient(circle at 50% 50%, #ffeb3b, #14b87a);
   transform: scale(1.4);
@@ -1912,4 +1924,32 @@ footer .credit { font-size: 0.75rem; }
 .profile-tile-add:hover {
   border-color: rgba(255, 122, 24, 0.7);
   background: linear-gradient(180deg, #fff6ee, #fff);
+}
+
+/* ===== Simon Sequence pads ===== */
+.games-simon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 360px;
+  margin: 14px auto;
+}
+.games-simon-pad {
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  background: var(--c, #888);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  filter: brightness(0.55) saturate(0.85);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+  transition: filter 0.08s, transform 0.08s, box-shadow 0.08s;
+}
+.games-simon-pad:hover { filter: brightness(0.75); }
+.games-simon-pad.active {
+  filter: brightness(1.15) saturate(1.2);
+  transform: scale(1.04);
+  box-shadow:
+    0 0 22px var(--g, #fff),
+    0 0 42px var(--g, #fff),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.25);
 }

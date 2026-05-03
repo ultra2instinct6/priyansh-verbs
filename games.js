@@ -160,6 +160,7 @@
       case "rain":      return runRain();
       case "reaction":  return runReaction();
       case "asteroids": return runAsteroids();
+      case "simon":     return runSimon();
       default:          return renderHome();
     }
   }
@@ -172,6 +173,7 @@
     { key: "rain",      icon: "☔", titleEn: "Word Rain",     titlePa: "ਸ਼ਬਦ ਮੀਂਹ",   blurb: "Catch the right words as they fall." },
     { key: "reaction",  icon: "🎯", titleEn: "Reaction Grid", titlePa: "ਪ੍ਰਤੀਕਿਰਿਆ",  blurb: "Tap the glowing tile before it fades." },
     { key: "asteroids", icon: "☄️", titleEn: "Math Asteroids",titlePa: "ਗਣਿਤ ਉਲਕਾਪਿੰਡ",blurb: "Tap math rocks that match the target." },
+    { key: "simon",     icon: "🟣", titleEn: "Simon Sequence",titlePa: "ਰੰਗ ਲੜੀ",       blurb: "Watch the colors. Repeat the sequence." },
   ];
 
   function renderHome() {
@@ -254,6 +256,11 @@
     { rule: "Tap all PAST-TENSE verbs", ok: ["went","ate","ran","sang","wrote","slept","drank","threw","swam","drove"], no: ["go","eat","run","sing","write","sleep","drink","throw","swim","drive"] },
     { rule: "Tap all PUNJABI WORDS",    ok: ["ਘਰ","ਕੁੱਤਾ","ਪਾਣੀ","ਸਕੂਲ","ਦੋਸਤ","ਮਾਂ","ਪਿਤਾ","ਰੋਟੀ","ਬੱਚਾ","ਚਾਹ"], no: ["house","dog","water","school","friend","mom","dad","bread","child","tea"] },
     { rule: "Tap all PRIMES (under 30)",ok: ["2","3","5","7","11","13","17","19","23","29"], no: ["4","6","9","10","12","15","18","20","21","25"] },
+    { rule: "Tap all CONSONANTS",      ok: ["b","c","d","f","g","h","j","k","l","m"], no: ["a","e","i","o","u","A","E","I","O","U"] },
+    { rule: "Tap all MULTIPLES OF 4",  ok: ["4","8","12","16","20","24","28","32","36","40"], no: ["3","5","7","9","11","13","15","18","22","26"] },
+    { rule: "Tap all PLURAL nouns",    ok: ["dogs","books","children","feet","mice","cars","apples","teeth","rivers","women"], no: ["dog","book","child","foot","mouse","car","apple","tooth","river","woman"] },
+    { rule: "Tap all PRESENT-TENSE verbs", ok: ["go","eat","run","sing","write","sleep","drink","throw","swim","drive"], no: ["went","ate","ran","sang","wrote","slept","drank","threw","swam","drove"] },
+    { rule: "Tap all SQUARES (≤100)",  ok: ["1","4","9","16","25","36","49","64","81","100"], no: ["2","5","8","12","20","30","50","60","75","99"] },
   ];
   function makeTapRound() {
     const r = pick(TAP_RULES);
@@ -382,6 +389,18 @@
       ["do not","don't"],["I am","I'm"],["you are","you're"],["he is","he's"],
       ["we will","we'll"],["they have","they've"],["cannot","can't"],["will not","won't"],
     ]},
+    { title: "Animals (EN ↔ PA)", pairs: [
+      ["cat","ਬਿੱਲੀ"],["cow","ਗਾਂ"],["horse","ਘੋੜਾ"],["bird","ਪੰਛੀ"],
+      ["fish","ਮੱਛੀ"],["goat","ਬੱਕਰੀ"],["lion","ਸ਼ੇਰ"],["elephant","ਹਾਥੀ"],
+    ]},
+    { title: "Food (EN ↔ PA)", pairs: [
+      ["rice","ਚਾਵਲ"],["milk","ਦੁੱਧ"],["sugar","ਖੰਡ"],["salt","ਲੂਣ"],
+      ["mango","ਅੰਬ"],["banana","ਕੇਲਾ"],["butter","ਮੱਖਣ"],["egg","ਅੰਡਾ"],
+    ]},
+    { title: "Synonyms", pairs: [
+      ["big","large"],["happy","glad"],["begin","start"],["smart","clever"],
+      ["quick","fast"],["tired","sleepy"],["angry","mad"],["silent","quiet"],
+    ]},
   ];
   function makeMatchRound(level) {
     const deck = pick(MATCH_DECKS);
@@ -406,9 +425,12 @@
       </div>
       <div class="games-rule">${esc(m.title)}</div>
       <div class="games-match-grid" data-n="${m.n}">
-        ${m.tiles.map((t, i) =>
-          `<button class="games-tile ${t.status}" data-i="${i}" ${t.status === "matched" ? "disabled" : ""}>${esc(t.label)}</button>`
-        ).join("")}
+        ${m.tiles.map((t, i) => {
+          const isFaceUp = t.status === "selected" || t.status === "matched" || t.status === "wrong";
+          const cls = `games-tile ${t.status}` + (isFaceUp ? "" : " face-down");
+          const label = isFaceUp ? esc(t.label) : "";
+          return `<button class="${cls}" data-i="${i}" ${t.status === "matched" ? "disabled" : ""}>${label}</button>`;
+        }).join("")}
       </div>
       <div class="games-status" id="match-status">${m.solved}/${m.n} pairs · ❌ ${m.mistakes}</div>
       <div class="games-actions">
@@ -418,7 +440,9 @@
     function refresh() {
       body().querySelectorAll(".games-tile").forEach((el, i) => {
         const t = m.tiles[i];
-        el.className = "games-tile " + t.status;
+        const isFaceUp = t.status === "selected" || t.status === "matched" || t.status === "wrong";
+        el.className = "games-tile " + t.status + (isFaceUp ? "" : " face-down");
+        el.textContent = isFaceUp ? t.label : "";
         el.disabled = t.status === "matched";
       });
       body().querySelector("#match-status").textContent = `${m.solved}/${m.n} pairs · ❌ ${m.mistakes}`;
@@ -531,6 +555,30 @@
       { p: "1/4 of 80?",          c: ["20","25","16","30"], a: "20" },
       { p: "Which is a multiple of 7?", c: ["63","58","52","69"], a: "63" },
     ]},
+    { title: "Fractions", seconds: 8, qs: [
+      { p: "½ + ¼ = ?",            c: ["¾","⅔","⅗","1"], a: "¾" },
+      { p: "⅓ of 30 = ?",          c: ["10","15","6","12"], a: "10" },
+      { p: "Which is bigger?",     c: ["⅔","½","⅖","⅓"], a: "⅔" },
+      { p: "½ of ½ = ?",           c: ["¼","½","⅓","⅛"], a: "¼" },
+      { p: "¾ as a decimal?",      c: ["0.75","0.34","0.5","0.7"], a: "0.75" },
+      { p: "⅖ + ⅖ = ?",            c: ["⅘","⅖","1","½"], a: "⅘" },
+      { p: "½ of 100?",            c: ["50","25","100","5"], a: "50" },
+      { p: "⅛ of 64?",             c: ["8","6","4","16"], a: "8" },
+      { p: "Smallest fraction?",   c: ["⅛","½","⅓","¼"], a: "⅛" },
+      { p: "3 quarters means?",    c: ["¾","⅓","½","¼"], a: "¾" },
+    ]},
+    { title: "Synonyms", seconds: 7, qs: [
+      { p: "Synonym of BIG?",      c: ["large","tiny","empty","loud"], a: "large" },
+      { p: "Synonym of HAPPY?",    c: ["glad","sad","angry","slow"], a: "glad" },
+      { p: "Synonym of QUICK?",    c: ["fast","slow","late","loud"], a: "fast" },
+      { p: "Synonym of START?",    c: ["begin","end","stop","sleep"], a: "begin" },
+      { p: "Synonym of SMART?",    c: ["clever","silly","slow","weak"], a: "clever" },
+      { p: "Synonym of TIRED?",    c: ["sleepy","awake","angry","sad"], a: "sleepy" },
+      { p: "Synonym of QUIET?",    c: ["silent","loud","angry","big"], a: "silent" },
+      { p: "Synonym of BRAVE?",    c: ["bold","shy","weak","sad"], a: "bold" },
+      { p: "Synonym of TINY?",     c: ["small","big","tall","long"], a: "small" },
+      { p: "Synonym of SHOUT?",    c: ["yell","whisper","smile","sit"], a: "yell" },
+    ]},
   ];
   function runSpeed() {
     if (!live) {
@@ -625,6 +673,7 @@
     const score = live.score | 0;
     const total = live.qs.length;
     const perfect = score === total;
+    const acc = total ? Math.round((score / total) * 100) : 0;
     renderResults({
       gameKey: "speed",
       title: "Speed Sprint",
@@ -632,7 +681,7 @@
       perfect,
       rupees: 25 + score * 12,
       power:  20 + score * 18 + (perfect ? 100 : 0),
-      breakdown: [`${score}/${total} correct`, `Bank: ${live.bank.title}`],
+      breakdown: [`${score}/${total} correct`, `Accuracy: ${acc}%`, `Bank: ${live.bank.title}`],
     });
   }
 
@@ -671,11 +720,11 @@
       const word = wantTarget ? pick(live.rule.ok) : pick(live.rule.no);
       const isTarget = !!live.rule.ok.includes(word);
       const el = document.createElement("button");
-      el.className = "games-rain-word" + (isTarget ? " is-target" : "");
+      // No target marker on the DOM — keeps the challenge honest.
+      el.className = "games-rain-word";
       el.textContent = word;
       el.style.left = (5 + Math.random() * 80) + "%";
       el.style.top = "-40px";
-      el.dataset.target = isTarget ? "1" : "0";
       arena.appendChild(el);
       const sprite = {
         el, isTarget,
@@ -890,7 +939,11 @@
     if (isMatch) {
       // Pick a decomposition.
       op = pick(ops);
-      if (op === "+") { p = randi(1, target); q = target - p; }
+      if (op === "+") {
+        // Avoid trivial p+0 / 0+q expressions.
+        p = randi(1, Math.max(1, target - 1));
+        q = target - p;
+      }
       else if (op === "−") { p = target + randi(1, 12); q = p - target; }
       else { // × — choose factors of target if possible
         const factors = [];
@@ -941,11 +994,11 @@
       const isMatch = Math.random() < 0.45;
       const expr = makeExpr(live.target, isMatch);
       const el = document.createElement("button");
-      el.className = "games-asteroid" + (isMatch ? " is-match" : "");
+      // No match marker on the DOM — player must compute.
+      el.className = "games-asteroid";
       el.textContent = expr;
       el.style.top = (10 + Math.random() * 70) + "%";
       el.style.left = "-90px";
-      el.dataset.match = isMatch ? "1" : "0";
       arena.appendChild(el);
       const sprite = {
         el, isMatch,
@@ -1027,6 +1080,136 @@
         rupees: 30 + score,
         power:  20 + score * 2,
         breakdown: [`Hits: ${live.hits}`, `Wrong taps: ${live.misses}`, `Leaks: ${live.leaks}`],
+      });
+    }
+  }
+
+  // ============================================================
+  // GAME 7 — SIMON SEQUENCE 🟣
+  // Watch a color sequence, then repeat it. Length grows each round.
+  // ============================================================
+  const SIMON_PADS = [
+    { key: "r", color: "#ef4444", glow: "rgba(239,68,68,0.85)",  freq: 261.63 }, // C4
+    { key: "g", color: "#14b87a", glow: "rgba(20,184,122,0.85)", freq: 329.63 }, // E4
+    { key: "b", color: "#3b82f6", glow: "rgba(59,130,246,0.85)", freq: 392.00 }, // G4
+    { key: "y", color: "#ffd54f", glow: "rgba(255,213,79,0.95)", freq: 523.25 }, // C5
+  ];
+  function simonBeep(freq, dur) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = simonBeep._ctx || (simonBeep._ctx = new Ctx());
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (dur / 1000));
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + (dur / 1000) + 0.02);
+    } catch (_) {}
+  }
+  function runSimon() {
+    if (!live) {
+      live = {
+        seq: [randi(0,3)], userIdx: 0,
+        round: 1, score: 0, lives: 2,
+        playing: false, finished: false,
+      };
+    }
+    setTitle(`🟣 Simon Sequence · Round ${live.round}`);
+    body().innerHTML = `
+      <div class="games-hud-row">
+        <div class="games-hud-pill">❤️ ${"🟧".repeat(Math.max(0,live.lives))}${"⬛".repeat(Math.max(0,2 - live.lives))}</div>
+        <div class="games-hud-pill">⭐ ${live.score}</div>
+        <div class="games-hud-pill">🔢 R${live.round}</div>
+      </div>
+      <div class="games-rule" id="simon-rule">Watch the lights…</div>
+      <div class="games-simon-grid">
+        ${SIMON_PADS.map((p,i) =>
+          `<button class="games-simon-pad" data-i="${i}" style="--c:${p.color};--g:${p.glow}"></button>`
+        ).join("")}
+      </div>
+      <div class="games-status" id="simon-status">${live.userIdx}/${live.seq.length}</div>
+      <div class="games-actions">
+        <button class="games-btn-ghost" id="simon-quit">🏁 End</button>
+      </div>
+    `;
+    const pads = body().querySelectorAll(".games-simon-pad");
+    body().querySelector("#simon-quit").addEventListener("click", endSimon);
+
+    function flash(i, ms) {
+      const pad = pads[i];
+      if (!pad) return;
+      pad.classList.add("active");
+      simonBeep(SIMON_PADS[i].freq, ms);
+      setT(() => pad && pad.classList.remove("active"), ms);
+    }
+    function playSeq() {
+      live.playing = true;
+      const rule = body().querySelector("#simon-rule");
+      if (rule) rule.textContent = "👀 Watch the lights…";
+      const stepMs = Math.max(280, 600 - live.round * 18);
+      live.seq.forEach((idx, n) => {
+        setT(() => flash(idx, stepMs - 80), n * stepMs);
+      });
+      setT(() => {
+        live.playing = false;
+        const r = body().querySelector("#simon-rule");
+        if (r) r.textContent = "👆 Your turn — repeat the sequence!";
+      }, live.seq.length * stepMs + 60);
+    }
+    pads.forEach((pad, i) => {
+      pad.addEventListener("click", () => {
+        if (live.finished || live.playing) return;
+        flash(i, 220);
+        const expected = live.seq[live.userIdx];
+        if (i === expected) {
+          live.userIdx += 1;
+          live.score += 5;
+          const st = body().querySelector("#simon-status");
+          if (st) st.textContent = `${live.userIdx}/${live.seq.length}`;
+          if (live.userIdx >= live.seq.length) {
+            // Round complete — extend sequence.
+            sfx("correct");
+            live.score += 10 + live.round * 2;
+            live.round += 1;
+            live.userIdx = 0;
+            live.seq.push(randi(0, 3));
+            setT(() => { runSimon(); }, 600);
+          }
+        } else {
+          live.lives -= 1;
+          live.score = Math.max(0, live.score - 5);
+          sfx("wrong");
+          const st = body().querySelector("#simon-status");
+          if (st) st.textContent = `❌ wrong — was pad ${expected + 1}`;
+          if (live.lives <= 0) return setT(endSimon, 600);
+          // Replay sequence from start.
+          live.userIdx = 0;
+          setT(playSeq, 700);
+        }
+      });
+    });
+    // Auto-play after a short delay so user sees the board.
+    setT(playSeq, 450);
+
+    function endSimon() {
+      if (live.finished) return;
+      live.finished = true;
+      clearTimers();
+      const score = live.score | 0;
+      const cleared = live.round - 1;
+      renderResults({
+        gameKey: "simon",
+        title: "Simon Sequence",
+        score,
+        perfect: cleared >= 8 && live.lives === 2,
+        rupees: 25 + score,
+        power:  15 + score * 2 + cleared * 8,
+        breakdown: [`Rounds cleared: ${cleared}`, `Longest sequence: ${live.seq.length - (live.userIdx === 0 ? 1 : 0)}`, `Lives left: ${Math.max(0,live.lives)}`],
       });
     }
   }
