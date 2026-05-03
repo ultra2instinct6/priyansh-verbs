@@ -8,7 +8,7 @@
  *  ▸ Bump CACHE_VERSION on every release to invalidate old caches.
  * ============================================================ */
 
-const CACHE_VERSION = "punjabiji-v20260502-r31-debzfinal";
+const CACHE_VERSION = "punjabiji-v20260502-r32-swschemeguard";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -59,6 +59,11 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
+
+  // Skip non-http(s) schemes (e.g. chrome-extension://, moz-extension://)
+  // injected by browser extensions like wallet dapp connectors. The Cache API
+  // refuses to store these and throws "Request scheme '...' is unsupported".
+  if (url.protocol !== "http:" && url.protocol !== "https:") return;
 
   // Always go to network for Firestore + analytics + auth.
   if (

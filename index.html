@@ -168,9 +168,19 @@
         splash.style.opacity = "0";
         splash.style.pointerEvents = "none";
         function gone() {
+          // Move focus off the splash before hiding it from a11y, otherwise
+          // Chrome warns: "Blocked aria-hidden on an element because its
+          // descendant retained focus." Using inert also prevents focus and
+          // is the modern replacement for aria-hidden on hidden containers.
+          try {
+            if (splash.contains(document.activeElement)) {
+              document.activeElement.blur();
+            }
+          } catch (_) {}
           splash.classList.add("gone");
           splash.style.display = "none";
-          splash.setAttribute("aria-hidden", "true");
+          splash.removeAttribute("aria-hidden");
+          splash.setAttribute("inert", "");
         }
         setTimeout(gone, FADE_MS);
       }

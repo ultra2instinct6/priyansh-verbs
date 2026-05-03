@@ -103,7 +103,11 @@ if (!isConfigured(FIREBASE_CONFIG)) {
         status: "online",
         push(row) {
           // row = { id, childId, player, power, rupees, gold, rank, device, step, stepTotal }
+          // Defensive: Firestore rules reject empty player/childId, so skip
+          // pushes that would be rejected (e.g. early init race).
           if (!row || !row.id) return;
+          if (!row.player || !String(row.player).trim()) return;
+          if (!row.childId || !String(row.childId).trim()) return;
           pending = { id: row.id, data: row };
           if (!timer) timer = setTimeout(flush, 1500);
         },
