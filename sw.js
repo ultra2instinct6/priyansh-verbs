@@ -18,6 +18,7 @@ const CORE_ASSETS = [
   "/online.js",
   "/games.js",
   "/attacks.js",
+  "/enemies.js",
   "/vocab.js",
   "/manifest.json",
   "/images/logo.png",

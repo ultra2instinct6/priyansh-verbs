@@ -667,15 +667,36 @@
     localStorage.removeItem(`${AVATAR_KEY}__${child.id}`);
     localStorage.removeItem(`${AVATAR_KEY}__${name}`); // legacy cleanup
     const lb = rdJSON(LOCAL_LB_KEY, {});
+    const lcName = String(name).toLowerCase();
     for (const k of Object.keys(lb)) {
       const row = lb[k] || {};
-      if (row.childId === child.id || row.player === name || row.id === `${child.id}__${deviceId}`) delete lb[k];
+      const rowName = String(row.player || "").toLowerCase();
+      if (
+        row.childId === child.id ||
+        rowName === lcName ||
+        row.id === `${child.id}__${deviceId}` ||
+        (typeof k === "string" && k.startsWith(`${child.id}__`))
+      ) delete lb[k];
     }
     wrJSON(LOCAL_LB_KEY, lb);
     // Purge from the global online board so the row doesn't reappear on
     // the 🌐 Global tab (or on other devices) after the next snapshot.
+    // Match by docId, childId, OR player name so legacy/cross-device rows
+    // for this fighter all get nuked.
     if (window.OnlineLB && typeof window.OnlineLB.remove === "function") {
-      try { window.OnlineLB.remove(`${child.id}__${deviceId}`); } catch (_) {}
+      try {
+        const targetId = `${child.id}__${deviceId}`;
+        const all = (typeof window.OnlineLB.getAll === "function") ? window.OnlineLB.getAll() : [];
+        const ids = new Set([targetId]);
+        const lcName = String(name).toLowerCase();
+        all.forEach(row => {
+          if (!row || !row.id) return;
+          if (row.childId === child.id) ids.add(row.id);
+          else if (String(row.player || "").toLowerCase() === lcName) ids.add(row.id);
+          else if (row.id.startsWith(`${child.id}__`)) ids.add(row.id);
+        });
+        ids.forEach(id => { try { window.OnlineLB.remove(id); } catch (_) {} });
+      } catch (_) {}
     }
     const next = getChildren().filter(c => c.id !== child.id);
     setChildren(next);
